@@ -99,3 +99,29 @@
 	backdrop-filter: blur(8px);
 	-webkit-backdrop-filter: blur(8px);
 }
+
+/* Add these styles for react-resizable */
+.react-resizable {
+    position: relative;
+}
+
+.react-resizable-handle {
+    position: absolute;
+    right: -5px;
+    bottom: 0;
+    top: 0;
+    width: 10px;
+    cursor: col-resize;
+    z-index: 1;
+}
+
+.react-resizable-handle:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Smooth transitions */
+.transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+}

@@ -6,13 +6,48 @@ import {
 	StreamTheme,
 	PaginatedGridLayout,
 	SpeakerLayout,
-	CallControls
+	CallControls,
+	StreamVideoParticipant
 } from "@stream-io/video-react-sdk";
 import { useParams } from "next/navigation";
-import {  useEffect, useState } from "react";
+import {  useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { TraderStats } from "@/components/TraderStats";
+import { TradesFeed } from "@/components/TradesFeed";
+import { TradingDashboard } from "@/components/TradingDashboard";
+import { FaChartLine, FaUsers, FaVideo } from 'react-icons/fa';
+import { TradeEntryPanel } from '@/components/TradeEntryPanel';
+import { TradesProvider } from '@/context/TradesContext';
+import { ResizableBox } from 'react-resizable';
+import 'react-resizable/css/styles.css';
+import { IoMdExpand, IoMdContract } from 'react-icons/io';
+import { ActiveTradeOverlay } from '@/components/ActiveTradeOverlay';
+import { TradeDetailsModal } from '@/components/TradeDetailsModal';
+import { Trade } from '@/types/trade';
+import { FC } from 'react';
 
-type CallLayoutType = "grid" | "speaker-left" | "speaker-right";
+type CallLayoutType = "grid" | "speaker-left" | "speaker-right" | "trading";
+
+interface Trader {
+	name: string;
+	profitLoss: number;
+	winRate: number;
+	totalTrades: number;
+	// Add other trader properties as needed
+}
+
+// Mock trader data (you can replace this with real data from your context/API)
+const mockTrader: Trader = {
+	name: "John Doe",
+	profitLoss: 1250.50,
+	winRate: 68.5,
+	totalTrades: 45,
+};
+
+// Add this mock data (replace with real data later)
+const mockTrades = {
+	tradesByParticipant: new Map<string, Array<Trade>>()
+};
 
 export default function FaceTimePage() {
 	const { id } = useParams<{ id: string }>();
@@ -64,34 +99,172 @@ export default function FaceTimePage() {
 }
 
 const MeetingRoom = () => {
-	const [layout, setLayout] = useState<CallLayoutType>("grid");
+	const [layout, setLayout] = useState<CallLayoutType>("trading");
+	const [isPanelExpanded, setIsPanelExpanded] = useState(true);
+	const [panelWidth, setPanelWidth] = useState(300);
 	const router = useRouter();
+	const [selectedTrade, setSelectedTrade] = useState<null | any>(null);
+	const [selectedTrader, setSelectedTrader] = useState<string>('');
+
+	const handleResize = useCallback((e: any, { size }: { size: { width: number } }) => {
+		setPanelWidth(size.width);
+	}, []);
+
+	const togglePanel = () => {
+		setIsPanelExpanded(!isPanelExpanded);
+		setPanelWidth(isPanelExpanded ? 60 : 300);
+	};
 
 	const handleLeave = () => {
-		confirm("Are you sure you want to leave the call?") && router.push("/");
+		confirm("Are you sure you want to leave the trading session?") && router.push("/");
+	};
+
+	const handleTradeClick = (trade: any, traderName: string) => {
+		setSelectedTrade(trade);
+		setSelectedTrader(traderName);
+	};
+
+	const handleNewTrade = (trade: Trade, participantId: string) => {
+		const existingTrades = mockTrades.tradesByParticipant.get(participantId) || [];
+		mockTrades.tradesByParticipant.set(participantId, [...existingTrades, trade]);
+	};
+
+	const ParticipantView: FC<{ participant: StreamVideoParticipant }> = ({ participant }) => {
+		const participantName = participant?.name || participant?.userId || 'Trader';
+		const sessionId = participant?.sessionId || '';
+		
+		return (
+			<div className="relative rounded-lg overflow-hidden shadow-lg bg-gray-800 border border-gray-700 transition-transform hover:scale-[1.02]">
+				{/* Original participant video content will be rendered here by the Stream SDK */}
+				<div className="absolute bottom-0 left-0 right-0">
+					<div className="p-3 bg-gradient-to-t from-black/70 to-transparent">
+						<p className="text-white text-sm font-medium mb-2">
+							{participantName}
+						</p>
+					</div>
+					<ActiveTradeOverlay 
+						trades={mockTrades.tradesByParticipant.get(sessionId) || []}
+						onTradeClick={(trade) => handleTradeClick(trade, participantName)}
+					/>
+				</div>
+			</div>
+		);
 	};
 
 	const CallLayout = () => {
 		switch (layout) {
 			case "grid":
-				return <PaginatedGridLayout />;
-			case "speaker-right":
-				return <SpeakerLayout participantsBarPosition='left' />;
+				return (
+					<div className="grid grid-cols-3 gap-4 p-4 h-full">
+						<PaginatedGridLayout
+							VideoPlaceholder={() => (
+								<div className="flex items-center justify-center h-full bg-gray-800 rounded-lg">
+									<FaVideo className="text-gray-400 text-4xl" />
+								</div>
+							)}
+							ParticipantViewUI={ParticipantView}
+						/>
+					</div>
+				);
+			case "trading":
+				return (
+					<TradesProvider>
+						<div className="flex h-full bg-gray-900">
+							{/* Resizable Left Panel */}
+							<ResizableBox
+								width={panelWidth}
+								height={Infinity}
+								minConstraints={[60, Infinity]}
+								maxConstraints={[600, Infinity]}
+								axis="x"
+								onResize={handleResize}
+								className={`bg-gray-800 border-r border-gray-700 transition-all duration-300 ${
+									isPanelExpanded ? '' : 'hover:bg-gray-750'
+								}`}
+							>
+								<div className="h-full relative">
+									{/* Toggle Button */}
+									<button
+										onClick={togglePanel}
+										className="absolute -right-3 top-1/2 transform -translate-y-1/2 z-10
+												bg-gray-700 rounded-full p-1 text-gray-300 hover:bg-gray-600
+												shadow-lg border border-gray-600"
+									>
+										{isPanelExpanded ? <IoMdContract size={16} /> : <IoMdExpand size={16} />}
+									</button>
+
+									{/* Panel Content */}
+									<div className={`h-full overflow-hidden ${isPanelExpanded ? 'px-4' : 'px-2'}`}>
+										<div className="py-4 border-b border-gray-700">
+											<h2 className="text-lg font-semibold text-white flex items-center gap-2">
+												<FaChartLine className="text-green-400" />
+												{isPanelExpanded && "Trading Dashboard"}
+											</h2>
+										</div>
+										
+										{isPanelExpanded && (
+											<div className="py-4 space-y-4">
+												<TraderStats trader={mockTrader} />
+												<TradingDashboard />
+												<TradesFeed />
+											</div>
+										)}
+									</div>
+								</div>
+							</ResizableBox>
+
+							{/* Main Content Area */}
+							<div className="flex-1 h-full">
+								<div className="grid grid-cols-3 gap-4 p-4 h-full">
+									<SpeakerLayout
+										participantsBarPosition="right"
+										ParticipantViewUI={ParticipantView}
+										ParticipantViewUISpotlight={ParticipantView}
+									/>
+								</div>
+							</div>
+
+							{/* Trade Entry Panel */}
+							<TradeEntryPanel onNewTrade={(trade) => {
+								const currentParticipantId = call?.sessionId;
+								if (currentParticipantId) {
+									handleNewTrade(trade, currentParticipantId);
+								}
+							}} />
+						</div>
+					</TradesProvider>
+				);
 			default:
-				return <SpeakerLayout participantsBarPosition='right' />;
+				return <SpeakerLayout participantsBarPosition='right' ParticipantViewUI={ParticipantView} />;
 		}
 	};
 
 	return (
-		<section className='relative min-h-screen w-full overflow-hidden pt-4'>
-			<div className='relative flex size-full items-center justify-center'>
-				<div className='flex size-full max-w-[1000px] items-center'>
+		<section className="relative min-h-screen w-full overflow-hidden">
+			<div className="relative flex size-full items-center justify-center">
+				<div className="flex size-full items-center">
 					<CallLayout />
 				</div>
-				<div className='fixed bottom-0 flex w-full items-center justify-center gap-5'>
+				<div className="fixed bottom-0 flex w-full items-center justify-center gap-5 p-4 bg-gray-900/95 backdrop-blur border-t border-gray-800">
 					<CallControls onLeave={handleLeave} />
+					<select 
+						value={layout}
+						onChange={(e) => setLayout(e.target.value as CallLayoutType)}
+						className="bg-gray-800 text-white rounded-lg px-4 py-2 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+					>
+						<option value="trading">Trading View</option>
+						<option value="grid">Grid View</option>
+						<option value="speaker">Speaker View</option>
+					</select>
 				</div>
 			</div>
+			{selectedTrade && (
+				<TradeDetailsModal
+					trade={selectedTrade}
+					traderName={selectedTrader}
+					onClose={() => setSelectedTrade(null)}
+				/>
+			)}
 		</section>
 	);
 };
