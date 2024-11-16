@@ -1,13 +1,13 @@
 export interface Trade {
     id: string;
-    type: "LONG" | "SHORT";
     symbol: string;
+    type: 'LONG' | 'SHORT';
     entry: number;
     target: number;
     stopLoss: number;
+    size: number;
     timestamp: number;
-    trader: {
-        id: string;
-        name: string;
-    };
+    status: 'OPEN' | 'CLOSED';
+    profitLoss: number;
+    currentPrice: number;
 } 

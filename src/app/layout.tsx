@@ -30,7 +30,11 @@ export default function RootLayout({
 				<html lang='en'>
 				<body className={inter.className}>
 					<StreamVideoProvider>
-						<nav className='w-full py-4 md:px-8 px-4 text-center flex items-center justify-between sticky top-0 bg-white '>
+						<nav className='w-full py-4 md:px-8 px-4 text-center flex items-center justify-between sticky top-0 bg-custom-color'>
+							<div className='flex items-center justify-start'>
+								{/* Trade Party Text Logo */}
+								<span className='text-xl font-bold text-custom-color'>TradeParty</span>
+							</div>
 							<div className='flex items-center justify-end gap-5'>
 								{/*-- if user is signed out --*/}
 								<SignedOut>

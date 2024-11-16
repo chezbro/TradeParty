@@ -31,6 +31,7 @@ import { StarIcon } from '@radix-ui/react-icons';
 import { io, Socket } from "socket.io-client";
 import Draggable from 'react-draggable';
 import { WatchlistContainer } from '@/components/WatchlistContainer';
+import { TradeEntryContainer } from '@/components/TradeEntryContainer';
 
 type CallLayoutType = "grid" | "speaker-left" | "speaker-right" | "trading";
 
@@ -65,6 +66,7 @@ interface MeetingRoomProps {
 	shareChart: (chartData: any) => void;
 	sharedCharts: SharedChart[];
 	socket: Socket | null;
+	meetingName?: string;
 }
 
 // Add this near the top of the file with other interfaces
@@ -223,6 +225,7 @@ export default function FaceTimePage() {
 							shareChart={shareChart}
 							sharedCharts={sharedCharts}
 							socket={socket}
+							meetingName={call?.data?.custom?.name || "Trading Session #1"}
 						/>
 					) : (
 						<div className='h-screen w-full flex items-center justify-center bg-black/90'>
@@ -253,7 +256,7 @@ export default function FaceTimePage() {
 
 }
 
-const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => {
+const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading Session #1" }: MeetingRoomProps) => {
 	const { user } = useUser();
 	const router = useRouter();
 	const [layout, setLayout] = useState<CallLayoutType>("trading");
@@ -274,6 +277,7 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => 
 	const [isMinimized, setIsMinimized] = useState(false);
 	const [isDetached, setIsDetached] = useState(false);
 	const [isWatchlistExpanded, setIsWatchlistExpanded] = useState(false);
+	const [isTradeEntryExpanded, setIsTradeEntryExpanded] = useState(true);
 
 	const handleResize = useCallback((e: any, { size }: { size: { width: number } }) => {
 		setPanelWidth(size.width);
@@ -422,19 +426,67 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => 
 
 									{/* Panel Content */}
 									<div className={`h-full ${isPanelExpanded ? 'w-full' : 'w-[60px]'}`}>
-										<div className="p-4 border-b border-white/5">
-											<h2 className={`font-medium flex items-center gap-3 text-white/90
-												${isPanelExpanded ? 'text-lg' : 'justify-center'}`}>
-												<FaChartLine className="text-emerald-400 text-xl" />
-												{isPanelExpanded && "Trading Dashboard"}
-											</h2>
-										</div>
-										
+										{/* Meeting Name Section */}
+										{isPanelExpanded && (
+											<div className="border-b border-white/5">
+												<div className="p-4">
+													{/* Live Status & Time */}
+													<div className="flex items-center gap-2 mb-2">
+														<div className="flex items-center gap-1.5">
+															<span className="animate-pulse text-emerald-400 text-[8px]">●</span>
+															<span className="text-xs text-emerald-400 font-medium">LIVE</span>
+														</div>
+														<span className="text-xs text-white/50">•</span>
+														<span className="text-xs text-white/50">{new Date().toLocaleTimeString()}</span>
+													</div>
+													
+													{/* Meeting Name */}
+													<div className="space-y-1">
+														<h1 className="text-xl font-bold text-white/90 truncate">
+															{meetingName}
+														</h1>
+														<p className="text-sm text-white/50">
+															Trading Room
+														</p>
+													</div>
+
+													{/* Participants Preview */}
+													<div className="flex items-center gap-2 mt-3">
+														<div className="flex -space-x-2">
+															{[...Array(3)].map((_, i) => (
+																<div
+																	key={i}
+																	className="w-6 h-6 rounded-full border-2 border-gray-900 bg-gray-800 overflow-hidden"
+																>
+																	<img
+																		src={`https://picsum.photos/seed/trader${i + 1}/200/200`}
+																		alt={`Participant ${i + 1}`}
+																		className="w-full h-full object-cover"
+																	/>
+																</div>
+															))}
+														</div>
+														<span className="text-xs text-white/50">+2 others</span>
+													</div>
+												</div>
+											</div>
+										)}
+
+										{/* Rest of the panel content remains the same */}
 										{isPanelExpanded && (
 											<div className="h-[calc(100vh-64px)] overflow-y-auto">
 												<div className="p-4 space-y-6">
 													<TraderStats trader={mockTrader} />
-													<TradingDashboard 
+													<TradeEntryContainer 
+														currentSymbol={currentSymbol}
+														onNewTrade={(trade: Trade) => {
+															const currentParticipantId = call?.sessionId;
+															if (currentParticipantId) {
+																handleNewTrade(trade, currentParticipantId);
+															}
+														}}
+													/>
+													<TradingDashboard
 														watchlist={watchlist}
 														onSymbolSelect={setCurrentSymbol}
 														onStarClick={handleStarClick}
@@ -654,20 +706,67 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => 
 
 							{/* Panel Content */}
 							<div className={`h-full ${isPanelExpanded ? 'w-full' : 'w-[60px]'}`}>
-								<div className="p-4 border-b border-white/5">
-									<h2 className={`font-medium flex items-center gap-3 text-white/90
-										${isPanelExpanded ? 'text-lg' : 'justify-center'}`}>
-										<FaChartLine className="text-emerald-400 text-xl" />
-										{isPanelExpanded && "Trading Dashboard"}
-									</h2>
-								</div>
-								
+								{/* Meeting Name Section */}
 								{isPanelExpanded && (
-									<div className="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-64px)]">
-										<TraderStats trader={mockTrader} />
-										
-										<div className="space-y-4">
-											<TradingDashboard 
+									<div className="border-b border-white/5">
+										<div className="p-4">
+											{/* Live Status & Time */}
+											<div className="flex items-center gap-2 mb-2">
+												<div className="flex items-center gap-1.5">
+													<span className="animate-pulse text-emerald-400 text-[8px]">●</span>
+													<span className="text-xs text-emerald-400 font-medium">LIVE</span>
+												</div>
+												<span className="text-xs text-white/50">•</span>
+												<span className="text-xs text-white/50">{new Date().toLocaleTimeString()}</span>
+											</div>
+											
+											{/* Meeting Name */}
+											<div className="space-y-1">
+												<h1 className="text-xl font-bold text-white/90 truncate">
+													{meetingName}
+												</h1>
+												<p className="text-sm text-white/50">
+													Trading Room
+												</p>
+											</div>
+
+											{/* Participants Preview */}
+											<div className="flex items-center gap-2 mt-3">
+												<div className="flex -space-x-2">
+													{[...Array(3)].map((_, i) => (
+														<div
+															key={i}
+															className="w-6 h-6 rounded-full border-2 border-gray-900 bg-gray-800 overflow-hidden"
+														>
+															<img
+																src={`https://picsum.photos/seed/trader${i + 1}/200/200`}
+																alt={`Participant ${i + 1}`}
+																className="w-full h-full object-cover"
+															/>
+														</div>
+													))}
+												</div>
+												<span className="text-xs text-white/50">+2 others</span>
+											</div>
+										</div>
+									</div>
+								)}
+
+								{/* Rest of the panel content remains the same */}
+								{isPanelExpanded && (
+									<div className="h-[calc(100vh-64px)] overflow-y-auto">
+										<div className="p-4 space-y-6">
+											<TraderStats trader={mockTrader} />
+											<TradeEntryContainer 
+												currentSymbol={currentSymbol}
+												onNewTrade={(trade: Trade) => {
+													const currentParticipantId = call?.sessionId;
+													if (currentParticipantId) {
+														handleNewTrade(trade, currentParticipantId);
+													}
+												}}
+											/>
+											<TradingDashboard
 												watchlist={watchlist}
 												onSymbolSelect={setCurrentSymbol}
 												onStarClick={handleStarClick}
