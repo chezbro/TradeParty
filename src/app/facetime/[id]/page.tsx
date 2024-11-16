@@ -541,34 +541,32 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => 
 	};
 
 	const handleMouseMove = (e: React.MouseEvent) => {
-		const threshold = window.innerHeight - 100; // 100px from bottom
+		const threshold = window.innerHeight - 150; // Increased from 100 to 150px from bottom
 		
-		// Only auto-hide if controls are at the bottom (default position)
-		const shouldAutoHide = controlsPosition.x === 0 && controlsPosition.y === 0;
-		
-		if (shouldAutoHide && e.clientY > threshold) {
-			setIsControlsVisible(true);
-			// Clear any existing timeout
-			if (hideTimeoutRef.current) {
-				clearTimeout(hideTimeoutRef.current);
+		if (e.clientY > threshold) {
+			// Only show controls if not minimized
+			if (!isMinimized) {
+				setIsControlsVisible(true);
 			}
-			// Set new timeout to hide controls
-			hideTimeoutRef.current = setTimeout(() => {
-				if (!isDragging && !isHovering) {
-					setIsControlsVisible(false);
-				}
-			}, 2000); // 2 second delay
-		} else if (shouldAutoHide) {
-			// Clear any existing timeout
-			if (hideTimeoutRef.current) {
-				clearTimeout(hideTimeoutRef.current);
-			}
-			hideTimeoutRef.current = setTimeout(() => {
-				if (!isDragging && !isHovering) {
-					setIsControlsVisible(false);
-				}
-			}, 2000);
 		}
+	};
+
+	// Add new hover handlers for the controls container
+	const handleControlsMouseEnter = () => {
+		if (!isMinimized) {
+			setIsControlsVisible(true);
+			// Clear any existing timeout when hovering over controls
+			if (hideTimeoutRef.current) {
+				clearTimeout(hideTimeoutRef.current);
+			}
+		}
+	};
+
+	const handleControlsMouseLeave = () => {
+		// Set timeout to hide controls when mouse leaves
+		hideTimeoutRef.current = setTimeout(() => {
+			setIsControlsVisible(false);
+		}, 1000); // Reduced from 2000ms to 1000ms for better responsiveness
 	};
 
 	const handleStarClick = (symbol: string) => {
@@ -618,6 +616,12 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => 
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
 	}, [controlsPosition]);
+
+	// Add function to handle minimize toggle
+	const handleMinimizeToggle = () => {
+		setIsMinimized(!isMinimized);
+		setIsControlsVisible(false);
+	};
 
 	return (
 		<TradesProvider>
@@ -704,95 +708,73 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => 
 						</div>
 					</div>
 
-					{/* Floating Controls */}
-					<Draggable
-						position={controlsPosition}
-						onStart={() => {
-							setIsDragging(true);
-							setIsDetached(true);
-						}}
-						onStop={(e, data) => {
-							setIsDragging(false);
-							setControlsPosition({ x: data.x, y: data.y });
-						}}
-						bounds="parent"
+					{/* Updated Floating Controls */}
+					<div 
+						className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] transition-all duration-300
+							${isControlsVisible && !isMinimized ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+						onMouseEnter={handleControlsMouseEnter}
+						onMouseLeave={handleControlsMouseLeave}
 					>
-						<div 
-							id="floating-controls"
-							className={`fixed z-[100] transition-all duration-300
-								${isControlsVisible || isDragging || isHovering || isDetached 
-								  ? 'opacity-100' 
-								  : 'opacity-0'}
-								${isMinimized ? 'scale-75' : 'scale-100'}`}
-							style={{
-								touchAction: 'none',
-								position: 'fixed',
-								left: '50%',
-								bottom: '24px',
-								
-								transform: isDetached 
-									? `translate(${controlsPosition.x}px, ${controlsPosition.y}px) ${isMinimized ? 'scale(0.75)' : 'scale(1)'}` 
-									: `translate(-50%, 0) ${isMinimized ? 'scale(0.75)' : 'scale(1)'}`,
-							}}
-							onMouseEnter={() => setIsHovering(true)}
-							onMouseLeave={() => setIsHovering(false)}
-						>
-							<div className={`handle flex items-center gap-4 p-4 rounded-2xl
-								bg-gray-900/90 backdrop-blur-md border border-white/10 shadow-xl
+						<div className="flex items-center gap-4 p-4 rounded-2xl
+							bg-gray-900/90 backdrop-blur-md border border-white/10 shadow-xl
 								hover:border-white/20 transition-colors duration-200 relative
-								${isMinimized ? 'opacity-75 hover:opacity-100' : ''}`}
-							>
-								{/* Top Bar with Drag Handle and Minimize Button */}
-								<div className="absolute top-0 left-0 right-0 h-6 flex items-center justify-center">
-									{/* Drag Handle */}
-									<div className="w-12 h-1 bg-white/20 rounded-full cursor-move 
-										hover:bg-white/30 transition-colors duration-200"
-									/>
-									
-									{/* Minimize Button */}
-									<button
-										onClick={(e) => {
-											e.stopPropagation();
-											if (isDetached) {
-												// If detached, clicking minimize returns it to bottom
-												setIsDetached(false);
-												setControlsPosition({ x: 0, y: 0 });
-												setIsMinimized(false);
-											} else {
-												// If at bottom, just toggle minimize state
-												setIsMinimized(!isMinimized);
-											}
-										}}
-										className="absolute right-2 top-1/2 -translate-y-1/2
-											text-white/50 hover:text-white/90 transition-colors
-											duration-200 p-1 rounded-full hover:bg-white/10"
-									>
-										<IoMdRemove size={16} />
-									</button>
+								cursor-default"
+						>
+							{/* Top Bar with Minimize Button */}
+							<div className="absolute top-0 left-0 right-0 h-6 flex items-center justify-between px-2">
+								{/* Added a drag handle indicator */}
+								<div className="flex-1 flex justify-center">
+									<div className="w-12 h-1 bg-white/10 rounded-full" />
 								</div>
-								
-								{/* Controls Content */}
-								<div className={`mt-4 flex items-center gap-4 transition-all duration-300
-									${isMinimized ? 'opacity-75' : 'opacity-100'}`}
+								<button
+									onClick={handleMinimizeToggle}
+									className="text-white/50 hover:text-white/90 transition-colors
+										duration-200 p-1.5 rounded-full hover:bg-white/10"
 								>
-									<CallControls onLeave={handleLeave} />
-									<div className="h-8 w-px bg-white/10" />
-									<select 
-										value={layout}
-										onChange={(e) => setLayout(e.target.value as CallLayoutType)}
-										className="bg-gray-800 text-white/90 rounded-lg px-4 py-2 text-sm
-											border border-white/10 focus:outline-none focus:ring-2 
-											focus:ring-emerald-500/50 transition-all duration-200
-											cursor-pointer"
-									>
-										<option value="trading">Trading View</option>
-										<option value="grid">Grid View</option>
-										<option value="speaker">Speaker View</option>
-									</select>
-								</div>
+									<IoMdRemove size={16} />
+								</button>
+							</div>
+							
+							{/* Controls Content */}
+							<div className="mt-4 flex items-center gap-4">
+								<CallControls onLeave={handleLeave} />
+								<div className="h-8 w-px bg-white/10" />
+								<select 
+									value={layout}
+									onChange={(e) => setLayout(e.target.value as CallLayoutType)}
+									className="bg-gray-800 text-white/90 rounded-lg px-4 py-2 text-sm
+										border border-white/10 focus:outline-none focus:ring-2 
+										focus:ring-emerald-500/50 transition-all duration-200
+										cursor-pointer"
+								>
+									<option value="trading">Trading View</option>
+									<option value="grid">Grid View</option>
+									<option value="speaker">Speaker View</option>
+								</select>
 							</div>
 						</div>
-					</Draggable>
+					</div>
+
+					{/* Updated minimized indicator */}
+					{isMinimized && (
+						<div 
+							className="fixed bottom-2 left-1/2 -translate-x-1/2 z-[100] 
+								cursor-pointer transition-all duration-200
+								hover:opacity-100 hover:translate-y-0
+								opacity-50 translate-y-2"
+							onClick={() => {
+								setIsMinimized(false);
+								setIsControlsVisible(true);
+							}}
+							onMouseEnter={() => setIsControlsVisible(true)}
+						>
+							<div className="px-4 py-2 rounded-full bg-gray-900/90 backdrop-blur-md 
+								border border-white/10 shadow-lg hover:border-white/20
+								transition-all duration-200">
+								<div className="w-8 h-1 bg-white/20 rounded-full" />
+							</div>
+						</div>
+					)}
 				</div>
 
 				{/* Live Chart Indicator */}
