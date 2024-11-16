@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { TraderStats } from "@/components/TraderStats";
 import { TradesFeed } from "@/components/TradesFeed";
 import { TradingDashboard } from "@/components/TradingDashboard";
-import { FaChartLine, FaUsers, FaVideo } from 'react-icons/fa';
+import { FaChartLine, FaUsers, FaVideo, FaStar } from 'react-icons/fa';
 import { TradeEntryPanel } from '@/components/TradeEntryPanel';
 import { TradesProvider } from '@/context/TradesContext';
 import { ResizableBox } from 'react-resizable';
@@ -27,6 +27,7 @@ import { TradeDetailsModal } from '@/components/TradeDetailsModal';
 import { Trade } from '@/types/trade';
 import { FC } from 'react';
 import { ChartViewer } from '@/components/ChartViewer';
+import { StarIcon } from '@radix-ui/react-icons';
 
 type CallLayoutType = "grid" | "speaker-left" | "speaker-right" | "trading";
 
@@ -109,6 +110,8 @@ const MeetingRoom = () => {
 	const [selectedTrader, setSelectedTrader] = useState<string>('');
 	const call = useCall();
 	const [isControlsVisible, setIsControlsVisible] = useState(false);
+	const [currentSymbol, setCurrentSymbol] = useState<string>('AAPL');
+	const [watchlist, setWatchlist] = useState<string[]>(['AAPL']);
 
 	const handleResize = useCallback((e: any, { size }: { size: { width: number } }) => {
 		setPanelWidth(size.width);
@@ -209,6 +212,31 @@ const MeetingRoom = () => {
 										{isPanelExpanded && (
 											<div className="py-4 space-y-4">
 												<TraderStats trader={mockTrader} />
+												<div className="border-t border-gray-700 pt-4">
+													<h3 className="text-white text-lg font-semibold mb-3">Watchlist</h3>
+													<div className="space-y-2">
+														{watchlist.map((symbol) => (
+															<div 
+																key={symbol}
+																className="flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer text-gray-200"
+																onClick={() => setCurrentSymbol(symbol)}
+															>
+																<span>{symbol}</span>
+																<FaStar 
+																	size={20}
+																	className="text-yellow-500"
+																	onClick={(e) => {
+																		e.stopPropagation();
+																		handleStarClick(symbol);
+																	}}
+																/>
+															</div>
+														))}
+														{watchlist.length === 0 && (
+															<p className="text-sm text-gray-400">No starred symbols yet</p>
+														)}
+													</div>
+												</div>
 												<TradingDashboard />
 												<TradesFeed />
 											</div>
@@ -221,10 +249,16 @@ const MeetingRoom = () => {
 							<div className="flex-1 h-full flex flex-col">
 								<div className="flex-1 p-4">
 									<ChartViewer 
+										symbol={currentSymbol}
+										onSymbolChange={(newSymbol: string) => {
+											console.log('Symbol changed to:', newSymbol);
+											setCurrentSymbol(newSymbol);
+										}}
 										onShare={(symbol) => {
-											// Here you can implement sharing the chart with other participants
 											console.log(`Sharing chart: ${symbol}`);
-										}} 
+										}}
+										onToggleFavorite={handleStarClick}
+										isFavorited={watchlist.includes(currentSymbol)}
 									/>
 								</div>
 								<div className="h-1/2">
@@ -265,6 +299,14 @@ const MeetingRoom = () => {
 		} else {
 			setIsControlsVisible(false);
 		}
+	};
+
+	const handleStarClick = (symbol: string) => {
+		setWatchlist(prev => 
+			prev.includes(symbol) 
+				? prev.filter(item => item !== symbol)
+				: [...prev, symbol]
+		);
 	};
 
 	return (

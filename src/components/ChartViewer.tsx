@@ -1,19 +1,28 @@
 import { FC, useState } from 'react';
 import { TradingViewChart } from './TradingViewChart';
-import { FaSearch, FaHistory } from 'react-icons/fa';
+import { FaSearch, FaHistory, FaStar } from 'react-icons/fa';
 
 interface ChartViewerProps {
-  onShare?: (symbol: string) => void;
+  onShare: (symbol: string) => void;
+  onSymbolChange: (symbol: string) => void;
+  symbol: string;
+  onToggleFavorite?: (symbol: string) => void;
+  isFavorited?: boolean;
 }
 
-export const ChartViewer: FC<ChartViewerProps> = ({ onShare }) => {
-  const [symbol, setSymbol] = useState('NASDAQ:AAPL');
+export const ChartViewer: FC<ChartViewerProps> = ({ 
+  onShare, 
+  onSymbolChange,
+  symbol,
+  onToggleFavorite,
+  isFavorited 
+}) => {
+  const [searchInput, setSearchInput] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [recentSymbols, setRecentSymbols] = useState<string[]>([]);
-  const [searchInput, setSearchInput] = useState('');
 
   const handleSymbolChange = (newSymbol: string) => {
-    setSymbol(newSymbol);
+    onSymbolChange(newSymbol);
     if (!recentSymbols.includes(newSymbol)) {
       setRecentSymbols(prev => [newSymbol, ...prev].slice(0, 5));
     }
@@ -23,7 +32,20 @@ export const ChartViewer: FC<ChartViewerProps> = ({ onShare }) => {
   return (
     <div className="bg-gray-800/50 backdrop-blur rounded-xl p-6 border border-gray-700/50">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl text-white font-semibold">Chart Viewer</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl text-white font-semibold">{symbol}</h2>
+          {onToggleFavorite && (
+            <button
+              onClick={() => onToggleFavorite(symbol)}
+              className="p-1 hover:bg-gray-700 rounded transition-colors"
+            >
+              <FaStar 
+                size={20} 
+                className={isFavorited ? "text-yellow-500" : "text-gray-400 hover:text-yellow-500"} 
+              />
+            </button>
+          )}
+        </div>
         <div className="flex gap-4 items-center">
           <div className="relative">
             <input
