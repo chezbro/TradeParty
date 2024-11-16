@@ -66,6 +66,79 @@ interface MeetingRoomProps {
 	socket: Socket | null;
 }
 
+// Add this near the top of the file with other interfaces
+interface MockParticipant extends StreamVideoParticipant {
+	name: string;
+	userId: string;
+	sessionId: string;
+	image: string;
+	activeTrades: Trade[];
+}
+
+// Add this before the MeetingRoom component
+const mockParticipants: MockParticipant[] = [
+	{
+		name: "Sarah Chen",
+		userId: "trader_1",
+		sessionId: "session_1",
+		image: "https://picsum.photos/seed/trader1/200/200",
+		activeTrades: [
+			{
+				id: "t1",
+				symbol: "AAPL",
+				type: "LONG",
+				entry: 175.50,
+				target: 180.00,
+				stopLoss: 173.00,
+				timestamp: new Date().toISOString(),
+				status: "OPEN",
+				profitLoss: 250.75,
+				pnl: 250.75
+			}
+		]
+	},
+	{
+		name: "Marcus Rodriguez",
+		userId: "trader_2",
+		sessionId: "session_2",
+		image: "https://picsum.photos/seed/trader2/200/200",
+		activeTrades: [
+			{
+				id: "t2",
+				symbol: "TSLA",
+				type: "SHORT",
+				entry: 242.30,
+				target: 235.00,
+				stopLoss: 245.00,
+				timestamp: new Date().toISOString(),
+				status: "OPEN",
+				profitLoss: -120.50,
+				pnl: -120.50
+			}
+		]
+	},
+	{
+		name: "Emma Thompson",
+		userId: "trader_3",
+		sessionId: "session_3",
+		image: "https://picsum.photos/seed/trader3/200/200",
+		activeTrades: [
+			{
+				id: "t3",
+				symbol: "META",
+				type: "LONG",
+				entry: 480.25,
+				target: 495.00,
+				stopLoss: 475.00,
+				timestamp: new Date().toISOString(),
+				status: "OPEN",
+				profitLoss: 875.25,
+				pnl: 875.25
+			}
+		]
+	}
+];
+
 export default function FaceTimePage() {
 	const { id } = useParams<{ id: string }>();
 	const { isLoaded } = useUser();
@@ -181,6 +254,7 @@ export default function FaceTimePage() {
 
 const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => {
 	const { user } = useUser();
+	const router = useRouter();
 	const [layout, setLayout] = useState<CallLayoutType>("trading");
 	const [isPanelExpanded, setIsPanelExpanded] = useState(true);
 	const [panelWidth, setPanelWidth] = useState(300);
@@ -209,7 +283,9 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => 
 	};
 
 	const handleLeave = () => {
-		confirm("Are you sure you want to leave the trading session?") && router.push("/");
+		if (confirm("Are you sure you want to leave the trading session?")) {
+			router.push("/");
+		}
 	};
 
 	const handleTradeClick = (trade: any, traderName: string) => {
@@ -222,29 +298,46 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => 
 		mockTrades.tradesByParticipant.set(participantId, [...existingTrades, trade]);
 	};
 
+	// Update the ParticipantView component
 	const ParticipantView = ({ participant }: { participant: StreamVideoParticipant }) => {
-		const participantName = participant?.name || participant?.userId || 'Trader';
-		const sessionId = participant?.sessionId || '';
+		// Get a random mock participant for demo purposes
+		const mockParticipant = mockParticipants[Math.floor(Math.random() * mockParticipants.length)] || {
+			name: participant?.name || participant?.userId || 'Trader',
+			sessionId: participant?.sessionId || '',
+			image: "https://picsum.photos/seed/default/200/200",
+			activeTrades: []
+		};
 		
 		return (
 			<div className="relative rounded-xl overflow-hidden bg-gray-900/50 backdrop-blur-sm 
 				border border-gray-800/50 transition-all duration-300 hover:border-gray-700/50
 				hover:shadow-lg hover:shadow-emerald-500/5">
-				{/* Video content rendered by Stream SDK */}
+				{/* Placeholder for video feed */}
+				<img 
+					src={mockParticipant.image} 
+					alt={mockParticipant.name}
+					className="w-full h-full object-cover"
+				/>
+				
 				<div className="absolute bottom-0 left-0 right-0">
 					<div className="p-3 bg-gradient-to-t from-gray-900/90 to-transparent">
 						<p className="text-gray-200 text-sm font-medium tracking-wide">
-							{participantName}
+							{mockParticipant.name}
 						</p>
 					</div>
 					<ActiveTradeOverlay 
-						trades={mockTrades.tradesByParticipant.get(sessionId) || []}
-						onTradeClick={(trade) => handleTradeClick(trade, participantName)}
+						trades={mockParticipant.activeTrades}
+						onTradeClick={(trade) => handleTradeClick(trade, mockParticipant.name)}
 					/>
 				</div>
 			</div>
 		);
 	};
+
+	// Update the mockTrades object to include the mock participants' trades
+	mockParticipants.forEach(participant => {
+		mockTrades.tradesByParticipant.set(participant.sessionId, participant.activeTrades);
+	});
 
 	const CallLayout = () => {
 		switch (layout) {

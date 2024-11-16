@@ -47,7 +47,7 @@ export const TradeDetailsModal: FC<TradeDetailsModalProps> = ({ trade, onClose, 
                         <span className={`flex items-center gap-2 font-medium ${
                             trade.direction === 'long' ? 'text-green-400' : 'text-red-400'
                         }`}>
-                            {trade.direction.toUpperCase()}
+                            {trade.direction?.toUpperCase() || 'N/A'}
                             {trade.direction === 'long' ? <FaArrowUp /> : <FaArrowDown />}
                         </span>
                     </div>

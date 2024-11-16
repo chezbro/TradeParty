@@ -1,10 +1,12 @@
 export interface Trade {
     id: string;
     symbol: string;
-    direction: 'long' | 'short';
-    entryPrice: number;
-    currentPrice: number;
-    profitLoss: number;
+    type: "LONG" | "SHORT";
+    entry: number;
+    target: number;
+    stopLoss: number;
     timestamp: string;
-    size: number;
+    status: "OPEN" | "CLOSED";
+    profitLoss: number;
+    pnl?: number;
 } 
