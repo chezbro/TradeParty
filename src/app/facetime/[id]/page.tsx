@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { TraderStats } from "@/components/TraderStats";
 import { TradesFeed } from "@/components/TradesFeed";
 import { TradingDashboard } from "@/components/TradingDashboard";
-import { FaChartLine, FaUsers, FaVideo, FaStar } from 'react-icons/fa';
+import { FaChartLine, FaUsers, FaVideo, FaStar, FaChevronDown, FaChevronRight } from 'react-icons/fa';
 import { TradeEntryPanel } from '@/components/TradeEntryPanel';
 import { TradesProvider } from '@/context/TradesContext';
 import { ResizableBox } from 'react-resizable';
@@ -30,6 +30,7 @@ import { ChartViewer } from '@/components/ChartViewer';
 import { StarIcon } from '@radix-ui/react-icons';
 import { io, Socket } from "socket.io-client";
 import Draggable from 'react-draggable';
+import { WatchlistContainer } from '@/components/WatchlistContainer';
 
 type CallLayoutType = "grid" | "speaker-left" | "speaker-right" | "trading";
 
@@ -272,6 +273,7 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => 
 	const hideTimeoutRef = useRef<NodeJS.Timeout>();
 	const [isMinimized, setIsMinimized] = useState(false);
 	const [isDetached, setIsDetached] = useState(false);
+	const [isWatchlistExpanded, setIsWatchlistExpanded] = useState(false);
 
 	const handleResize = useCallback((e: any, { size }: { size: { width: number } }) => {
 		setPanelWidth(size.width);
@@ -300,7 +302,6 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => 
 
 	// Update the ParticipantView component
 	const ParticipantView = ({ participant }: { participant: StreamVideoParticipant }) => {
-		// Get a random mock participant for demo purposes
 		const mockParticipant = mockParticipants[Math.floor(Math.random() * mockParticipants.length)] || {
 			name: participant?.name || participant?.userId || 'Trader',
 			sessionId: participant?.sessionId || '',
@@ -312,23 +313,62 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => 
 			<div className="relative rounded-xl overflow-hidden bg-gray-900/50 backdrop-blur-sm 
 				border border-gray-800/50 transition-all duration-300 hover:border-gray-700/50
 				hover:shadow-lg hover:shadow-emerald-500/5">
-				{/* Placeholder for video feed */}
+				{/* Participant Video/Image */}
 				<img 
 					src={mockParticipant.image} 
 					alt={mockParticipant.name}
 					className="w-full h-full object-cover"
 				/>
 				
-				<div className="absolute bottom-0 left-0 right-0">
-					<div className="p-3 bg-gradient-to-t from-gray-900/90 to-transparent">
-						<p className="text-gray-200 text-sm font-medium tracking-wide">
-							{mockParticipant.name}
-						</p>
+				{/* Participant Info & Trades Overlay */}
+				<div className="absolute inset-0 flex flex-col justify-end">
+					{/* Active Trades Section */}
+					<div className="p-3 space-y-2 bg-gradient-to-t from-gray-900/95 via-gray-900/80 to-transparent">
+						{/* Trader Name */}
+						<div className="flex items-center justify-between">
+							<p className="text-white font-medium">{mockParticipant.name}</p>
+							<span className="text-xs text-emerald-400">
+								{mockParticipant.activeTrades.length} Active {mockParticipant.activeTrades.length === 1 ? 'Trade' : 'Trades'}
+							</span>
+						</div>
+						
+						{/* Active Trades List */}
+						<div className="space-y-1.5">
+							{mockParticipant.activeTrades.map((trade) => (
+								<div
+									key={trade.id}
+									onClick={() => handleTradeClick(trade, mockParticipant.name)}
+									className="group flex items-center gap-2 p-1.5 rounded-lg 
+										bg-white/5 hover:bg-white/10 cursor-pointer 
+										transition-all duration-200 border border-white/10"
+								>
+									{/* Symbol & Type */}
+									<div className="flex items-center gap-2 flex-1">
+										<span className={`text-xs px-1.5 py-0.5 rounded font-medium
+											${trade.type === 'LONG' 
+												? 'bg-green-500/20 text-green-400' 
+												: 'bg-red-500/20 text-red-400'}`}>
+											{trade.type}
+										</span>
+										<span className="text-white/90 font-medium">{trade.symbol}</span>
+									</div>
+									
+									{/* PnL */}
+									<div className={`text-sm font-medium
+										${trade.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+										{trade.pnl >= 0 ? '+' : ''}{trade.pnl.toFixed(2)}
+									</div>
+									
+									{/* View Details Icon */}
+									<div className="opacity-0 group-hover:opacity-100 transition-opacity">
+										<svg className="w-4 h-4 text-white/50" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+										</svg>
+									</div>
+								</div>
+							))}
+						</div>
 					</div>
-					<ActiveTradeOverlay 
-						trades={mockParticipant.activeTrades}
-						onTradeClick={(trade) => handleTradeClick(trade, mockParticipant.name)}
-					/>
 				</div>
 			</div>
 		);
@@ -366,60 +406,41 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => 
 								maxConstraints={[600, Infinity]}
 								axis="x"
 								onResize={handleResize}
-								className={`bg-gray-800 border-r border-gray-700 transition-all duration-300 ${
-									isPanelExpanded ? '' : 'hover:bg-gray-750'
-								}`}
+								className="h-screen transition-all duration-300 ease-in-out"
 							>
-								<div className="h-full relative">
+								<div className="h-full relative bg-gray-900/40 backdrop-blur-md border-r border-white/5">
 									{/* Toggle Button */}
 									<button
 										onClick={togglePanel}
 										className="absolute -right-3 top-1/2 transform -translate-y-1/2 z-10
-												bg-gray-700 rounded-full p-1 text-gray-300 hover:bg-gray-600
-												shadow-lg border border-gray-600"
+											bg-gray-800 rounded-full p-1.5 text-gray-300 hover:bg-gray-700
+											shadow-lg border border-white/10 transition-all duration-200
+											hover:scale-110 hover:text-emerald-400"
 									>
 										{isPanelExpanded ? <IoMdContract size={16} /> : <IoMdExpand size={16} />}
 									</button>
 
 									{/* Panel Content */}
-									<div className={`h-full overflow-hidden ${isPanelExpanded ? 'px-4' : 'px-2'}`}>
-										<div className="py-4 border-b border-gray-700">
-											<h2 className="text-lg font-semibold text-white flex items-center gap-2">
-												<FaChartLine className="text-green-400" />
+									<div className={`h-full ${isPanelExpanded ? 'w-full' : 'w-[60px]'}`}>
+										<div className="p-4 border-b border-white/5">
+											<h2 className={`font-medium flex items-center gap-3 text-white/90
+												${isPanelExpanded ? 'text-lg' : 'justify-center'}`}>
+												<FaChartLine className="text-emerald-400 text-xl" />
 												{isPanelExpanded && "Trading Dashboard"}
 											</h2>
 										</div>
 										
 										{isPanelExpanded && (
-											<div className="py-4 space-y-4">
-												<TraderStats trader={mockTrader} />
-												<div className="border-t border-gray-700 pt-4">
-													<h3 className="text-white text-lg font-semibold mb-3">Watchlist</h3>
-													<div className="space-y-2">
-														{watchlist.map((symbol) => (
-															<div 
-																key={symbol}
-																className="flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer text-gray-200"
-																onClick={() => setCurrentSymbol(symbol)}
-															>
-																<span>{symbol}</span>
-																<FaStar 
-																	size={20}
-																	className="text-yellow-500"
-																	onClick={(e) => {
-																		e.stopPropagation();
-																		handleStarClick(symbol);
-																	}}
-																/>
-															</div>
-														))}
-														{watchlist.length === 0 && (
-															<p className="text-sm text-gray-400">No starred symbols yet</p>
-														)}
-													</div>
+											<div className="h-[calc(100vh-64px)] overflow-y-auto">
+												<div className="p-4 space-y-6">
+													<TraderStats trader={mockTrader} />
+													<TradingDashboard 
+														watchlist={watchlist}
+														onSymbolSelect={setCurrentSymbol}
+														onStarClick={handleStarClick}
+													/>
+													<TradesFeed />
 												</div>
-												<TradingDashboard />
-												<TradesFeed />
 											</div>
 										)}
 									</div>
@@ -641,36 +662,12 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => 
 									<div className="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-64px)]">
 										<TraderStats trader={mockTrader} />
 										
-										<div className="space-y-3">
-											<h3 className="text-white/80 text-sm font-medium tracking-wide flex items-center gap-2">
-												<StarIcon className="w-4 h-4 text-emerald-400" />
-												Watchlist
-											</h3>
-											<div className="space-y-1">
-												{watchlist.map((symbol) => (
-													<div 
-														key={symbol}
-														className="flex items-center justify-between p-2.5 
-															rounded-lg cursor-pointer text-white/70 
-															hover:bg-white/5 transition-colors duration-200"
-														onClick={() => setCurrentSymbol(symbol)}
-													>
-														<span className="text-sm font-medium">{symbol}</span>
-														<StarIcon 
-															className="w-4 h-4 text-emerald-400/70 hover:text-emerald-300 
-																transition-colors duration-200"
-															onClick={(e) => {
-																e.stopPropagation();
-																handleStarClick(symbol);
-															}}
-														/>
-													</div>
-												))}
-											</div>
-										</div>
-
 										<div className="space-y-4">
-											<TradingDashboard />
+											<TradingDashboard 
+												watchlist={watchlist}
+												onSymbolSelect={setCurrentSymbol}
+												onStarClick={handleStarClick}
+											/>
 											<TradesFeed />
 										</div>
 									</div>
@@ -722,7 +719,7 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => 
 					>
 						<div 
 							id="floating-controls"
-							className={`fixed z-50 transition-all duration-300
+							className={`fixed z-[100] transition-all duration-300
 								${isControlsVisible || isDragging || isHovering || isDetached 
 								  ? 'opacity-100' 
 								  : 'opacity-0'}
@@ -732,6 +729,7 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket }: MeetingRoomProps) => 
 								position: 'fixed',
 								left: '50%',
 								bottom: '24px',
+								
 								transform: isDetached 
 									? `translate(${controlsPosition.x}px, ${controlsPosition.y}px) ${isMinimized ? 'scale(0.75)' : 'scale(1)'}` 
 									: `translate(-50%, 0) ${isMinimized ? 'scale(0.75)' : 'scale(1)'}`,

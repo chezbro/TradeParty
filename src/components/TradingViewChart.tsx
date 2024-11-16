@@ -16,6 +16,7 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
   onShare
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const widgetRef = useRef<any>(null);
   const [height, setHeight] = useState(500);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -51,7 +52,7 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
     script.async = true;
     script.onload = () => {
       if (typeof TradingView !== 'undefined') {
-        new TradingView.widget({
+        const widget = new TradingView.widget({
           autosize: true,
           symbol: symbol,
           interval: "D",
@@ -63,8 +64,20 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
           enable_publishing: false,
           hide_side_toolbar: false,
           allow_symbol_change: true,
-          container_id: "tradingview_chart"
+          container_id: "tradingview_chart",
+          
+          charts_storage_url: "https://saveload.tradingview.com",
+          charts_storage_api_version: "1.1",
+          client_id: "tradingview.com",
+          user_id: "public_user_id",
+          
+          drawings_access: { 
+            type: "localStorage", 
+            tools: [{ name: "all", grayed: false }] 
+          }
         });
+
+        widgetRef.current = widget;
       }
     };
     containerRef.current.appendChild(script);
@@ -76,6 +89,7 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
           scriptElement.remove();
         }
       }
+      widgetRef.current = null;
     };
   }, [symbol]);
 
