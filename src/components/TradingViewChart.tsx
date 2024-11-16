@@ -1,5 +1,6 @@
-import { FC, useEffect, useRef } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { FaExpand, FaCompress, FaShare } from 'react-icons/fa';
+import { FaGripLines } from 'react-icons/fa6';
 
 interface TradingViewChartProps {
   symbol: string;
@@ -15,6 +16,32 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
   onShare
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(500);
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging && containerRef.current) {
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const newHeight = Math.max(200, Math.min(1000, e.clientY - containerRect.top));
+        setHeight(newHeight);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -53,8 +80,12 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
   }, [symbol]);
 
   return (
-    <div className={`relative bg-gray-900 rounded-lg overflow-hidden border border-gray-700
-      ${isFullscreen ? 'fixed inset-0 z-50' : 'h-[400px]'}`}>
+    <div 
+      ref={containerRef}
+      style={{ height: isFullscreen ? '100%' : `${height}px` }}
+      className={`relative bg-gray-900 rounded-lg overflow-hidden border border-gray-700
+        ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}
+    >
       <div className="absolute top-4 right-4 flex gap-2 z-10">
         {onShare && (
           <button
@@ -76,6 +107,15 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
         id="tradingview_chart"
         className="w-full h-full"
       />
+      
+      {!isFullscreen && (
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-6 flex items-center justify-center cursor-ns-resize hover:bg-gray-800/50 transition-colors"
+          onMouseDown={() => setIsDragging(true)}
+        >
+          <FaGripLines className="text-gray-400" />
+        </div>
+      )}
     </div>
   );
 }; 
