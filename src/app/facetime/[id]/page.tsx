@@ -7,7 +7,8 @@ import {
 	PaginatedGridLayout,
 	SpeakerLayout,
 	CallControls,
-	StreamVideoParticipant
+	StreamVideoParticipant,
+	useCall
 } from "@stream-io/video-react-sdk";
 import { useParams } from "next/navigation";
 import {  useEffect, useState, useCallback, useRef } from "react";
@@ -25,6 +26,7 @@ import { ActiveTradeOverlay } from '@/components/ActiveTradeOverlay';
 import { TradeDetailsModal } from '@/components/TradeDetailsModal';
 import { Trade } from '@/types/trade';
 import { FC } from 'react';
+import { ChartViewer } from '@/components/ChartViewer';
 
 type CallLayoutType = "grid" | "speaker-left" | "speaker-right" | "trading";
 
@@ -103,8 +105,10 @@ const MeetingRoom = () => {
 	const [isPanelExpanded, setIsPanelExpanded] = useState(true);
 	const [panelWidth, setPanelWidth] = useState(300);
 	const router = useRouter();
-	const [selectedTrade, setSelectedTrade] = useState<null | any>(null);
+	const [selectedTrade, setSelectedTrade] = useState<null | Trade>(null);
 	const [selectedTrader, setSelectedTrader] = useState<string>('');
+	const call = useCall();
+	const [isControlsVisible, setIsControlsVisible] = useState(false);
 
 	const handleResize = useCallback((e: any, { size }: { size: { width: number } }) => {
 		setPanelWidth(size.width);
@@ -129,7 +133,7 @@ const MeetingRoom = () => {
 		mockTrades.tradesByParticipant.set(participantId, [...existingTrades, trade]);
 	};
 
-	const ParticipantView: FC<{ participant: StreamVideoParticipant }> = ({ participant }) => {
+	const ParticipantView = ({ participant }: { participant: StreamVideoParticipant }) => {
 		const participantName = participant?.name || participant?.userId || 'Trader';
 		const sessionId = participant?.sessionId || '';
 		
@@ -162,7 +166,7 @@ const MeetingRoom = () => {
 									<FaVideo className="text-gray-400 text-4xl" />
 								</div>
 							)}
-							ParticipantViewUI={ParticipantView}
+							ParticipantViewUI={(props) => <ParticipantView {...props} />}
 						/>
 					</div>
 				);
@@ -214,18 +218,28 @@ const MeetingRoom = () => {
 							</ResizableBox>
 
 							{/* Main Content Area */}
-							<div className="flex-1 h-full">
-								<div className="grid grid-cols-3 gap-4 p-4 h-full">
-									<SpeakerLayout
-										participantsBarPosition="right"
-										ParticipantViewUI={ParticipantView}
-										ParticipantViewUISpotlight={ParticipantView}
+							<div className="flex-1 h-full flex flex-col">
+								<div className="flex-1 p-4">
+									<ChartViewer 
+										onShare={(symbol) => {
+											// Here you can implement sharing the chart with other participants
+											console.log(`Sharing chart: ${symbol}`);
+										}} 
 									/>
+								</div>
+								<div className="h-1/2">
+									<div className="grid grid-cols-3 gap-4 p-4 h-full">
+										<SpeakerLayout
+											participantsBarPosition="right"
+											ParticipantViewUIBar={(props) => <ParticipantView {...props} />}
+											ParticipantViewUISpotlight={(props) => <ParticipantView {...props} />}
+										/>
+									</div>
 								</div>
 							</div>
 
 							{/* Trade Entry Panel */}
-							<TradeEntryPanel onNewTrade={(trade) => {
+							<TradeEntryPanel onNewTrade={(trade: Trade) => {
 								const currentParticipantId = call?.sessionId;
 								if (currentParticipantId) {
 									handleNewTrade(trade, currentParticipantId);
@@ -235,17 +249,38 @@ const MeetingRoom = () => {
 					</TradesProvider>
 				);
 			default:
-				return <SpeakerLayout participantsBarPosition='right' ParticipantViewUI={ParticipantView} />;
+				return (
+					<SpeakerLayout 
+						participantsBarPosition='right' 
+						ParticipantViewUIBar={(props) => <ParticipantView {...props} />}
+					/>
+				);
+		}
+	};
+
+	const handleMouseMove = (e: React.MouseEvent) => {
+		const threshold = window.innerHeight - 100; // 100px from bottom
+		if (e.clientY > threshold) {
+			setIsControlsVisible(true);
+		} else {
+			setIsControlsVisible(false);
 		}
 	};
 
 	return (
-		<section className="relative min-h-screen w-full overflow-hidden">
+		<section 
+			className="relative min-h-screen w-full overflow-hidden"
+			onMouseMove={handleMouseMove}
+		>
 			<div className="relative flex size-full items-center justify-center">
 				<div className="flex size-full items-center">
 					<CallLayout />
 				</div>
-				<div className="fixed bottom-0 flex w-full items-center justify-center gap-5 p-4 bg-gray-900/95 backdrop-blur border-t border-gray-800">
+				<div className={`fixed bottom-0 flex w-full items-center justify-center gap-5 p-4 bg-gray-900/95 backdrop-blur border-t border-gray-800 transition-all duration-300 ${
+					isControlsVisible 
+						? 'translate-y-0 opacity-100' 
+						: 'translate-y-full opacity-0'
+				}`}>
 					<CallControls onLeave={handleLeave} />
 					<select 
 						value={layout}
