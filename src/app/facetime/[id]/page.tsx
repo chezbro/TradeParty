@@ -798,10 +798,79 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 						<div className="h-1/3 p-4">
 							<div className="h-full rounded-xl overflow-hidden border border-white/5 
 								bg-gray-900/20 backdrop-blur-sm">
-								<SpeakerLayout
-									participantsBarPosition="right"
-									ParticipantViewUIBar={(props) => <ParticipantView participant={props.participant} />}
-									ParticipantViewUISpotlight={(props) => <ParticipantView participant={props.participant} />}
+								<PaginatedGridLayout
+									groupSize={6}
+									containerClassName="h-full w-full p-4"
+									participantsClassName="grid grid-cols-2 gap-4 h-full"
+									ParticipantViewUI={({ participant }) => (
+										<div className="relative h-full w-full rounded-lg overflow-hidden 
+											bg-gray-900/50 backdrop-blur-sm border border-white/10 
+											transition-all duration-300 hover:border-emerald-500/30 
+											hover:shadow-lg hover:shadow-emerald-500/10">
+											{/* Video Container */}
+											<div className="absolute inset-0 bg-black/20">
+												<video
+													className="h-full w-full object-cover"
+													autoPlay
+													muted
+													playsInline
+												/>
+											</div>
+
+											{/* Overlay with Participant Info */}
+											<div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent">
+												<div className="absolute bottom-0 left-0 right-0 p-3 space-y-2">
+													{/* Participant Name & Status */}
+													<div className="flex items-center justify-between">
+														<div className="flex items-center gap-2">
+															<div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+															<span className="text-sm font-medium text-white">
+																{ 'Trader'}
+															</span>
+														</div>
+														<span className="text-xs text-emerald-400 bg-emerald-500/10 
+															px-2 py-0.5 rounded-full">
+															Live
+														</span>
+													</div>
+
+													{/* Trading Status */}
+													<div className="flex items-center gap-2 text-xs text-white/70">
+														<span className="bg-white/10 px-2 py-0.5 rounded-full">
+															3 Active Trades
+														</span>
+														<span className="text-emerald-400">
+															+$1,234.56
+														</span>
+													</div>
+												</div>
+											</div>
+
+											{/* Audio Indicator */}
+											<div className="absolute top-3 right-3">
+												<div className="p-1.5 rounded-full bg-gray-900/80 backdrop-blur-sm 
+													border border-white/10">
+													<svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" 
+														stroke="currentColor" strokeWidth="2">
+														<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+														<path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5" />
+														<path d="M12 19v3" />
+													</svg>
+												</div>
+											</div>
+										</div>
+									)}
+									VideoPlaceholder={() => (
+										<div className="flex items-center justify-center h-full rounded-lg 
+											bg-gray-800/50 border border-white/5">
+											<div className="flex flex-col items-center gap-2">
+												<FaVideo className="text-gray-400 text-3xl" />
+												<span className="text-sm text-gray-400">
+													Waiting for participant...
+												</span>
+											</div>
+										</div>
+									)}
 								/>
 							</div>
 						</div>

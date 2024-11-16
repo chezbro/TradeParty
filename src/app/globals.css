@@ -199,3 +199,17 @@ body {
 .share-chart-btn:hover {
   background: #0056b3;
 }
+
+/* Override Stream Video SDK grid layout styles */
+.str-video__paginated-grid-layout .str-video__paginated-grid-layout__group {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 1rem !important;
+  flex-wrap: nowrap !important;
+  width: 100% !important;
+}
+
+.str-video__paginated-grid-layout {
+  width: 100% !important;
+  height: 100% !important;
+}
