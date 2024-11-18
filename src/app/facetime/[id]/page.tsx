@@ -960,31 +960,18 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 						minConstraints={[60, Infinity]}
 						maxConstraints={[600, Infinity]}
 						axis="x"
-						onResize={(e, { size }) => {
-							const panel = document.getElementById('right-video-panel');
-							if (panel) panel.style.transition = 'none';
-							setVideosPanelWidth(size.width);
-						}}
-						onResizeStop={() => {
-							const panel = document.getElementById('right-video-panel');
-							if (panel) panel.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-						}}
+						onResize={(e, { size }) => setVideosPanelWidth(size.width)}
 						resizeHandles={['w']}
-						className="right-panel-resizable"
-					>
-						<div 
-							id="right-video-panel"
-							className={`h-full relative bg-gray-900/40 backdrop-blur-md border-l border-white/5
-								transition-all duration-300 ease-in-out ${!isVideosPanelExpanded ? 'w-[60px]' : ''}`}
-							style={{ width: isVideosPanelExpanded ? videosPanelWidth : 60 }}
+						className={`transition-all duration-300 ease-in-out ${isVideosPanelExpanded ? '' : 'w-[60px]'}`}
 						>
-							{/* Move toggle button slightly to the left */}
+						<div className="h-full relative bg-gray-900/40 backdrop-blur-md border-l border-white/5">
+							{/* Toggle Button */}
 							<button
 								onClick={() => {
 									setIsVideosPanelExpanded(!isVideosPanelExpanded);
 									setVideosPanelWidth(isVideosPanelExpanded ? 60 : 300);
 								}}
-								className="absolute -left-8 top-1/2 transform -translate-y-1/2 z-50
+								className="absolute -left-3 top-1/2 transform -translate-y-1/2 z-10
 									bg-gray-800 rounded-full p-1.5 text-gray-300 hover:bg-gray-700
 									shadow-lg border border-white/10 transition-all duration-200
 									hover:scale-110 hover:text-emerald-400"
@@ -992,16 +979,18 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 								{isVideosPanelExpanded ? <IoMdContract size={16} /> : <IoMdExpand size={16} />}
 							</button>
 
-							{/* Video Grid - Only show when expanded */}
-							<div className={`h-full transition-all duration-300 ease-in-out
-								${isVideosPanelExpanded ? 'opacity-100 p-4' : 'opacity-0 p-0 w-0 overflow-hidden'}`}>
+							{/* Video Grid */}
+							<div className="h-full p-2">
 								<PaginatedGridLayout
-									groupSize={4}
+									groupSize={3}
+									containerClassName="h-full w-full"
+									participantsClassName="grid grid-cols-1 gap-6"
 									ParticipantViewUI={({ participant }) => (
-										<div className="relative aspect-video w-full rounded-lg overflow-hidden 
+										<div className="relative w-full h-[200px] rounded-lg overflow-hidden 
 											bg-gray-900/50 backdrop-blur-sm border border-white/10 
 											transition-all duration-300 hover:border-emerald-500/30 
-											hover:shadow-lg hover:shadow-emerald-500/10">
+											hover:shadow-lg hover:shadow-emerald-500/10 mb-2"
+										>
 											{/* Video Container */}
 											<div className="absolute inset-0 bg-black/20">
 												{participant?.videoTrack ? (
@@ -1012,7 +1001,6 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 														playsInline
 													/>
 												) : (
-													// Use Clerk avatar as fallback when no video
 													<img 
 														src={user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
 														alt={participant?.name || "Participant"}
@@ -1021,40 +1009,40 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 												)}
 											</div>
 
-											{/* Rest of the overlay content remains the same */}
+											{/* Overlay content - made more compact */}
 											<div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent">
-												<div className="absolute bottom-0 left-0 right-0 p-3 space-y-2">
+												<div className="absolute bottom-0 left-0 right-0 p-2 space-y-1">
 													{/* Participant Name & Status */}
 													<div className="flex items-center justify-between">
-														<div className="flex items-center gap-2">
-															<div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-															<span className="text-sm font-medium text-white">
+														<div className="flex items-center gap-1.5">
+															<div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+															<span className="text-sm font-medium text-white truncate">
 																{participant?.name || user?.firstName || 'Trader'}
 															</span>
 														</div>
-														<span className="text-xs text-emerald-400 bg-emerald-500/10 
-															px-2 py-0.5 rounded-full">
+														<span className="text-[10px] text-emerald-400 bg-emerald-500/10 
+															px-1.5 py-0.5 rounded-full">
 															Live
 														</span>
 													</div>
 
-													{/* Trading Status */}
-													<div className="flex items-center gap-2 text-xs text-white/70">
-														<span className="bg-white/10 px-2 py-0.5 rounded-full">
-															3 Active Trades
+													{/* Trading Status - more compact */}
+													<div className="flex items-center gap-1.5 text-[10px] text-white/70">
+														<span className="bg-white/10 px-1.5 py-0.5 rounded-full">
+															3 Active
 														</span>
 														<span className="text-emerald-400">
-															+$1,234.56
+															+$1,234
 														</span>
 													</div>
 												</div>
 											</div>
 
-											{/* Audio Indicator */}
-											<div className="absolute top-3 right-3">
-												<div className="p-1.5 rounded-full bg-gray-900/80 backdrop-blur-sm 
+											{/* Audio Indicator - made smaller */}
+											<div className="absolute top-2 right-2">
+												<div className="p-1 rounded-full bg-gray-900/80 backdrop-blur-sm 
 													border border-white/10">
-													<svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" 
+													<svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" 
 														stroke="currentColor" strokeWidth="2">
 														<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
 														<path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5" />
@@ -1065,12 +1053,12 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 										</div>
 									)}
 									VideoPlaceholder={() => (
-										<div className="flex items-center justify-center aspect-video w-full rounded-lg 
-											bg-gray-800/50 border border-white/5">
-											<div className="flex flex-col items-center gap-2">
-												<FaVideo className="text-gray-400 text-3xl" />
-												<span className="text-sm text-gray-400">
-													Waiting for participant...
+										<div className="flex items-center justify-center w-full h-[200px] rounded-lg 
+											bg-gray-800/50 border border-white/5 mb-2">
+											<div className="flex flex-col items-center gap-1.5">
+												<FaVideo className="text-gray-400 text-2xl" />
+												<span className="text-xs text-gray-400">
+													Waiting...
 												</span>
 											</div>
 										</div>

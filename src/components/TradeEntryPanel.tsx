@@ -4,6 +4,7 @@ import { TradeSuccessAnimation } from './TradeSuccessAnimation';
 import Confetti from 'react-confetti';
 import { useUser } from '@clerk/nextjs';
 import { useTrades } from '@/context/TradesContext';
+import { ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 
 interface TradeEntryPanelProps {
     onNewTrade: (trade: Trade) => void;
@@ -136,15 +137,30 @@ export const TradeEntryPanel: React.FC<TradeEntryPanelProps> = ({ onNewTrade, cu
                             className="flex-1 bg-gray-900 border border-white/10 rounded px-3 py-1.5 text-sm text-white/90
                                 focus:outline-none focus:border-emerald-500/50"
                         />
-                        <select
-                            value={tradeData.type}
-                            onChange={(e) => setTradeData(prev => ({ ...prev, type: e.target.value }))}
-                            className="bg-gray-900 border border-white/10 rounded px-3 py-1.5 text-sm text-white/90
-                                focus:outline-none focus:border-emerald-500/50"
-                        >
-                            <option value="LONG">Long</option>
-                            <option value="SHORT">Short</option>
-                        </select>
+                        <div className="flex gap-1">
+                            <button
+                                type="button"
+                                onClick={() => setTradeData(prev => ({ ...prev, type: 'LONG' }))}
+                                className={`p-1.5 rounded transition-colors duration-200 ${
+                                    tradeData.type === 'LONG'
+                                        ? 'bg-emerald-500 text-white'
+                                        : 'bg-gray-900 border border-white/10 text-white/90 hover:border-emerald-500/50'
+                                }`}
+                            >
+                                <ArrowUpCircle size={20} />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setTradeData(prev => ({ ...prev, type: 'SHORT' }))}
+                                className={`p-1.5 rounded transition-colors duration-200 ${
+                                    tradeData.type === 'SHORT'
+                                        ? 'bg-red-500 text-white'
+                                        : 'bg-gray-900 border border-white/10 text-white/90 hover:border-red-500/50'
+                                }`}
+                            >
+                                <ArrowDownCircle size={20} />
+                            </button>
+                        </div>
                     </div>
                 </div>
 

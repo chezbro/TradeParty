@@ -22,10 +22,7 @@ export const TradeEntryContainer: React.FC<TradeEntryContainerProps> = ({
                 onClick={() => setIsExpanded(!isExpanded)}
             >
                 <div className="flex items-center gap-3">
-                    <span className="text-white/90 font-medium">Enter Trade</span>
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400">
-                        New
-                    </span>
+                    <span className="text-white/90 font-medium">Enter Trade</span>     
                 </div>
                 <button className="text-white/50 hover:text-white/90 transition-colors">
                     {isExpanded ? <FaChevronDown size={16} /> : <FaChevronRight size={16} />}
