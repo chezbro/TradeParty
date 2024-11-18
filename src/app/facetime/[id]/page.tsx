@@ -8,7 +8,8 @@ import {
 	SpeakerLayout,
 	CallControls,
 	StreamVideoParticipant,
-	useCall
+	useCall,
+	Call
 } from "@stream-io/video-react-sdk";
 import { useParams } from "next/navigation";
 import {  useEffect, useState, useCallback, useRef } from "react";
@@ -87,6 +88,20 @@ const MultiChartGrid = ({
 		</div>
 	);
 };
+
+// Update the StreamVideoParticipant interface to include the properties we're using
+interface EnhancedStreamVideoParticipant extends StreamVideoParticipant {
+	videoTrack?: MediaStreamTrack;
+	name?: string;
+}
+
+// Update the Trade interface to match what's being used
+interface ExtendedTrade extends Trade {
+	direction: 'long' | 'short';
+	entryPrice: number;
+	currentPrice: number;
+	size: number;
+}
 
 export default function FaceTimePage() {
 	const { id } = useParams<{ id: string }>();
@@ -171,7 +186,7 @@ export default function FaceTimePage() {
 							shareChart={shareChart}
 							sharedCharts={sharedCharts}
 							socket={socket}
-							meetingName={call.custom?.name || "Trading Session #1"}
+							meetingName={call?.state?.custom?.name || "Trading Session #1"}
 						/>
 					) : (
 						<div className='h-screen w-full flex items-center justify-center bg-black/90'>
@@ -208,7 +223,7 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 	const [layout, setLayout] = useState<CallLayoutType>("trading");
 	const [isPanelExpanded, setIsPanelExpanded] = useState(true);
 	const [panelWidth, setPanelWidth] = useState(300);
-	const [selectedTrade, setSelectedTrade] = useState<null | Trade>(null);
+	const [selectedTrade, setSelectedTrade] = useState<null | ExtendedTrade>(null);
 	const [selectedTrader, setSelectedTrader] = useState<string>('');
 	const [isControlsVisible, setIsControlsVisible] = useState(false);
 	const [currentSymbol, setCurrentSymbol] = useState<string>('AAPL');
@@ -256,12 +271,12 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 		}
 	};
 
-	const handleTradeClick = (trade: Trade, traderName: string) => {
+	const handleTradeClick = (trade: ExtendedTrade, traderName: string) => {
 		setSelectedTrade(trade);
 		setSelectedTrader(traderName);
 	};
 
-	const handleNewTrade = (trade: Trade) => {
+	const handleNewTrade = (trade: ExtendedTrade) => {
 		// Implement actual trade handling logic here
 		console.log("New trade:", trade);
 		// You can emit this to your socket or handle it however needed
@@ -575,6 +590,26 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 							<div className="h-full p-2">
 								<PaginatedGridLayout
 									groupSize={3}
+									ParticipantViewUI={(props) => {
+										const participant = props.participant as EnhancedStreamVideoParticipant;
+										return (
+											<div className="relative w-full h-[200px] rounded-lg overflow-hidden 
+												bg-gray-900/50 backdrop-blur-sm border border-white/10 
+												transition-all duration-300 hover:border-emerald-500/30 
+												hover:shadow-lg hover:shadow-emerald-500/10 mb-2"
+											>
+												{/* Video Container */}
+												<div className="absolute inset-0 bg-black/20">
+													{participant?.videoTrack ? (
+														<video
+															className="h-full w-full object-cover"
+															autoPlay
+															muted
+															playsInline
+														/>
+													) : (
+														<img 
+															src={user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
 									ParticipantViewUI={({ participant }: { participant: StreamVideoParticipant }) => (
 										<div className="relative w-full h-[200px] rounded-lg overflow-hidden 
 											bg-gray-900/50 backdrop-blur-sm border border-white/10 

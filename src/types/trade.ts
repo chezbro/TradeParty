@@ -5,7 +5,7 @@ export interface Trade {
     entry: number;
     target: number;
     stopLoss: number;
-    timestamp: number;
+    timestamp: string;
     status: 'OPEN' | 'CLOSED';
     profitLoss: number;
     pnl: number;
@@ -13,4 +13,8 @@ export interface Trade {
         name: string;
         id: string;
     };
+    direction: 'long' | 'short';
+    entryPrice: number;
+    currentPrice: number;
+    size: number;
 } 
