@@ -58,103 +58,116 @@ export const TradesFeed = () => {
 
             <button 
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full p-4 flex items-center justify-between hover:bg-gray-700/30 transition-colors rounded-t-xl"
+                className="w-full p-4 flex items-center justify-between hover:bg-gray-700/30 
+                    transition-all duration-200 rounded-t-xl group"
             >
                 <h2 className="text-xl text-white font-semibold flex items-center gap-2">
-                    <FaExchangeAlt className="text-green-400" />
+                    <FaExchangeAlt className="text-green-400 group-hover:rotate-12 transition-transform duration-200" />
                     Active Trades
                 </h2>
-                {isExpanded ? (
-                    <FaChevronDown className="text-gray-400" />
-                ) : (
-                    <FaChevronRight className="text-gray-400" />
-                )}
+                <div className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
+                    <FaChevronDown className="text-gray-400 group-hover:text-gray-300" />
+                </div>
             </button>
             
             <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
                 isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
             }`}>
                 <div className="p-4 pt-0">
-                    <div className="flex flex-col gap-4 mb-6">
-                        <div className="flex justify-center w-full">
-                            <div className="inline-flex bg-gray-700/50 backdrop-blur rounded-lg p-1 gap-1">
+                    <div className="flex justify-center w-full mb-4">
+                        <div className="inline-flex bg-gray-700/50 backdrop-blur rounded-lg p-1 gap-1">
+                            {[
+                                { value: "ALL", label: "All" },
+                                { value: "LONG", label: "Long" },
+                                { value: "SHORT", label: "Short" }
+                            ].map(({ value, label }) => (
                                 <button 
-                                    onClick={() => setFilter("ALL")}
-                                    className={`w-16 px-2 py-1.5 rounded-md text-xs font-medium transition-all duration-200
-                                        ${filter === "ALL" 
-                                            ? 'bg-gray-600 text-white shadow-sm' 
+                                    key={value}
+                                    onClick={() => setFilter(value as "ALL" | "LONG" | "SHORT")}
+                                    className={`w-20 px-3 py-1.5 rounded-md text-xs font-medium 
+                                        transition-all duration-200 relative overflow-hidden
+                                        ${filter === value 
+                                            ? value === "LONG"
+                                                ? 'bg-green-500/20 text-green-400 shadow-sm' 
+                                                : value === "SHORT"
+                                                    ? 'bg-red-500/20 text-red-400 shadow-sm'
+                                                    : 'bg-gray-600 text-white shadow-sm'
                                             : 'text-gray-400 hover:text-white hover:bg-gray-600/50'}`}
                                 >
-                                    All
+                                    {label}
                                 </button>
-                                <button 
-                                    onClick={() => setFilter("LONG")}
-                                    className={`w-16 px-2 py-1.5 rounded-md text-xs font-medium transition-all duration-200
-                                        ${filter === "LONG" 
-                                            ? 'bg-green-500/20 text-green-400 shadow-sm' 
-                                            : 'text-gray-400 hover:text-white hover:bg-gray-600/50'}`}
-                                >
-                                    Long
-                                </button>
-                                <button 
-                                    onClick={() => setFilter("SHORT")}
-                                    className={`w-16 px-2 py-1.5 rounded-md text-xs font-medium transition-all duration-200
-                                        ${filter === "SHORT" 
-                                            ? 'bg-red-500/20 text-red-400 shadow-sm' 
-                                            : 'text-gray-400 hover:text-white hover:bg-gray-600/50'}`}
-                                >
-                                    Short
-                                </button>
-                            </div>
+                            ))}
                         </div>
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         {filteredTrades.length > 0 ? (
                             filteredTrades.map(trade => (
                                 <div 
                                     key={trade.id} 
-                                    className="bg-gray-700/50 backdrop-blur rounded-xl p-4 border border-gray-600/50 hover:border-gray-500/50 transition-colors"
+                                    className="group bg-gray-700/50 backdrop-blur rounded-xl p-3 
+                                        border border-gray-600/50 hover:border-gray-500/50 
+                                        hover:bg-gray-700/70 transition-all duration-200 
+                                        hover:shadow-lg hover:shadow-black/10"
                                 >
-                                    <div className="flex justify-between items-center mb-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
+                                    {/* Top row: Trader info and timestamp */}
+                                    <div className="flex justify-between items-center mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-full bg-gray-600/80 
+                                                flex items-center justify-center text-xs
+                                                group-hover:bg-gray-600 transition-colors">
                                                 {getTraderInitials(trade)}
                                             </div>
-                                            <span className="text-white font-medium">
+                                            <span className="text-white/90 font-medium text-xs">
                                                 {getTraderName(trade)}
                                             </span>
                                         </div>
-                                        <span className="text-sm text-gray-400">
-                                            {new Date(trade.timestamp).toLocaleTimeString()}
-                                        </span>
+                                        <div className="flex items-center gap-2 text-[11px]">
+                                            {Date.now() - new Date(trade.timestamp).getTime() < 300000 && (
+                                                <span className="flex items-center gap-1">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 
+                                                        animate-pulse"></span>
+                                                    <span className="text-green-400">Live</span>
+                                                </span>
+                                            )}
+                                            <span className="text-gray-400">
+                                                {new Date(trade.timestamp).toLocaleTimeString()}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <div className="flex items-center gap-3">
-                                            <span className={`px-3 py-1 rounded-lg text-sm font-medium
+
+                                    {/* Bottom row: Trade details in a more compact layout */}
+                                    <div className="flex items-center gap-4">
+                                        {/* Left side: Symbol and type */}
+                                        <div className="flex items-center gap-2 min-w-[100px]">
+                                            <span className={`px-2 py-0.5 rounded text-xs font-medium
                                                 ${trade.type === 'LONG' 
-                                                    ? 'bg-green-500/20 text-green-400' 
-                                                    : 'bg-red-500/20 text-red-400'
-                                                }`}
+                                                    ? 'bg-green-500/20 text-green-400 group-hover:bg-green-500/30' 
+                                                    : 'bg-red-500/20 text-red-400 group-hover:bg-red-500/30'
+                                                } transition-colors`}
                                             >
                                                 {trade.type}
                                             </span>
-                                            <span className="text-lg font-semibold text-white">
+                                            <span className="text-sm font-semibold text-white/90">
                                                 {trade.symbol}
                                             </span>
                                         </div>
-                                        <div className="grid grid-cols-3 gap-4 text-sm">
-                                            <div className="text-center">
-                                                <div className="text-gray-400 mb-1">Entry</div>
-                                                <div className="text-blue-400 font-medium">${trade.entry}</div>
-                                            </div>
-                                            <div className="text-center">
-                                                <div className="text-gray-400 mb-1">Target</div>
-                                                <div className="text-green-400 font-medium">${trade.target}</div>
-                                            </div>
-                                            <div className="text-center">
-                                                <div className="text-gray-400 mb-1">Stop</div>
-                                                <div className="text-red-400 font-medium">${trade.stopLoss}</div>
-                                            </div>
+
+                                        {/* Right side: Trade values in a more compact layout */}
+                                        <div className="flex gap-4 ml-auto">
+                                            {[
+                                                { label: "Entry", value: trade.entry, color: "blue" },
+                                                { label: "Target", value: trade.target, color: "green" },
+                                                { label: "Stop", value: trade.stopLoss, color: "red" }
+                                            ].map(({ label, value, color }) => (
+                                                <div key={label} className="text-right min-w-[50px]">
+                                                    <div className="text-gray-400 text-[10px] uppercase tracking-wide leading-tight">
+                                                        {label}
+                                                    </div>
+                                                    <div className={`text-${color}-400 text-xs font-medium leading-tight`}>
+                                                        ${value.toFixed(2)}
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>

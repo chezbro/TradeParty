@@ -1,3 +1,4 @@
+import React from 'react';
 import { FC, useEffect, useRef, useState } from 'react';
 import { FaExpand, FaCompress, FaShare } from 'react-icons/fa';
 import { FaGripLines } from 'react-icons/fa6';
@@ -8,6 +9,7 @@ interface TradingViewChartProps {
   onToggleFullscreen: () => void;
   onShare?: () => void;
   compact?: boolean;
+  isReadOnly?: boolean;
 }
 
 export const TradingViewChart: FC<TradingViewChartProps> = ({
@@ -15,7 +17,8 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
   isFullscreen,
   onToggleFullscreen,
   onShare,
-  compact = false
+  compact = false,
+  isReadOnly = false
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<any>(null);

@@ -103,6 +103,13 @@ interface ExtendedTrade extends Trade {
 	size: number;
 }
 
+// Add new interfaces at the top with other interfaces
+interface LiveChart {
+	symbol: string;
+	sharedBy: string;
+	sharedByName?: string;
+}
+
 export default function FaceTimePage() {
 	const { id } = useParams<{ id: string }>();
 	const { isLoaded } = useUser();
@@ -217,7 +224,7 @@ export default function FaceTimePage() {
 
 }
 
-const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading Session #1" }: MeetingRoomProps) => {
+const MeetingRoom: FC<MeetingRoomProps> = ({ shareChart, sharedCharts, socket, meetingName }) => {
 	const { user } = useUser();
 	const router = useRouter();
 	const [layout, setLayout] = useState<CallLayoutType>("trading");
@@ -243,6 +250,9 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 	const [chartLayouts, setChartLayouts] = useState<string[]>([currentSymbol]);
 	const [isVideosPanelExpanded, setIsVideosPanelExpanded] = useState(true);
 	const [videosPanelWidth, setVideosPanelWidth] = useState(300);
+	const [isLiveSharing, setIsLiveSharing] = useState(false);
+	const [liveCharts, setLiveCharts] = useState<LiveChart[]>([]);
+	const [broadcaster, setBroadcaster] = useState<{ userId: string; symbol: string } | null>(null);
 
 	// Create a trader object from the current user
 	const currentTrader = {
@@ -251,6 +261,7 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 			? `${user.firstName} ${user.lastName}`
 			: user?.username || 'Anonymous Trader',
 		profitLoss: 0,
+		
 		winRate: 0,
 		totalTrades: 0,
 		openPositions: 0
@@ -378,20 +389,71 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 		}
 	};
 
-	const handleSymbolChange = (newSymbol: string) => {
+	const handleSymbolChange = useCallback((newSymbol: string) => {
 		setCurrentSymbol(newSymbol);
-		if (isChartShared) {
-			shareChart({
-				symbol: newSymbol,
-				isLive: true
+		
+		// If we're broadcasting, send update to others
+		if (isLiveSharing && call) {
+			call.sendCustomEvent({
+				type: 'chart_update',
+				data: {
+					symbol: newSymbol,
+					userId: call.state.localParticipant?.userId
+				}
 			});
 		}
-	};
+	}, [isLiveSharing, call]);
+
+	// Simplified event handler for chart sharing
+	useEffect(() => {
+		if (!call) return;
+
+		const handleCustomEvent = (event: any) => {
+			console.log('Received event:', event);
+			
+			if (event.type === 'chart_update') {
+				const { symbol, userId } = event.data;
+				console.log('Chart update:', { symbol, userId, currentUser: user?.id });
+				
+				// If someone else is broadcasting, update our view
+				if (userId !== user?.id) {
+					setCurrentSymbol(symbol);
+					setBroadcaster({ userId, symbol });
+				}
+			} else if (event.type === 'stop_sharing') {
+				const { userId } = event.data;
+				if (userId !== user?.id) {
+					setBroadcaster(null);
+				}
+			}
+		};
+
+		call.on('custom', handleCustomEvent);
+		return () => call.off('custom', handleCustomEvent);
+	}, [call, user?.id]);
+
+	// Handle toggling live share
+	const handleToggleLiveShare = useCallback(() => {
+		if (!call) return;
+
+		const newIsLiveSharing = !isLiveSharing;
+		setIsLiveSharing(newIsLiveSharing);
+
+		// Send event based on new state
+		call.sendCustomEvent({
+			type: newIsLiveSharing ? 'chart_update' : 'stop_sharing',
+			data: {
+				symbol: currentSymbol,
+				userId: call.state.localParticipant?.userId
+			}
+		});
+	}, [isLiveSharing, call, currentSymbol]);
 
 	const MainContentArea = () => {
 		if (isMultiChartEnabled) {
 			return (
 				<div className="grid grid-cols-2 gap-4 p-4 h-full">
+					{/* Your charts */}
 					{chartLayouts.map((symbol, index) => (
 						<div key={`${symbol}-${index}`} className="relative rounded-xl overflow-hidden border border-white/5 
 							bg-gray-900/20 backdrop-blur-sm">
@@ -405,6 +467,7 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 								onToggleFavorite={handleStarClick}
 								isFavorited={watchlist.includes(symbol)}
 								onShare={shareChart}
+								
 								compact={true}
 							/>
 							{chartLayouts.length > 1 && (
@@ -420,27 +483,68 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 							)}
 						</div>
 					))}
-					{/* Add Chart Button - Using ChartViewer's search */}
-					<div className="rounded-xl border border-white/5 bg-gray-900/20 backdrop-blur-sm">
-						<ChartViewer 
-							symbol=""
-							onSymbolChange={(newSymbol) => {
-								setChartLayouts(prev => [...prev, newSymbol]);
-							}}
-							onToggleFavorite={handleStarClick}
-							isFavorited={false}
-							compact={true}
-							isAddChart={true} // Add this prop to ChartViewer
-							onShare={shareChart}
-						/>
-					</div>
+
+					{/* Live shared charts from other participants */}
+					{liveCharts
+						.filter(chart => chart.sharedBy !== user?.id) // Don't show our own shared chart
+						.map((chart) => (
+							<div 
+								key={chart.sharedBy}
+								className="relative rounded-xl overflow-hidden border border-emerald-500/20 
+									bg-gray-900/20 backdrop-blur-sm"
+							>
+								<div className="absolute top-2 left-2 z-10 flex items-center gap-2 
+									bg-gray-900/90 px-3 py-1.5 rounded-full border border-emerald-500/20">
+									<span className="animate-pulse text-emerald-400 text-[8px]">●</span>
+									<span className="text-sm text-white/90">
+										{chart.sharedByName}'s Chart
+									</span>
+								</div>
+								<ChartViewer 
+									symbol={chart.symbol}
+									onSymbolChange={() => {}} // Read-only
+									onShare={shareChart}
+									compact={true}
+									isReadOnly={true} // Add this prop to ChartViewer
+								/>
+							</div>
+					))}
+
+					{/* Add Chart Button */}
+					{chartLayouts.length + liveCharts.length < 4 && (
+						<div className="rounded-xl border border-white/5 bg-gray-900/20 backdrop-blur-sm">
+							<ChartViewer 
+								symbol=""
+								onSymbolChange={(newSymbol) => {
+									setChartLayouts(prev => [...prev, newSymbol]);
+								}}
+								onToggleFavorite={handleStarClick}
+								isFavorited={false}
+								compact={true}
+								isAddChart={true}
+								onShare={shareChart}
+							/>
+						</div>
+					)}
 				</div>
 			);
 		}
 
+		// Single chart view with live broadcast indicator
 		return (
 			<div className="h-full rounded-xl overflow-hidden border border-white/5 
-				bg-gray-900/20 backdrop-blur-sm">
+				bg-gray-900/20 backdrop-blur-sm relative">
+				{/* Live Broadcast Indicator */}
+				{broadcaster && broadcaster.userId !== user?.id && (
+					<div className="absolute top-4 left-4 z-20 flex items-center gap-2 
+						bg-gray-900/90 px-3 py-2 rounded-full border border-emerald-500/20">
+						<span className="animate-pulse text-emerald-400 text-[8px]">●</span>
+						<span className="text-sm text-white/90">
+							Viewing Shared Chart
+						</span>
+					</div>
+				)}
+
 				<ChartViewer 
 					symbol={currentSymbol}
 					onSymbolChange={handleSymbolChange}
@@ -449,10 +553,27 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 					onShare={shareChart}
 					onToggleMultiChart={handleToggleMultiChart}
 					isMultiChartEnabled={isMultiChartEnabled}
+					isLiveSharing={isLiveSharing}
+					onToggleLiveShare={handleToggleLiveShare}
+					isReadOnly={Boolean(broadcaster && broadcaster.userId !== user?.id)}
 				/>
 			</div>
 		);
 	};
+
+	useEffect(() => {
+		// If we're live sharing, broadcast any symbol changes
+		if (isLiveSharing && call) {
+			console.log("Broadcasting symbol change:", currentSymbol);
+			call.sendCustomEvent({
+				type: 'start_chart_share',
+				data: {
+					symbol: currentSymbol,
+					sharedBy: call.state.localParticipant?.userId
+				}
+			});
+		}
+	}, [currentSymbol, isLiveSharing, call]);
 
 	return (
 		<TradesProvider>
@@ -610,73 +731,16 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 													) : (
 														<img 
 															src={user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
-									ParticipantViewUI={({ participant }: { participant: StreamVideoParticipant }) => (
-										<div className="relative w-full h-[200px] rounded-lg overflow-hidden 
-											bg-gray-900/50 backdrop-blur-sm border border-white/10 
-											transition-all duration-300 hover:border-emerald-500/30 
-											hover:shadow-lg hover:shadow-emerald-500/10 mb-2"
-										>
-											{/* Video Container */}
-											<div className="absolute inset-0 bg-black/20">
-												{participant?.videoTrack ? (
-													<video
-														className="h-full w-full object-cover"
-														autoPlay
-														muted
-														playsInline
-													/>
-												) : (
-													<img 
-														src={user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
-														alt={participant?.name || "Participant"}
-														className="h-full w-full object-cover"
-													/>
-												)}
-											</div>
-
-											{/* Overlay content - made more compact */}
-											<div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent">
-												<div className="absolute bottom-0 left-0 right-0 p-2 space-y-1">
-													{/* Participant Name & Status */}
-													<div className="flex items-center justify-between">
-														<div className="flex items-center gap-1.5">
-															<div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-															<span className="text-sm font-medium text-white truncate">
-																{participant?.name || user?.firstName || 'Trader'}
-															</span>
-														</div>
-														<span className="text-[10px] text-emerald-400 bg-emerald-500/10 
-															px-1.5 py-0.5 rounded-full">
-															Live
-														</span>
-													</div>
-
-													{/* Trading Status - more compact */}
-													<div className="flex items-center gap-1.5 text-[10px] text-white/70">
-														<span className="bg-white/10 px-1.5 py-0.5 rounded-full">
-															3 Active
-														</span>
-														<span className="text-emerald-400">
-															+$1,234
-														</span>
-													</div>
+															alt={participant?.name || "Participant"}
+															className="h-full w-full object-cover"
+														/>
+													)}
 												</div>
+												
+												{/* Rest of the participant view code... */}
 											</div>
-
-											{/* Audio Indicator - made smaller */}
-											<div className="absolute top-2 right-2">
-												<div className="p-1 rounded-full bg-gray-900/80 backdrop-blur-sm 
-													border border-white/10">
-													<svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" 
-														stroke="currentColor" strokeWidth="2">
-														<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
-														<path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5" />
-														<path d="M12 19v3" />
-													</svg>
-												</div>
-											</div>
-										</div>
-									)}
+										);
+									}}
 									VideoPlaceholder={() => (
 										<div className="flex items-center justify-center w-full h-[200px] rounded-lg 
 											bg-gray-800/50 border border-white/5 mb-2">
@@ -762,13 +826,7 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 				{/* Trade Details Modal */}
 				{selectedTrade && (
 					<TradeDetailsModal
-						trade={{
-							...selectedTrade,
-							direction: selectedTrade.direction || 'long',
-							entryPrice: selectedTrade.entryPrice || 0,
-							currentPrice: selectedTrade.currentPrice || 0,
-							size: selectedTrade.size || 0
-						}}
+						trade={selectedTrade}
 						traderName={selectedTrader}
 						onClose={() => setSelectedTrade(null)}
 					/>
