@@ -77,7 +77,7 @@ interface MockParticipant extends StreamVideoParticipant {
 	activeTrades: Trade[];
 }
 
-// Add this before the MeetingRoom component
+// Update the mockParticipants array with required StreamVideoParticipant properties
 const mockParticipants: MockParticipant[] = [
 	{
 		name: "Sarah Chen",
@@ -101,7 +101,19 @@ const mockParticipants: MockParticipant[] = [
 					name: "Sarah Chen"
 				}
 			}
-		]
+		],
+		// Add required StreamVideoParticipant properties
+		publishedTracks: [],
+		trackLookupPrefix: "",
+		connectionQuality: 'excellent',
+		isSpeaking: false,
+		isDominantSpeaker: false,
+		audioLevel: 0,
+		viewportVisibility: 1,
+		videoTrack: null,
+		audioTrack: null,
+		screenShareTrack: null,
+		isLocalParticipant: false
 	},
 	{
 		name: "Marcus Rodriguez",
@@ -125,7 +137,19 @@ const mockParticipants: MockParticipant[] = [
 					name: "Marcus Rodriguez"
 				}
 			}
-		]
+		],
+		// Add required StreamVideoParticipant properties
+		publishedTracks: [],
+		trackLookupPrefix: "",
+		connectionQuality: 'excellent',
+		isSpeaking: false,
+		isDominantSpeaker: false,
+		audioLevel: 0,
+		viewportVisibility: 1,
+		videoTrack: null,
+		audioTrack: null,
+		screenShareTrack: null,
+		isLocalParticipant: false
 	},
 	{
 		name: "Emma Thompson",
@@ -149,7 +173,19 @@ const mockParticipants: MockParticipant[] = [
 					name: "Emma Thompson"
 				}
 			}
-		]
+		],
+		// Add required StreamVideoParticipant properties
+		publishedTracks: [],
+		trackLookupPrefix: "",
+		connectionQuality: 'excellent',
+		isSpeaking: false,
+		isDominantSpeaker: false,
+		audioLevel: 0,
+		viewportVisibility: 1,
+		videoTrack: null,
+		audioTrack: null,
+		screenShareTrack: null,
+		isLocalParticipant: false
 	}
 ];
 
