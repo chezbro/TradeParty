@@ -110,6 +110,11 @@ interface LiveChart {
 	sharedByName?: string;
 }
 
+// Add this interface near the top of the file with other interfaces
+interface ParticipantViewUIProps {
+	participant: StreamVideoParticipant;
+}
+
 export default function FaceTimePage() {
 	const { id } = useParams<{ id: string }>();
 	const { isLoaded } = useUser();
@@ -719,7 +724,7 @@ const MeetingRoom: FC<MeetingRoomProps> = ({ shareChart, sharedCharts, socket, m
 							<div className="h-full p-2">
 								<PaginatedGridLayout
 									groupSize={4}
-									ParticipantViewUI={(props) => {
+									ParticipantViewUI={(props: ParticipantViewUIProps) => {
 										const participant = props.participant as EnhancedStreamVideoParticipant;
 										return (
 											<div className="relative w-full aspect-video rounded-lg overflow-hidden 
