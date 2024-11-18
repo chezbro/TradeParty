@@ -98,8 +98,7 @@ const mockParticipants: MockParticipant[] = [
 				pnl: 250.75,
 				trader: {
 					id: "trader_1",
-					name: "Sarah Chen",
-					avatar: "https://picsum.photos/seed/trader1/200/200"
+					name: "Sarah Chen"
 				}
 			}
 		]
@@ -123,8 +122,7 @@ const mockParticipants: MockParticipant[] = [
 				pnl: -120.50,
 				trader: {
 					id: "trader_2",
-					name: "Marcus Rodriguez",
-					avatar: "https://picsum.photos/seed/trader2/200/200"
+					name: "Marcus Rodriguez"
 				}
 			}
 		]
@@ -148,8 +146,7 @@ const mockParticipants: MockParticipant[] = [
 				pnl: 875.25,
 				trader: {
 					id: "trader_3",
-					name: "Emma Thompson",
-					avatar: "https://picsum.photos/seed/trader3/200/200"
+					name: "Emma Thompson"
 				}
 			}
 		]
