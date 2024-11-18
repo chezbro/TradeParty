@@ -11,6 +11,8 @@ import { useGetCalls } from "@/app/hooks/useGetCalls";
 import { Call } from '@stream-io/video-react-sdk';
 import { formatDateTime } from "../lib/util";
 import Link from "next/link";
+import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
+import toast from 'react-hot-toast';
 
 interface Props {
 	enable: boolean;
@@ -69,6 +71,12 @@ export default function UpcomingMeeting({ enable, setEnable }: Props) {
 const MeetingList = () => { 
 	const { upcomingCalls, isLoading } = useGetCalls();
 
+	const handleCopyLink = (callId: string) => {
+		const meetingLink = `${window.location.origin}/facetime/${callId}`
+		navigator.clipboard.writeText(meetingLink)
+		toast.success('Meeting link copied to clipboard')
+	}
+
 	if (isLoading) { 
 		return (
 			<>
@@ -101,11 +109,20 @@ const MeetingList = () => {
 							<p className='text-xs'>{formatDateTime(call.state?.startsAt?.toLocaleString()!)}</p>
                     </div>
                     
-						<Link className='bg-green-500 text-sm px-4 py-2 hover:bg-green-700 text-white rounded-md shadow-sm'
-						href={`/facetime/${call.id}`}
-						>
-                       Start now
-                    </Link>
+						<div className="mt-4 flex gap-2">
+							<Link className='bg-green-500 text-sm px-4 py-2 hover:bg-green-700 text-white rounded-md shadow-sm'
+							href={`/facetime/${call.id}`}
+							>
+								Start now
+							</Link>
+							<button 
+								className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 bg-white hover:bg-gray-100 rounded-md shadow-sm border border-gray-300"
+								onClick={() => handleCopyLink(call.id)}
+								title="Copy meeting link"
+							>
+								<DocumentDuplicateIcon className="h-4 w-4" />
+							</button>
+						</div>
                 </div>
 
 				))}

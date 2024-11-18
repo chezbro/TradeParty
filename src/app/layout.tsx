@@ -12,6 +12,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "@stream-io/video-react-sdk/dist/css/styles.css";
 import { StreamVideoProvider } from "./providers/StreamVideoProvider";
 import Link from "next/link";
+import { Toaster } from 'react-hot-toast'
 
 const inter = Inclusive_Sans({ subsets: ["latin"], weight: ["400"] });
 
@@ -71,6 +72,7 @@ export default function RootLayout({
 							{children}
 						</div>
 					</StreamVideoProvider>
+					<Toaster />
 				</body>
 			</html>
 		</ClerkProvider>
