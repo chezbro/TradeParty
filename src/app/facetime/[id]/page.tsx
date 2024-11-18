@@ -8,7 +8,8 @@ import {
 	SpeakerLayout,
 	CallControls,
 	StreamVideoParticipant,
-	useCall
+	useCall,
+	ConnectionQuality
 } from "@stream-io/video-react-sdk";
 import { useParams } from "next/navigation";
 import {  useEffect, useState, useCallback, useRef } from "react";
@@ -105,7 +106,7 @@ const mockParticipants: MockParticipant[] = [
 		// Add required StreamVideoParticipant properties
 		publishedTracks: [],
 		trackLookupPrefix: "",
-		connectionQuality: 'excellent',
+		connectionQuality: ConnectionQuality.Excellent,
 		isSpeaking: false,
 		isDominantSpeaker: false,
 		audioLevel: 0,
@@ -141,7 +142,7 @@ const mockParticipants: MockParticipant[] = [
 		// Add required StreamVideoParticipant properties
 		publishedTracks: [],
 		trackLookupPrefix: "",
-		connectionQuality: 'excellent',
+		connectionQuality: ConnectionQuality.Excellent,
 		isSpeaking: false,
 		isDominantSpeaker: false,
 		audioLevel: 0,
@@ -177,7 +178,7 @@ const mockParticipants: MockParticipant[] = [
 		// Add required StreamVideoParticipant properties
 		publishedTracks: [],
 		trackLookupPrefix: "",
-		connectionQuality: 'excellent',
+		connectionQuality: ConnectionQuality.Excellent,
 		isSpeaking: false,
 		isDominantSpeaker: false,
 		audioLevel: 0,
