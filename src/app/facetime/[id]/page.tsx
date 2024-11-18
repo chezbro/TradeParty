@@ -95,7 +95,12 @@ const mockParticipants: MockParticipant[] = [
 				timestamp: new Date().getTime(),
 				status: "OPEN",
 				profitLoss: 250.75,
-				pnl: 250.75
+				pnl: 250.75,
+				trader: {
+					id: "trader_1",
+					name: "Sarah Chen",
+					avatar: "https://picsum.photos/seed/trader1/200/200"
+				}
 			}
 		]
 	},
@@ -115,7 +120,12 @@ const mockParticipants: MockParticipant[] = [
 				timestamp: new Date().getTime(),
 				status: "OPEN",
 				profitLoss: -120.50,
-				pnl: -120.50
+				pnl: -120.50,
+				trader: {
+					id: "trader_2",
+					name: "Marcus Rodriguez",
+					avatar: "https://picsum.photos/seed/trader2/200/200"
+				}
 			}
 		]
 	},
@@ -135,7 +145,12 @@ const mockParticipants: MockParticipant[] = [
 				timestamp: new Date().getTime(),
 				status: "OPEN",
 				profitLoss: 875.25,
-				pnl: 875.25
+				pnl: 875.25,
+				trader: {
+					id: "trader_3",
+					name: "Emma Thompson",
+					avatar: "https://picsum.photos/seed/trader3/200/200"
+				}
 			}
 		]
 	}
