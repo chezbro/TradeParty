@@ -22,7 +22,6 @@ import { TradesProvider } from '@/context/TradesContext';
 import { ResizableBox } from 'react-resizable';
 import 'react-resizable/css/styles.css';
 import { IoMdExpand, IoMdContract, IoMdRemove } from 'react-icons/io';
-import { ActiveTradeOverlay } from '@/components/ActiveTradeOverlay';
 import { TradeDetailsModal } from '@/components/TradeDetailsModal';
 import { Trade } from '@/types/trade';
 import { FC } from 'react';
