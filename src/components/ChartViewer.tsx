@@ -16,6 +16,7 @@ interface ChartViewerProps {
   isLiveSharing?: boolean;
   onToggleLiveShare?: () => void;
   isReadOnly?: boolean;
+  onAddChart?: (symbol: string) => void;
 }
 
 // Cryptocurrency trading pairs (with USDT)
@@ -60,10 +61,11 @@ export const ChartViewer: FC<ChartViewerProps> = ({
   compact = false,
   onToggleMultiChart,
   isMultiChartEnabled,
-  isAddChart,
+  isAddChart = false,
   isLiveSharing = false,
   onToggleLiveShare,
   isReadOnly = false,
+  onAddChart,
 }) => {
   const [searchInput, setSearchInput] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -112,6 +114,13 @@ export const ChartViewer: FC<ChartViewerProps> = ({
       return;
     }
     
+    if (isAddChart && onAddChart) {
+      onAddChart(newSymbol);
+      setSearchInput('');
+      setShowDropdown(false);
+      return;
+    }
+
     onSymbolChange(newSymbol);
     if (!recentSymbols.includes(newSymbol)) {
       setRecentSymbols(prev => [newSymbol, ...prev].slice(0, 5));
@@ -137,24 +146,33 @@ export const ChartViewer: FC<ChartViewerProps> = ({
       {!isReadOnly && (
         <div className={`flex items-center justify-between ${compact ? 'mb-3' : 'mb-6'}`}>
           <div className="flex items-center gap-3">
-            <h2 className={`${compact ? 'text-lg' : 'text-xl'} text-white font-semibold`}>
-              {symbol}
-            </h2>
-            {onToggleFavorite && (
-              <button
-                onClick={() => onToggleFavorite(symbol)}
-                className="p-1 hover:bg-gray-700 rounded transition-colors"
-              >
-                <FaStar 
-                  size={compact ? 16 : 20} 
-                  className={isFavorited ? "text-yellow-500" : "text-gray-400 hover:text-yellow-500"} 
-                />
-              </button>
+            {isAddChart ? (
+              <h2 className={`${compact ? 'text-lg' : 'text-xl'} text-white font-semibold`}>
+                Add Chart
+              </h2>
+            ) : (
+              <>
+                <h2 className={`${compact ? 'text-lg' : 'text-xl'} text-white font-semibold`}>
+                  {symbol}
+                </h2>
+                {onToggleFavorite && (
+                  <button
+                    onClick={() => onToggleFavorite(symbol)}
+                    className="p-1 hover:bg-gray-700 rounded transition-colors"
+                  >
+                    <FaStar 
+                      size={compact ? 16 : 20} 
+                      className={isFavorited ? "text-yellow-500" : "text-gray-400 hover:text-yellow-500"} 
+                    />
+                  </button>
+                )}
+              </>
             )}
           </div>
           
-          {!compact && (
-            <div className="flex gap-4 items-center">
+          {/* Search Input - Always show for Add Chart mode */}
+          {(!compact || isAddChart) && (
+            <div className="flex gap-3 items-center">
               <div className="relative" ref={searchRef}>
                 <input
                   type="text"
@@ -164,12 +182,12 @@ export const ChartViewer: FC<ChartViewerProps> = ({
                     setShowDropdown(true);
                   }}
                   onFocus={() => setShowDropdown(true)}
-                  placeholder="Search symbol..."
+                  placeholder={isAddChart ? "Search for symbol to add..." : "Search symbol..."}
                   className="bg-gray-700 text-white rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
                 <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 
-                {/* Updated Dropdown Menu */}
+                {/* Dropdown Menu */}
                 {showDropdown && searchInput && (
                   <div className="absolute mt-1 w-full bg-gray-700 rounded-lg shadow-lg border border-gray-600 overflow-hidden z-50">
                     {filteredSymbols.length > 0 ? (
@@ -207,89 +225,75 @@ export const ChartViewer: FC<ChartViewerProps> = ({
                   </div>
                 )}
               </div>
-              
-              {/* Add Multi-Chart Toggle Button */}
-              {onToggleMultiChart && (
-                <button
-                  onClick={onToggleMultiChart}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg
-                    border transition-colors ${
-                      isMultiChartEnabled
-                        ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30'
-                        : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
-                    }`}
-                >
-                  <FaChartLine size={16} />
-                  <span className="text-sm">{isMultiChartEnabled ? 'Single View' : 'Multi View'}</span>
-                </button>
+
+              {/* Only show these buttons when not in Add Chart mode */}
+              {!isAddChart && (
+                <>
+                  {/* Live Share Button */}
+                  {onToggleLiveShare && (
+                    <button
+                      onClick={handleToggleLiveShare}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg
+                        border transition-colors ${
+                          isLiveSharing
+                            ? 'bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30'
+                            : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
+                        }`}
+                    >
+                      <span className={`${isLiveSharing ? 'animate-pulse' : ''} text-[8px]`}>●</span>
+                      <span className="text-sm">Share Live</span>
+                    </button>
+                  )}
+                  
+                  {/* Multi-Chart Toggle Button */}
+                  {onToggleMultiChart && (
+                    <button
+                      onClick={onToggleMultiChart}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg
+                        border transition-colors ${
+                          isMultiChartEnabled
+                            ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30'
+                            : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
+                        }`}
+                    >
+                      <FaChartLine size={16} />
+                      <span className="text-sm">{isMultiChartEnabled ? 'Single View' : 'Multi View'}</span>
+                    </button>
+                  )}
+                </>
               )}
             </div>
           )}
         </div>
       )}
 
-      {!compact && recentSymbols.length > 0 && (
-        <div className="flex gap-2 mb-4 items-center">
-          <FaHistory className="text-gray-400" />
-          {recentSymbols.map((sym) => (
-            <button
-              key={sym}
-              onClick={() => handleSymbolChange(sym)}
-              className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-sm text-white rounded-lg transition-colors"
-            >
-              {sym}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <TradingViewChart
-        symbol={symbol}
-        isFullscreen={isFullscreen}
-        onToggleFullscreen={handleToggleFullscreen}
-        onShare={handleShare}
-        compact={compact}
-        isReadOnly={isReadOnly}
-      />
-
-      {!isReadOnly && (
-      <div className="absolute top-4 right-4 flex gap-2 z-10">
-        {typeof onShare === 'function' && (
-          <button
-            onClick={handleShare}
-            className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white transition-colors"
-          >
-            <FaShare size={16} />
-          </button>
-        )}
-        
-        {/* Add Live Share button */}
-        {onToggleLiveShare && (
-          <button
-            onClick={handleToggleLiveShare}
-            className={`p-2 rounded-lg transition-colors flex items-center gap-2
-              ${isLiveSharing 
-                ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' 
-                : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'}`}
-          >
-            <div className="flex items-center gap-1.5">
-              {isLiveSharing && (
-                <span className="animate-pulse text-[8px]">●</span>
-              )}
-              <span className="text-sm">
-                {isLiveSharing ? 'Stop Sharing' : 'Share Live'}
-              </span>
+      {/* Only show recent symbols and chart when not in Add Chart mode */}
+      {!isAddChart && (
+        <>
+          {!compact && recentSymbols.length > 0 && (
+            <div className="flex gap-2 mb-4 items-center">
+              <FaHistory className="text-gray-400" />
+              {recentSymbols.map((sym) => (
+                <button
+                  key={sym}
+                  onClick={() => handleSymbolChange(sym)}
+                  className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-sm text-white rounded-lg transition-colors"
+                >
+                  {sym}
+                </button>
+              ))}
             </div>
-          </button>
-        )}
+          )}
 
-        <button
-          onClick={handleToggleFullscreen}
-          className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white transition-colors"
-        >
-          {isFullscreen ? <FaCompress size={16} /> : <FaExpand size={16} />}
-        </button>
-      </div>
+          <TradingViewChart
+            symbol={symbol}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={handleToggleFullscreen}
+            onShare={handleShare}
+            compact={compact}
+            isReadOnly={isReadOnly}
+          />
+        </>
       )}
     </div>
   );
