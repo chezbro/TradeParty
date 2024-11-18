@@ -32,6 +32,7 @@ import { io, Socket } from "socket.io-client";
 import Draggable from 'react-draggable';
 import { WatchlistContainer } from '@/components/WatchlistContainer';
 import { TradeEntryContainer } from '@/components/TradeEntryContainer';
+import { useMeetingDetails } from '@/app/hooks/useMeetingDetails';
 
 type CallLayoutType = "grid" | "speaker-left" | "speaker-right" | "trading" | "multi-chart";
 
@@ -120,12 +121,14 @@ export default function FaceTimePage() {
 	const [sharedCharts, setSharedCharts] = useState<SharedChart[]>([]);
 	const [socket, setSocket] = useState<Socket | null>(null);
 	const { user } = useUser();
+	const { meetingDetails, isLoading: isMeetingLoading } = useMeetingDetails(id);
 
 	useEffect(() => {
 		if (camMicEnabled) {
 			call?.camera.enable();
 			call?.microphone.enable();
 		} else {
+			
 			call?.camera.disable();
 			call?.microphone.disable();
 		}
@@ -180,7 +183,7 @@ export default function FaceTimePage() {
 		setSharedCharts(prev => [...prev, sharedChart]);
 	};
 
-	if (isCallLoading || !isLoaded) return <p>Loading...</p>;
+	if (isCallLoading || !isLoaded || isMeetingLoading) return <p>Loading...</p>;
 
 	if (!call) return (<p>Call not found</p>);
 
@@ -193,23 +196,25 @@ export default function FaceTimePage() {
 							shareChart={shareChart}
 							sharedCharts={sharedCharts}
 							socket={socket}
-							meetingName={call?.state?.custom?.name || "Trading Session #1"}
+							meetingName={meetingDetails?.name || "Unnamed Trading Session"}
 						/>
 					) : (
-						<div className='h-screen w-full flex items-center justify-center bg-black/90'>
-							<div className='flex flex-col items-center justify-center gap-6 p-8 bg-gray-900/50 backdrop-blur-md rounded-lg border border-white/10'>
-								<h1 className='text-4xl font-extrabold text-white mb-2'>Join the Call</h1>
-								<p className='text-lg text-white/80 mb-4'>Ready to dive into the conversation?</p>
+						<div className='h-screen w-full flex items-center justify-center bg-gradient-to-br from-gray-800 via-gray-900 to-black'>
+							<div className='flex flex-col items-center justify-center gap-6 p-10 bg-gray-800/70 backdrop-blur-lg rounded-2xl border border-gray-700 shadow-lg'>
+								<h1 className='text-5xl font-bold text-white mb-2'>
+									{meetingDetails?.name || "Join the Call"}
+								</h1>
+								<p className='text-lg text-gray-300 mb-4'>Ready to dive into the conversation?</p>
 								<div className='flex gap-4'>
 									<button 
 										onClick={handleJoin} 
-										className='px-6 py-3 bg-emerald-500 text-white font-semibold rounded-lg shadow-md hover:bg-emerald-600 transition-all duration-200'
+										className='px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-transform transform hover:scale-105 duration-200'
 									>
 										Join Now
 									</button>
 									<button 
 										onClick={() => router.push("/")} 
-										className='px-6 py-3 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-all duration-200'
+										className='px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-transform transform hover:scale-105 duration-200'
 									>
 										Cancel
 									</button>
@@ -574,6 +579,10 @@ const MeetingRoom: FC<MeetingRoomProps> = ({ shareChart, sharedCharts, socket, m
 			});
 		}
 	}, [currentSymbol, isLiveSharing, call]);
+
+	useEffect(() => {
+		console.log("Meeting Name:", call?.state?.custom?.meetingName);
+	}, [call]);
 
 	return (
 		<TradesProvider>

@@ -42,7 +42,7 @@ export default function Dashboard() {
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.6 }}
-					className="relative mb-20 rounded-2xl overflow-hidden"
+					className="relative mb-20 rounded-2xl overflow-hidden z-0"
 				>
 					<div className="aspect-video relative rounded-2xl overflow-hidden border border-gray-800/50">
 						<div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60 z-10" />
@@ -132,23 +132,27 @@ export default function Dashboard() {
 				</motion.div>
 			</main>
 
-			{startInstantMeeting && (
-				<InstantMeeting
-					enable={startInstantMeeting}
-					setEnable={setStartInstantMeeting}
-				/>
-			)}
-			{showUpcomingMeetings && (
-				<UpcomingMeeting
-					enable={showUpcomingMeetings}
-					setEnable={setShowUpcomingMeetings}
-				/>
-			)}
-			{showCreateLink && (
-				<CreateLink enable={showCreateLink} setEnable={setShowCreateLink} />
-			)}
-			{joinMeeting && (
-				<JoinMeeting enable={joinMeeting} setEnable={setJoinMeeting} />
+			{(startInstantMeeting || showUpcomingMeetings || showCreateLink || joinMeeting) && (
+				<div className="fixed inset-0 z-[9999]">
+					{startInstantMeeting && (
+						<InstantMeeting
+							enable={startInstantMeeting}
+							setEnable={setStartInstantMeeting}
+						/>
+					)}
+					{showUpcomingMeetings && (
+						<UpcomingMeeting
+							enable={showUpcomingMeetings}
+							setEnable={setShowUpcomingMeetings}
+						/>
+					)}
+					{showCreateLink && (
+						<CreateLink enable={showCreateLink} setEnable={setShowCreateLink} />
+					)}
+					{joinMeeting && (
+						<JoinMeeting enable={joinMeeting} setEnable={setJoinMeeting} />
+					)}
+				</div>
 			)}
 		</div>
 	);

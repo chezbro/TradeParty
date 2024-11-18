@@ -13,6 +13,7 @@ import { Fragment, SetStateAction, useState, Dispatch } from "react";
 import { useStreamVideoClient, Call } from "@stream-io/video-react-sdk";
 import { useUser } from "@clerk/nextjs";
 import { AddToCalendarButton } from 'add-to-calendar-button-react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface Props {
 	enable: boolean;
@@ -29,15 +30,15 @@ export default function CreateLink({ enable, setEnable }: Props) {
 	return (
 		<>
 			<Transition appear show={enable} as={Fragment}>
-				<Dialog as='div' className='relative z-[100]' onClose={closeModal}>
+				<Dialog as='div' className='relative z-[9999]' onClose={closeModal}>
 					<TransitionChild
 						as={Fragment}
 						enter='ease-out duration-300'
-						enterFrom='opacity-0'
-						enterTo='opacity-100'
-						leave='ease-in duration-200'
-						leaveFrom='opacity-100'
-						leaveTo='opacity-0'
+							enterFrom='opacity-0'
+							enterTo='opacity-100'
+							leave='ease-in duration-200'
+							leaveFrom='opacity-100'
+							leaveTo='opacity-0'
 					>
 						<div className='fixed inset-0 bg-black/75' />
 					</TransitionChild>
@@ -53,7 +54,7 @@ export default function CreateLink({ enable, setEnable }: Props) {
 								leaveFrom='opacity-100 scale-100'
 								leaveTo='opacity-0 scale-95'
 							>
-								<DialogPanel className='w-full max-w-2xl transform overflow-visible rounded-2xl bg-white p-6 align-middle shadow-xl transition-all text-center relative' onClick={(e) => e.stopPropagation()}>
+								<DialogPanel className='w-full max-w-2xl transform overflow-visible rounded-2xl bg-white p-6 align-middle shadow-xl transition-all text-center relative'>
 									{showMeetingLink ? (
 										<MeetingLink 
 											facetimeLink={facetimeLink} 
@@ -67,7 +68,7 @@ export default function CreateLink({ enable, setEnable }: Props) {
 											setMeetingDescription={setMeetingDescription}
 											setMeetingDateTime={setMeetingDateTime}
 										/>
-										)}
+									)}
 								</DialogPanel>
 							</TransitionChild>
 						</div>
@@ -94,6 +95,7 @@ const MeetingForm = ({
 	const [callDetail, setCallDetail] = useState<Call>();
 	const client = useStreamVideoClient();
 	const { user } = useUser();
+	const supabase = createClientComponentClient();
 
 	const handleStartMeeting = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -120,6 +122,18 @@ const MeetingForm = ({
 
 			console.log({ call });
 			console.log("Meeting Created!");
+
+			// Save meeting to Supabase
+			const { error } = await supabase
+				.from('meetings')
+				.insert({
+					name: description,
+					created_by: user?.id,
+					call_id: call.id,
+					status: 'scheduled'
+				});
+
+			if (error) throw error;
 		} catch (error) {
 			console.error(error);
 			console.error({ title: "Failed to create Meeting" });
