@@ -44,7 +44,7 @@ interface MeetingRoomProps {
 	shareChart: (chartData: any) => void;
 	sharedCharts: SharedChart[];
 	socket: Socket | null;
-	meetingName?: string;
+	meetingName: string;
 }
 
 // Add this new component above the MeetingRoom component
@@ -171,7 +171,7 @@ export default function FaceTimePage() {
 							shareChart={shareChart}
 							sharedCharts={sharedCharts}
 							socket={socket}
-							meetingName={call?.data?.custom?.name || "Trading Session #1"}
+							meetingName={call.custom?.name || "Trading Session #1"}
 						/>
 					) : (
 						<div className='h-screen w-full flex items-center justify-center bg-black/90'>
@@ -231,12 +231,14 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 
 	// Create a trader object from the current user
 	const currentTrader = {
+		userId: user?.id || 'anonymous',
 		name: user?.firstName && user?.lastName 
 			? `${user.firstName} ${user.lastName}`
 			: user?.username || 'Anonymous Trader',
 		profitLoss: 0,
 		winRate: 0,
-		totalTrades: 0
+		totalTrades: 0,
+		openPositions: 0
 	};
 
 	const handleResize = useCallback((e: any, { size }: { size: { width: number } }) => {
@@ -414,6 +416,7 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 							isFavorited={false}
 							compact={true}
 							isAddChart={true} // Add this prop to ChartViewer
+							onShare={shareChart}
 						/>
 					</div>
 				</div>
@@ -572,9 +575,7 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 							<div className="h-full p-2">
 								<PaginatedGridLayout
 									groupSize={3}
-									containerClassName="h-full w-full"
-									participantsClassName="grid grid-cols-1 gap-6"
-									ParticipantViewUI={({ participant }) => (
+									ParticipantViewUI={({ participant }: { participant: StreamVideoParticipant }) => (
 										<div className="relative w-full h-[200px] rounded-lg overflow-hidden 
 											bg-gray-900/50 backdrop-blur-sm border border-white/10 
 											transition-all duration-300 hover:border-emerald-500/30 
@@ -726,7 +727,13 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 				{/* Trade Details Modal */}
 				{selectedTrade && (
 					<TradeDetailsModal
-						trade={selectedTrade}
+						trade={{
+							...selectedTrade,
+							direction: selectedTrade.direction || 'long',
+							entryPrice: selectedTrade.entryPrice || 0,
+							currentPrice: selectedTrade.currentPrice || 0,
+							size: selectedTrade.size || 0
+						}}
 						traderName={selectedTrader}
 						onClose={() => setSelectedTrade(null)}
 					/>
