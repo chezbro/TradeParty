@@ -12,7 +12,7 @@ import {
 	Call
 } from "@stream-io/video-react-sdk";
 import { useParams } from "next/navigation";
-import {  useEffect, useState, useCallback, useRef } from "react";
+import {  useEffect, useState, useCallback, useRef, memo } from "react";
 import { useRouter } from "next/navigation";
 import { TraderStats } from "@/components/TraderStats";
 import { TradesFeed } from "@/components/TradesFeed";
@@ -92,7 +92,8 @@ const MultiChartGrid = ({
 
 // Update the StreamVideoParticipant interface to include the properties we're using
 interface EnhancedStreamVideoParticipant extends StreamVideoParticipant {
-	name: string;
+	videoTrack?: MediaStreamTrack;
+	name?: string;
 }
 
 // Update the Trade interface to match what's being used
@@ -110,10 +111,135 @@ interface LiveChart {
 	sharedByName?: string;
 }
 
-// Add this interface near the top of the file with other interfaces
-interface ParticipantViewUIProps {
-	participant: StreamVideoParticipant;
-}
+// Memoize the MainContentArea component
+const MainContentArea = memo(({ 
+	isMultiChartEnabled,
+	chartLayouts,
+	currentSymbol,
+	handleSymbolChange,
+	handleStarClick,
+	watchlist,
+	shareChart,
+	isLiveSharing,
+	handleToggleLiveShare,
+	broadcaster,
+	user,
+	handleToggleMultiChart,
+	setChartLayouts,
+	liveCharts
+}) => {
+	if (isMultiChartEnabled) {
+		return (
+			<div className="grid grid-cols-2 gap-4 p-4 h-full">
+				{/* Your charts */}
+				{chartLayouts.map((symbol, index) => (
+					<div key={`${symbol}-${index}`} className="relative rounded-xl overflow-hidden border border-white/5 
+						bg-gray-900/20 backdrop-blur-sm">
+						<ChartViewer 
+							symbol={symbol}
+							onSymbolChange={(newSymbol) => {
+								const newLayouts = [...chartLayouts];
+								newLayouts[index] = newSymbol;
+								setChartLayouts(newLayouts);
+							}}
+							onToggleFavorite={handleStarClick}
+							isFavorited={watchlist.includes(symbol)}
+							onShare={shareChart}
+							
+							compact={true}
+						/>
+						{chartLayouts.length > 1 && (
+							<button
+								onClick={() => {
+									setChartLayouts(prev => prev.filter((_, i) => i !== index));
+								}}
+								className="absolute top-2 right-2 p-2 bg-red-500/20 hover:bg-red-500/30 
+									rounded-full text-red-400 transition-colors z-10"
+							>
+								<IoMdRemove size={16} />
+							</button>
+						)}
+					</div>
+				))}
+
+				{/* Live shared charts from other participants */}
+				{liveCharts
+					.filter(chart => chart.sharedBy !== user?.id) // Don't show our own shared chart
+					.map((chart) => (
+						<div 
+							key={chart.sharedBy}
+							className="relative rounded-xl overflow-hidden border border-emerald-500/20 
+								bg-gray-900/20 backdrop-blur-sm"
+						>
+							<div className="absolute top-2 left-2 z-10 flex items-center gap-2 
+								bg-gray-900/90 px-3 py-1.5 rounded-full border border-emerald-500/20">
+								<span className="animate-pulse text-emerald-400 text-[8px]">●</span>
+								<span className="text-sm text-white/90">
+									{chart.sharedByName}'s Chart
+								</span>
+							</div>
+							<ChartViewer 
+								symbol={chart.symbol}
+								onSymbolChange={() => {}} // Read-only
+								onShare={shareChart}
+								compact={true}
+								isReadOnly={true} // Add this prop to ChartViewer
+							/>
+						</div>
+				))}
+
+				{/* Add Chart Button */}
+				{chartLayouts.length + liveCharts.length < 4 && (
+					<div className="rounded-xl border border-white/5 bg-gray-900/20 backdrop-blur-sm">
+						<ChartViewer 
+							symbol=""
+							onSymbolChange={(newSymbol) => {
+								setChartLayouts(prev => [...prev, newSymbol]);
+							}}
+							onToggleFavorite={handleStarClick}
+							isFavorited={false}
+							compact={true}
+							isAddChart={true}
+							onShare={shareChart}
+						/>
+					</div>
+				)}
+			</div>
+		);
+	}
+
+	// Single chart view with live broadcast indicator
+	return (
+		<div className="h-full rounded-xl overflow-hidden border border-white/5 
+			bg-gray-900/20 backdrop-blur-sm relative">
+			{/* Live Broadcast Indicator */}
+			{broadcaster && broadcaster.userId !== user?.id && (
+				<div className="absolute top-4 left-4 z-20 flex items-center gap-2 
+					bg-gray-900/90 px-3 py-2 rounded-full border border-emerald-500/20">
+					<span className="animate-pulse text-emerald-400 text-[8px]">●</span>
+					<span className="text-sm text-white/90">
+						Viewing Shared Chart
+					</span>
+				</div>
+			)}
+
+			<ChartViewer 
+				symbol={currentSymbol}
+				onSymbolChange={handleSymbolChange}
+				onToggleFavorite={handleStarClick}
+				isFavorited={watchlist.includes(currentSymbol)}
+				onShare={shareChart}
+				onToggleMultiChart={handleToggleMultiChart}
+				isMultiChartEnabled={isMultiChartEnabled}
+				isLiveSharing={isLiveSharing}
+				onToggleLiveShare={handleToggleLiveShare}
+				isReadOnly={Boolean(broadcaster && broadcaster.userId !== user?.id)}
+			/>
+		</div>
+	);
+});
+
+MainContentArea.displayName = 'MainContentArea';
 
 export default function FaceTimePage() {
 	const { id } = useParams<{ id: string }>();
@@ -233,7 +359,7 @@ export default function FaceTimePage() {
 
 }
 
-const MeetingRoom: FC<MeetingRoomProps> = ({ shareChart, sharedCharts, socket, meetingName }) => {
+const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, socket, meetingName }) => {
 	const { user } = useUser();
 	const router = useRouter();
 	const [layout, setLayout] = useState<CallLayoutType>("trading");
@@ -326,13 +452,13 @@ const MeetingRoom: FC<MeetingRoomProps> = ({ shareChart, sharedCharts, socket, m
 		);
 	};
 
-	const handleStarClick = (symbol: string) => {
+	const handleStarClick = useCallback((symbol: string) => {
 		setWatchlist(prev => 
 			prev.includes(symbol) 
 				? prev.filter(item => item !== symbol)
 				: [...prev, symbol]
 		);
-	};
+	}, []);
 
 	const handleMouseMove = (e: React.MouseEvent) => {
 		const threshold = window.innerHeight - 150;
@@ -391,17 +517,19 @@ const MeetingRoom: FC<MeetingRoomProps> = ({ shareChart, sharedCharts, socket, m
 		};
 	}, [controlsPosition]);
 
-	const handleToggleMultiChart = () => {
-		setIsMultiChartEnabled(!isMultiChartEnabled);
-		if (!isMultiChartEnabled && !chartLayouts.includes(currentSymbol)) {
-			setChartLayouts(prev => [...prev, currentSymbol]);
-		}
-	};
+	const handleToggleMultiChart = useCallback(() => {
+		setIsMultiChartEnabled(prev => {
+			const newValue = !prev;
+			if (!newValue && !chartLayouts.includes(currentSymbol)) {
+				setChartLayouts(prevLayouts => [...prevLayouts, currentSymbol]);
+			}
+			return newValue;
+		});
+	}, [currentSymbol, chartLayouts]);
 
 	const handleSymbolChange = useCallback((newSymbol: string) => {
 		setCurrentSymbol(newSymbol);
 		
-		// If we're broadcasting, send update to others
 		if (isLiveSharing && call) {
 			call.sendCustomEvent({
 				type: 'chart_update',
@@ -458,136 +586,7 @@ const MeetingRoom: FC<MeetingRoomProps> = ({ shareChart, sharedCharts, socket, m
 		});
 	}, [isLiveSharing, call, currentSymbol]);
 
-	const MainContentArea = () => {
-		if (isMultiChartEnabled) {
-			return (
-				<div className="grid grid-cols-2 gap-4 p-4 h-full">
-					{/* Your charts */}
-					{chartLayouts.map((symbol, index) => (
-						<div key={`${symbol}-${index}`} className="relative rounded-xl overflow-hidden border border-white/5 
-							bg-gray-900/20 backdrop-blur-sm">
-							<ChartViewer 
-								symbol={symbol}
-								onSymbolChange={(newSymbol) => {
-									const newLayouts = [...chartLayouts];
-									newLayouts[index] = newSymbol;
-									setChartLayouts(newLayouts);
-								}}
-								onToggleFavorite={handleStarClick}
-								isFavorited={watchlist.includes(symbol)}
-								onShare={shareChart}
-								
-								compact={true}
-							/>
-							{chartLayouts.length > 1 && (
-								<button
-									onClick={() => {
-										setChartLayouts(prev => prev.filter((_, i) => i !== index));
-									}}
-									className="absolute top-2 right-2 p-2 bg-red-500/20 hover:bg-red-500/30 
-										rounded-full text-red-400 transition-colors z-10"
-								>
-									<IoMdRemove size={16} />
-								</button>
-							)}
-						</div>
-					))}
-
-					{/* Live shared charts from other participants */}
-					{liveCharts
-						.filter(chart => chart.sharedBy !== user?.id) // Don't show our own shared chart
-						.map((chart) => (
-							<div 
-								key={chart.sharedBy}
-								className="relative rounded-xl overflow-hidden border border-emerald-500/20 
-									bg-gray-900/20 backdrop-blur-sm"
-							>
-								<div className="absolute top-2 left-2 z-10 flex items-center gap-2 
-									bg-gray-900/90 px-3 py-1.5 rounded-full border border-emerald-500/20">
-									<span className="animate-pulse text-emerald-400 text-[8px]">●</span>
-									<span className="text-sm text-white/90">
-										{chart.sharedByName}'s Chart
-									</span>
-								</div>
-								<ChartViewer 
-									symbol={chart.symbol}
-									onSymbolChange={() => {}} // Read-only
-									onShare={shareChart}
-									compact={true}
-									isReadOnly={true} // Add this prop to ChartViewer
-								/>
-							</div>
-					))}
-
-					{/* Add Chart Button */}
-					{chartLayouts.length + liveCharts.length < 4 && (
-						<div className="rounded-xl border border-white/5 bg-gray-900/20 backdrop-blur-sm">
-							<ChartViewer 
-								symbol=""
-								onSymbolChange={(newSymbol) => {
-									setChartLayouts(prev => [...prev, newSymbol]);
-								}}
-								onToggleFavorite={handleStarClick}
-								isFavorited={false}
-								compact={true}
-								isAddChart={true}
-								onShare={shareChart}
-							/>
-						</div>
-					)}
-				</div>
-			);
-		}
-
-		// Single chart view with live broadcast indicator
-		return (
-			<div className="h-full rounded-xl overflow-hidden border border-white/5 
-				bg-gray-900/20 backdrop-blur-sm relative">
-				{/* Live Broadcast Indicator */}
-				{broadcaster && broadcaster.userId !== user?.id && (
-					<div className="absolute top-4 left-4 z-20 flex items-center gap-2 
-						bg-gray-900/90 px-3 py-2 rounded-full border border-emerald-500/20">
-						<span className="animate-pulse text-emerald-400 text-[8px]">●</span>
-						<span className="text-sm text-white/90">
-							Viewing Shared Chart
-						</span>
-					</div>
-				)}
-
-				<ChartViewer 
-					symbol={currentSymbol}
-					onSymbolChange={handleSymbolChange}
-					onToggleFavorite={handleStarClick}
-					isFavorited={watchlist.includes(currentSymbol)}
-					onShare={shareChart}
-					onToggleMultiChart={handleToggleMultiChart}
-					isMultiChartEnabled={isMultiChartEnabled}
-					isLiveSharing={isLiveSharing}
-					onToggleLiveShare={handleToggleLiveShare}
-					isReadOnly={Boolean(broadcaster && broadcaster.userId !== user?.id)}
-				/>
-			</div>
-		);
-	};
-
-	useEffect(() => {
-		// If we're live sharing, broadcast any symbol changes
-		if (isLiveSharing && call) {
-			console.log("Broadcasting symbol change:", currentSymbol);
-			call.sendCustomEvent({
-				type: 'start_chart_share',
-				data: {
-					symbol: currentSymbol,
-					sharedBy: call.state.localParticipant?.userId
-				}
-			});
-		}
-	}, [currentSymbol, isLiveSharing, call]);
-
-	useEffect(() => {
-		console.log("Meeting Name:", call?.state?.custom?.meetingName);
-	}, [call]);
-
+	// Use the memoized MainContentArea in your render
 	return (
 		<TradesProvider>
 			<section 
@@ -690,7 +689,22 @@ const MeetingRoom: FC<MeetingRoomProps> = ({ shareChart, sharedCharts, socket, m
 					{/* Main Content Area - Chart */}
 					<div className="flex-1 h-full flex flex-col bg-black/40">
 						<div className="flex-1 p-6">
-							<MainContentArea />
+							<MainContentArea 
+								isMultiChartEnabled={isMultiChartEnabled}
+								chartLayouts={chartLayouts}
+								currentSymbol={currentSymbol}
+								handleSymbolChange={handleSymbolChange}
+								handleStarClick={handleStarClick}
+								watchlist={watchlist}
+								shareChart={shareChart}
+								isLiveSharing={isLiveSharing}
+								handleToggleLiveShare={handleToggleLiveShare}
+								broadcaster={broadcaster}
+								user={user}
+								handleToggleMultiChart={handleToggleMultiChart}
+								setChartLayouts={setChartLayouts}
+								liveCharts={liveCharts}
+							/>
 						</div>
 					</div>
 
@@ -724,7 +738,7 @@ const MeetingRoom: FC<MeetingRoomProps> = ({ shareChart, sharedCharts, socket, m
 							<div className="h-full p-2">
 								<PaginatedGridLayout
 									groupSize={4}
-									ParticipantViewUI={(props: ParticipantViewUIProps) => {
+									ParticipantViewUI={(props) => {
 										const participant = props.participant as EnhancedStreamVideoParticipant;
 										return (
 											<div className="relative w-full aspect-video rounded-lg overflow-hidden 
@@ -859,4 +873,6 @@ const MeetingRoom: FC<MeetingRoomProps> = ({ shareChart, sharedCharts, socket, m
 			</section>
 		</TradesProvider>
 	);
-};
+});
+
+MeetingRoom.displayName = 'MeetingRoom';

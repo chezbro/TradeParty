@@ -73,7 +73,7 @@ export default function Dashboard() {
 										shadow-lg hover:shadow-indigo-500/25"
 							>
 								<FaPlay className="text-sm" />
-								Start Trading Now
+								Start a TradeParty
 							</button>
 						</div>
 					</div>
@@ -96,7 +96,7 @@ export default function Dashboard() {
 						<div className="bg-indigo-500/10 p-4 rounded-xl w-fit mb-6 ring-2 ring-indigo-500/20">
 							<FaVideo className="text-indigo-500 text-3xl" />
 						</div>
-						<h3 className="text-white text-xl font-semibold mb-3">Host a TradeParty</h3>
+						<h3 className="text-white text-xl font-semibold mb-3">Host</h3>
 						<p className="text-gray-400 leading-relaxed">Start a live trading session with friends. See your trades and chart analysis on stream.</p>
 					</motion.div>
 
@@ -111,7 +111,7 @@ export default function Dashboard() {
 						<div className="bg-purple-500/10 p-4 rounded-xl w-fit mb-6 ring-2 ring-purple-500/20">
 							<FaChartLine className="text-purple-500 text-3xl" />
 						</div>
-						<h3 className="text-white text-xl font-semibold mb-3">Create Trading Event</h3>
+						<h3 className="text-white text-xl font-semibold mb-3">Schedule</h3>
 						<p className="text-gray-400 leading-relaxed">Schedule a future trading session and invite others</p>
 					</motion.div>
 
@@ -126,7 +126,7 @@ export default function Dashboard() {
 						<div className="bg-fuchsia-500/10 p-4 rounded-xl w-fit mb-6 ring-2 ring-fuchsia-500/20">
 							<FaCalendar className="text-fuchsia-500 text-3xl" />
 						</div>
-						<h3 className="text-white text-xl font-semibold mb-3">Upcoming Sessions</h3>
+						<h3 className="text-white text-xl font-semibold mb-3">Upcoming</h3>
 						<p className="text-gray-400 leading-relaxed">View scheduled trading rooms and events</p>
 					</motion.div>
 				</motion.div>

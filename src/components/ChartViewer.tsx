@@ -1,4 +1,4 @@
-import { FC, useState, useEffect, useRef, useCallback } from 'react';
+import { FC, useState, useEffect, useRef, useCallback, memo } from 'react';
 import { TradingViewChart } from './TradingViewChart';
 import { FaSearch, FaHistory, FaStar, FaChartLine, FaShare, FaExpand, FaCompress } from 'react-icons/fa';
 import { useCall } from "@stream-io/video-react-sdk";
@@ -52,7 +52,7 @@ const ALL_SYMBOLS: SymbolOption[] = [
   }))
 ];
 
-export const ChartViewer: FC<ChartViewerProps> = ({ 
+export const ChartViewer: FC<ChartViewerProps> = memo(({ 
   onShare, 
   onSymbolChange,
   symbol,
@@ -108,7 +108,7 @@ export const ChartViewer: FC<ChartViewerProps> = ({
     sym.name?.toLowerCase().includes(searchInput.toLowerCase())
   ).slice(0, 8); // Show more results
 
-  const handleSymbolChange = (newSymbol: string) => {
+  const handleSymbolChange = useCallback((newSymbol: string) => {
     if (isReadOnly) {
       console.log("Chart is in read-only mode, ignoring symbol change");
       return;
@@ -122,12 +122,15 @@ export const ChartViewer: FC<ChartViewerProps> = ({
     }
 
     onSymbolChange(newSymbol);
-    if (!recentSymbols.includes(newSymbol)) {
-      setRecentSymbols(prev => [newSymbol, ...prev].slice(0, 5));
-    }
+    setRecentSymbols(prev => {
+      if (!prev.includes(newSymbol)) {
+        return [newSymbol, ...prev].slice(0, 5);
+      }
+      return prev;
+    });
     setSearchInput('');
     setShowDropdown(false);
-  };
+  }, [isReadOnly, isAddChart, onAddChart, onSymbolChange]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -297,4 +300,6 @@ export const ChartViewer: FC<ChartViewerProps> = ({
       )}
     </div>
   );
-}; 
+});
+
+ChartViewer.displayName = 'ChartViewer'; 
