@@ -347,10 +347,12 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 
 	// Update the ParticipantView component
 	const ParticipantView = ({ participant }: { participant: StreamVideoParticipant }) => {
+		const { user } = useUser();
+		
 		const mockParticipant = mockParticipants[Math.floor(Math.random() * mockParticipants.length)] || {
 			name: participant?.name || participant?.userId || 'Trader',
 			sessionId: participant?.sessionId || '',
-			image: "https://picsum.photos/seed/default/200/200",
+			image: user?.imageUrl || "https://picsum.photos/seed/default/200/200", // Use Clerk avatar
 			activeTrades: []
 		};
 		
@@ -500,7 +502,7 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 																	className="w-6 h-6 rounded-full border-2 border-gray-900 bg-gray-800 overflow-hidden"
 																>
 																	<img
-																		src={`https://picsum.photos/seed/trader${i + 1}/200/200`}
+																		src={user?.imageUrl || `https://picsum.photos/seed/trader${i + 1}/200/200`}
 																		alt={`Participant ${i + 1}`}
 																		className="w-full h-full object-cover"
 																	/>
@@ -828,10 +830,10 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 															className="w-6 h-6 rounded-full border-2 border-gray-900 bg-gray-800 overflow-hidden"
 														>
 															<img
-																src={`https://picsum.photos/seed/trader${i + 1}/200/200`}
+																src={user?.imageUrl || `https://picsum.photos/seed/trader${i + 1}/200/200`}
 																alt={`Participant ${i + 1}`}
 																className="w-full h-full object-cover"
-															/>
+																/>
 														</div>
 													))}
 												</div>
@@ -898,15 +900,24 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 											hover:shadow-lg hover:shadow-emerald-500/10">
 											{/* Video Container */}
 											<div className="absolute inset-0 bg-black/20">
-												<video
-													className="h-full w-full object-cover"
-													autoPlay
-													muted
-													playsInline
-												/>
+												{participant?.videoTrack ? (
+													<video
+														className="h-full w-full object-cover"
+														autoPlay
+														muted
+														playsInline
+													/>
+												) : (
+													// Use Clerk avatar as fallback when no video
+													<img 
+														src={user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
+														alt={participant?.name || "Participant"}
+														className="h-full w-full object-cover"
+													/>
+												)}
 											</div>
 
-											{/* Overlay with Participant Info */}
+											{/* Rest of the overlay content remains the same */}
 											<div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent">
 												<div className="absolute bottom-0 left-0 right-0 p-3 space-y-2">
 													{/* Participant Name & Status */}
@@ -914,7 +925,7 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 														<div className="flex items-center gap-2">
 															<div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
 															<span className="text-sm font-medium text-white">
-																{ 'Trader'}
+																{participant?.name || user?.firstName || 'Trader'}
 															</span>
 														</div>
 														<span className="text-xs text-emerald-400 bg-emerald-500/10 

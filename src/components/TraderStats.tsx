@@ -1,4 +1,5 @@
 import { FaUser, FaChartLine, FaPercent, FaExchangeAlt } from 'react-icons/fa';
+import { useUser } from "@clerk/nextjs";
 
 interface TraderData {
     userId: string;
@@ -13,50 +14,67 @@ interface TraderStatsProps {
     trader: TraderData;
 }
 
-export const TraderStats = ({ trader }: TraderStatsProps) => {
+export const TraderStats: React.FC<TraderStatsProps> = ({ trader }) => {
+    const { user } = useUser();
+
     return (
-        <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300">
-            {/* Trader Header */}
-            <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
-                    <FaUser className="text-blue-400" />
-                </div>
-                <div>
-                    <h3 className="text-white font-medium">{trader.name}</h3>
-                    <span className={`text-sm ${trader.profitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {trader.profitLoss >= 0 ? '+' : ''}{trader.profitLoss.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
-                    </span>
+        <div className="rounded-lg bg-gray-900/50 border border-white/10 overflow-hidden">
+            {/* Header */}
+            <div className="p-3 border-b border-white/5">
+                <div className="flex items-center gap-3">
+                    {/* Avatar */}
+                    <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10">
+                        <img 
+                            src={user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
+                            alt={trader.name}
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                    {/* Trader Info */}
+                    <div>
+                        <h3 className="font-medium text-white">{trader.name}</h3>
+                        <p className="text-sm text-emerald-400">Active Trader</p>
+                    </div>
                 </div>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-2 mt-2">
-                <div className="bg-gray-800/50 rounded-lg px-3 py-2">
-                    <div className="flex items-center gap-1.5 text-gray-400 text-xs mb-1">
-                        <FaPercent className="text-blue-400" />
-                        Win Rate
+            <div className="grid grid-cols-2 gap-px bg-white/5 p-px">
+                <div className="bg-gray-900/50 p-3">
+                    <div className="flex items-center gap-2 text-white/50 text-sm mb-1">
+                        <FaChartLine />
+                        <span>P/L</span>
                     </div>
-                    <div className="text-white font-medium">
-                        {(trader.winRate * 100).toFixed(1)}%
-                    </div>
-                </div>
-
-                <div className="bg-gray-800/50 rounded-lg px-3 py-2">
-                    <div className="flex items-center gap-1.5 text-gray-400 text-xs mb-1">
-                        <FaExchangeAlt className="text-blue-400" />
-                        Positions
-                    </div>
-                    <div className="text-white font-medium">
-                        {trader.openPositions}
+                    <div className={`text-lg font-semibold ${
+                        trader.profitLoss >= 0 ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                        ${trader.profitLoss.toFixed(2)}
                     </div>
                 </div>
-
-                <div className="bg-gray-800/50 rounded-lg px-3 py-2">
-                    <div className="flex items-center gap-1.5 text-gray-400 text-xs mb-1">
-                        <FaChartLine className="text-blue-400" />
-                        Trades
+                <div className="bg-gray-900/50 p-3">
+                    <div className="flex items-center gap-2 text-white/50 text-sm mb-1">
+                        <FaPercent />
+                        <span>Win Rate</span>
                     </div>
-                    <div className="text-white font-medium">
+                    <div className="text-lg font-semibold text-white">
+                        {trader.winRate}%
+                    </div>
+                </div>
+                <div className="bg-gray-900/50 p-3">
+                    <div className="flex items-center gap-2 text-white/50 text-sm mb-1">
+                        <FaUser />
+                        <span>Positions</span>
+                    </div>
+                    <div className="text-lg font-semibold text-white">
+                        {trader.openPositions || 0}
+                    </div>
+                </div>
+                <div className="bg-gray-900/50 p-3">
+                    <div className="flex items-center gap-2 text-white/50 text-sm mb-1">
+                        <FaExchangeAlt />
+                        <span>Trades</span>
+                    </div>
+                    <div className="text-lg font-semibold text-white">
                         {trader.totalTrades}
                     </div>
                 </div>
