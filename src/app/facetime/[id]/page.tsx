@@ -319,6 +319,8 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 	const [isDetached, setIsDetached] = useState(false);
 	const [isWatchlistExpanded, setIsWatchlistExpanded] = useState(false);
 	const [isTradeEntryExpanded, setIsTradeEntryExpanded] = useState(true);
+	const [isMultiChartEnabled, setIsMultiChartEnabled] = useState(false);
+	const [chartLayouts, setChartLayouts] = useState<string[]>([currentSymbol]);
 
 	const handleResize = useCallback((e: any, { size }: { size: { width: number } }) => {
 		setPanelWidth(size.width);
@@ -766,6 +768,78 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 		totalTrades: 45,
 	};
 
+	const handleToggleMultiChart = () => {
+		setIsMultiChartEnabled(!isMultiChartEnabled);
+		if (!isMultiChartEnabled && !chartLayouts.includes(currentSymbol)) {
+			setChartLayouts(prev => [...prev, currentSymbol]);
+		}
+	};
+
+	const MainContentArea = () => {
+		if (isMultiChartEnabled) {
+			return (
+				<div className="grid grid-cols-2 gap-4 p-4 h-full">
+					{chartLayouts.map((symbol, index) => (
+						<div key={`${symbol}-${index}`} className="relative rounded-xl overflow-hidden border border-white/5 
+							bg-gray-900/20 backdrop-blur-sm">
+							<ChartViewer 
+								symbol={symbol}
+								onSymbolChange={(newSymbol) => {
+									const newLayouts = [...chartLayouts];
+									newLayouts[index] = newSymbol;
+									setChartLayouts(newLayouts);
+								}}
+								onToggleFavorite={handleStarClick}
+								isFavorited={watchlist.includes(symbol)}
+								onShare={shareChart}
+								compact={true}
+							/>
+							{chartLayouts.length > 1 && (
+								<button
+									onClick={() => {
+										setChartLayouts(prev => prev.filter((_, i) => i !== index));
+									}}
+									className="absolute top-2 right-2 p-2 bg-red-500/20 hover:bg-red-500/30 
+										rounded-full text-red-400 transition-colors z-10"
+								>
+									<IoMdRemove size={16} />
+								</button>
+							)}
+						</div>
+					))}
+					{/* Add Chart Button - Using ChartViewer's search */}
+					<div className="rounded-xl border border-white/5 bg-gray-900/20 backdrop-blur-sm">
+						<ChartViewer 
+							symbol=""
+							onSymbolChange={(newSymbol) => {
+								setChartLayouts(prev => [...prev, newSymbol]);
+							}}
+							onToggleFavorite={handleStarClick}
+							isFavorited={false}
+							compact={true}
+							isAddChart={true} // Add this prop to ChartViewer
+						/>
+					</div>
+				</div>
+			);
+		}
+
+		return (
+			<div className="h-full rounded-xl overflow-hidden border border-white/5 
+				bg-gray-900/20 backdrop-blur-sm">
+				<ChartViewer 
+					symbol={currentSymbol}
+					onSymbolChange={handleSymbolChange}
+					onToggleFavorite={handleStarClick}
+					isFavorited={watchlist.includes(currentSymbol)}
+					onShare={shareChart}
+					onToggleMultiChart={handleToggleMultiChart}
+					isMultiChartEnabled={isMultiChartEnabled}
+				/>
+			</div>
+		);
+	};
+
 	return (
 		<TradesProvider>
 			<section 
@@ -873,16 +947,7 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 					{/* Main Content Area */}
 					<div className="flex-1 h-full flex flex-col bg-black/40">
 						<div className="flex-1 p-6">
-							<div className="h-full rounded-xl overflow-hidden border border-white/5 
-								bg-gray-900/20 backdrop-blur-sm">
-								<ChartViewer 
-									symbol={currentSymbol}
-									onSymbolChange={handleSymbolChange}
-									onToggleFavorite={handleStarClick}
-									isFavorited={watchlist.includes(currentSymbol)}
-									onShare={shareChart}
-								/>
-							</div>
+							<MainContentArea />
 						</div>
 
 						{/* Video Grid */}

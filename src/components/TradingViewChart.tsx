@@ -7,18 +7,22 @@ interface TradingViewChartProps {
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   onShare?: () => void;
+  compact?: boolean;
 }
 
 export const TradingViewChart: FC<TradingViewChartProps> = ({
   symbol,
   isFullscreen,
   onToggleFullscreen,
-  onShare
+  onShare,
+  compact = false
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<any>(null);
   const [height, setHeight] = useState(500);
   const [isDragging, setIsDragging] = useState(false);
+  
+  const chartId = useRef(`tradingview_chart_${Math.random().toString(36).substring(7)}`);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -64,7 +68,7 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
           enable_publishing: false,
           hide_side_toolbar: false,
           allow_symbol_change: true,
-          container_id: "tradingview_chart",
+          container_id: chartId.current,
           
           charts_storage_url: "https://saveload.tradingview.com",
           charts_storage_api_version: "1.1",
@@ -117,9 +121,8 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
         </button>
       </div>
       <div 
-        ref={containerRef}
-        id="tradingview_chart"
-        className="w-full h-full"
+        id={chartId.current}
+        className={`w-full h-full ${compact ? 'min-h-[300px]' : 'min-h-[400px]'}`}
       />
       
       {!isFullscreen && (
