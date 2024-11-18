@@ -719,11 +719,11 @@ const MeetingRoom: FC<MeetingRoomProps> = ({ shareChart, sharedCharts, socket, m
 							{/* Video Grid */}
 							<div className="h-full p-2">
 								<PaginatedGridLayout
-									groupSize={3}
+									groupSize={4}
 									ParticipantViewUI={(props) => {
 										const participant = props.participant as EnhancedStreamVideoParticipant;
 										return (
-											<div className="relative w-full h-[200px] rounded-lg overflow-hidden 
+											<div className="relative w-full aspect-video rounded-lg overflow-hidden 
 												bg-gray-900/50 backdrop-blur-sm border border-white/10 
 												transition-all duration-300 hover:border-emerald-500/30 
 												hover:shadow-lg hover:shadow-emerald-500/10 mb-2"
@@ -732,26 +732,38 @@ const MeetingRoom: FC<MeetingRoomProps> = ({ shareChart, sharedCharts, socket, m
 												<div className="absolute inset-0 bg-black/20">
 													{participant?.videoTrack ? (
 														<video
-															className="h-full w-full object-cover"
+															ref={(el) => {
+																if (el && participant.videoTrack) {
+																	el.srcObject = new MediaStream([participant.videoTrack]);
+																}
+															}}
 															autoPlay
-															muted
 															playsInline
+															muted
+															className="h-full w-full object-cover"
 														/>
 													) : (
-														<img 
-															src={user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
-															alt={participant?.name || "Participant"}
-															className="h-full w-full object-cover"
-														/>
+														<div className="h-full w-full flex items-center justify-center bg-gray-800">
+															<img 
+																src={participant?.image || "https://picsum.photos/seed/default/200/200"}
+																alt={participant?.name || "Participant"}
+																className="h-12 w-12 rounded-full"
+															/>
+														</div>
 													)}
 												</div>
 												
-												{/* Rest of the participant view code... */}
+												{/* Participant Name Overlay */}
+												<div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
+													<p className="text-sm text-white truncate">
+														{participant?.name || "Participant"}
+													</p>
+												</div>
 											</div>
 										);
 									}}
 									VideoPlaceholder={() => (
-										<div className="flex items-center justify-center w-full h-[200px] rounded-lg 
+										<div className="flex items-center justify-center w-full aspect-video rounded-lg 
 											bg-gray-800/50 border border-white/5 mb-2">
 											<div className="flex flex-col items-center gap-1.5">
 												<FaVideo className="text-gray-400 text-2xl" />
