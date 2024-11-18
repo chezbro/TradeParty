@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { FaVideo, FaChartLine, FaUsers, FaCalendar } from "react-icons/fa";
+import { FaVideo, FaChartLine, FaUsers, FaCalendar, FaPlay } from "react-icons/fa";
 import { motion } from "framer-motion";
 import InstantMeeting from "@/app/modals/InstantMeeting";
 import UpcomingMeeting from "@/app/modals/UpcomingMeeting";
@@ -38,12 +38,53 @@ export default function Dashboard() {
 	return (
 		<div className="min-h-screen bg-gradient-to-b from-[#0F172A] to-[#1E293B]">
 			<main className="container mx-auto px-4 py-12">
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.6 }}
+					className="relative mb-20 rounded-2xl overflow-hidden"
+				>
+					<div className="aspect-video relative rounded-2xl overflow-hidden border border-gray-800/50">
+						<div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60 z-10" />
+						<video
+							autoPlay
+							loop
+							muted
+							className="w-full h-full object-cover"
+						>
+							<source src="/video.mp4" type="video/mp4" />
+							Your browser does not support the video tag.
+						</video>
+						
+						<div className="absolute inset-0 z-20 flex flex-col justify-center items-center text-center p-6">
+							<h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
+								Trade Together,{" "}
+								<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">
+									Grow Together
+								</span>
+							</h1>
+							<p className="text-lg md:text-xl text-gray-300 max-w-2xl mb-8">
+								Join live trading sessions, share insights, and learn from fellow traders in real-time.
+							</p>
+							<button 
+								onClick={() => setStartInstantMeeting(true)}
+								className="bg-indigo-500 hover:bg-indigo-600 text-white px-8 py-4 rounded-xl
+										flex items-center gap-3 font-semibold transition-all duration-300
+										shadow-lg hover:shadow-indigo-500/25"
+							>
+								<FaPlay className="text-sm" />
+								Start Trading Now
+							</button>
+						</div>
+					</div>
+				</motion.div>
+
 				<motion.div 
 					variants={containerVariants}
 					initial="hidden"
 					animate="visible"
 					className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16"
-				>
+					>
 					<motion.div
 						variants={cardVariants}
 						whileHover={{ scale: 1.02, y: -5 }}

@@ -29,7 +29,7 @@ export default function CreateLink({ enable, setEnable }: Props) {
 	return (
 		<>
 			<Transition appear show={enable} as={Fragment}>
-				<Dialog as='div' className='relative z-10' onClose={closeModal}>
+				<Dialog as='div' className='relative z-[100]' onClose={closeModal}>
 					<TransitionChild
 						as={Fragment}
 						enter='ease-out duration-300'
@@ -53,7 +53,7 @@ export default function CreateLink({ enable, setEnable }: Props) {
 								leaveFrom='opacity-100 scale-100'
 								leaveTo='opacity-0 scale-95'
 							>
-								<DialogPanel className='w-full max-w-2xl transform overflow-visible rounded-2xl bg-white p-6 align-middle shadow-xl transition-all text-center relative'>
+								<DialogPanel className='w-full max-w-2xl transform overflow-visible rounded-2xl bg-white p-6 align-middle shadow-xl transition-all text-center relative' onClick={(e) => e.stopPropagation()}>
 									{showMeetingLink ? (
 										<MeetingLink 
 											facetimeLink={facetimeLink} 
@@ -67,7 +67,7 @@ export default function CreateLink({ enable, setEnable }: Props) {
 											setMeetingDescription={setMeetingDescription}
 											setMeetingDateTime={setMeetingDateTime}
 										/>
-									)}
+										)}
 								</DialogPanel>
 							</TransitionChild>
 						</div>
