@@ -1,18 +1,61 @@
 import { FaExchangeAlt, FaChevronDown, FaChevronRight } from 'react-icons/fa';
 import { useTrades } from '@/context/TradesContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Trade } from '@/types/trade';
+import Confetti from 'react-confetti';
 
 export const TradesFeed = () => {
     const { trades } = useTrades();
     const [filter, setFilter] = useState<"ALL" | "LONG" | "SHORT">("ALL");
     const [isExpanded, setIsExpanded] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
+    const [lastTradeCount, setLastTradeCount] = useState(trades.length);
+
+    // Monitor trades for changes
+    useEffect(() => {
+        if (trades.length > lastTradeCount) {
+            // New trade was added
+            setShowConfetti(true);
+            setTimeout(() => setShowConfetti(false), 5000); // Hide confetti after 5 seconds
+        }
+        setLastTradeCount(trades.length);
+    }, [trades.length, lastTradeCount]);
 
     const filteredTrades = trades.filter(trade => 
         filter === "ALL" ? true : trade.type === filter
     );
 
+    // Helper function to get trader initials
+    const getTraderInitials = (trade: Trade) => {
+        return trade.trader?.name?.[0] || '?';
+    };
+
+    // Helper function to get trader name
+    const getTraderName = (trade: Trade) => {
+        return trade.trader?.name || 'Anonymous Trader';
+    };
+
     return (
         <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700/50">
+            {/* Confetti overlay */}
+            {showConfetti && (
+                <Confetti
+                    width={window.innerWidth}
+                    height={window.innerHeight}
+                    recycle={false}
+                    numberOfPieces={200}
+                    gravity={0.3}
+                    colors={['#10B981', '#34D399', '#6EE7B7', '#A7F3D0']} // Green theme colors
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        zIndex: 1000,
+                        pointerEvents: 'none'
+                    }}
+                />
+            )}
+
             <button 
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="w-full p-4 flex items-center justify-between hover:bg-gray-700/30 transition-colors rounded-t-xl"
@@ -75,9 +118,11 @@ export const TradesFeed = () => {
                                     <div className="flex justify-between items-center mb-3">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
-                                                {trade.trader.name[0]}
+                                                {getTraderInitials(trade)}
                                             </div>
-                                            <span className="text-white font-medium">{trade.trader.name}</span>
+                                            <span className="text-white font-medium">
+                                                {getTraderName(trade)}
+                                            </span>
                                         </div>
                                         <span className="text-sm text-gray-400">
                                             {new Date(trade.timestamp).toLocaleTimeString()}

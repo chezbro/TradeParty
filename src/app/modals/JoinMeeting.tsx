@@ -71,7 +71,7 @@ const MeetingForm = () => {
 				as='h3'
 				className='text-lg font-bold leading-6 text-green-600'
 			>
-				Join FaceTime
+				Join TradeParty
 			</DialogTitle>
 
 			<form className='w-full' onSubmit={handleStartMeeting}>
@@ -79,7 +79,7 @@ const MeetingForm = () => {
 					className='block text-left text-sm font-medium text-gray-700'
 					htmlFor='link'
 				>
-					Enter the FaceTime link
+					Enter the TradeParty link
 				</label>
 				<input
 					type='url'
@@ -88,7 +88,7 @@ const MeetingForm = () => {
 					value={link}
 					onChange={(e) => setLink(e.target.value)}
 					className='mt-1 block w-full text-sm py-3 px-4 border-gray-200 border-[1px] rounded mb-3'
-					placeholder='Enter the FaceTime link'
+					placeholder='Enter the TradeParty link'
 				/>
 
 				<button className='w-full bg-green-600 text-white py-3 rounded mt-4'>

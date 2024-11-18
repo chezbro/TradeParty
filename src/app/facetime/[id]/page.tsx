@@ -33,7 +33,7 @@ import Draggable from 'react-draggable';
 import { WatchlistContainer } from '@/components/WatchlistContainer';
 import { TradeEntryContainer } from '@/components/TradeEntryContainer';
 
-type CallLayoutType = "grid" | "speaker-left" | "speaker-right" | "trading";
+type CallLayoutType = "grid" | "speaker-left" | "speaker-right" | "trading" | "multi-chart";
 
 interface Trader {
 	name: string;
@@ -141,6 +141,47 @@ const mockParticipants: MockParticipant[] = [
 		]
 	}
 ];
+
+// Add this new component above the MeetingRoom component
+const MultiChartGrid = ({ 
+	symbols, 
+	onSymbolChange,
+	onToggleFavorite,
+	onShare 
+}: { 
+	symbols: string[], 
+	onSymbolChange: (symbol: string) => void,
+	onToggleFavorite: (symbol: string) => void,
+	onShare: (chartData: any) => void
+}) => {
+	return (
+		<div className="grid grid-cols-2 gap-4 p-4 h-full">
+			{symbols.map((symbol) => (
+				<div key={symbol} className="relative rounded-xl overflow-hidden border border-white/5 
+					bg-gray-900/20 backdrop-blur-sm">
+					<ChartViewer 
+						symbol={symbol}
+						onSymbolChange={onSymbolChange}
+						onToggleFavorite={onToggleFavorite}
+						isFavorited={true} // It's in watchlist so always favorited
+						onShare={onShare}
+						compact={true} // Add this prop to ChartViewer
+					/>
+				</div>
+			))}
+			{/* Add empty placeholder slots if watchlist length is odd */}
+			{symbols.length % 2 !== 0 && (
+				<div className="rounded-xl border border-white/5 bg-gray-900/20 backdrop-blur-sm
+					flex items-center justify-center text-gray-400">
+					<div className="text-center">
+						<FaStar className="mx-auto mb-2 text-2xl" />
+						<p>Add more symbols to your watchlist</p>
+					</div>
+				</div>
+			)}
+		</div>
+	);
+};
 
 export default function FaceTimePage() {
 	const { id } = useParams<{ id: string }>();
@@ -582,6 +623,41 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 						</div>
 					</TradesProvider>
 				);
+			case "multi-chart":
+				return (
+					<div className="flex h-full bg-black/40">
+						{/* Left Panel - keep the same as trading layout */}
+						<ResizableBox
+							width={panelWidth}
+							height={Infinity}
+							minConstraints={[60, Infinity]}
+							maxConstraints={[600, Infinity]}
+							axis="x"
+							onResize={handleResize}
+							className="transition-all duration-300 ease-in-out"
+						>
+							{/* ... existing left panel content ... */}
+						</ResizableBox>
+
+						{/* Main Content Area */}
+						<div className="flex-1 h-full flex flex-col">
+							{/* Charts Grid */}
+							<div className="flex-1">
+								<MultiChartGrid 
+									symbols={watchlist}
+									onSymbolChange={handleSymbolChange}
+									onToggleFavorite={handleStarClick}
+									onShare={shareChart}
+								/>
+							</div>
+
+							{/* Video Grid - same as trading layout */}
+							<div className="h-1/3 p-4">
+								{/* ... existing video grid content ... */}
+							</div>
+						</div>
+					</div>
+				);
 			default:
 				return (
 					<SpeakerLayout 
@@ -673,6 +749,19 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 	const handleMinimizeToggle = () => {
 		setIsMinimized(!isMinimized);
 		setIsControlsVisible(false);
+	};
+
+	// Format the user's name
+	const traderName = user?.firstName && user?.lastName 
+		? `${user.firstName} ${user.lastName}`
+		: user?.username || 'Anonymous Trader';
+
+	// Update mockTrader with the current user's info
+	const mockTrader: Trader = {
+		name: traderName,
+		profitLoss: 1250.50,
+		winRate: 68.5,
+		totalTrades: 45,
 	};
 
 	return (
@@ -907,18 +996,24 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 							<div className="mt-4 flex items-center gap-4">
 								<CallControls onLeave={handleLeave} />
 								<div className="h-8 w-px bg-white/10" />
-								<select 
-									value={layout}
-									onChange={(e) => setLayout(e.target.value as CallLayoutType)}
-									className="bg-gray-800 text-white/90 rounded-lg px-4 py-2 text-sm
-										border border-white/10 focus:outline-none focus:ring-2 
-										focus:ring-emerald-500/50 transition-all duration-200
-										cursor-pointer"
+								<button
+									onClick={() => setLayout(layout === "trading" ? "multi-chart" : "trading")}
+									className="flex items-center gap-2 px-4 py-2 rounded-lg
+										bg-gray-800 text-white/90 border border-white/10 
+										hover:bg-gray-700 transition-colors"
 								>
-									<option value="trading">Trading View</option>
-									<option value="grid">Grid View</option>
-									<option value="speaker">Speaker View</option>
-								</select>
+									{layout === "trading" ? (
+										<>
+											<FaChartLine className="text-blue-400" />
+											<span>Multi Chart</span>
+										</>
+									) : (
+										<>
+											<FaChartLine className="text-green-400" />
+											<span>Single Chart</span>
+										</>
+									)}
+								</button>
 							</div>
 						</div>
 					</div>

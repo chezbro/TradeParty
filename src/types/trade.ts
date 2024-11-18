@@ -5,9 +5,12 @@ export interface Trade {
     entry: number;
     target: number;
     stopLoss: number;
-    size: number;
     timestamp: number;
     status: 'OPEN' | 'CLOSED';
     profitLoss: number;
-    currentPrice: number;
+    pnl: number;
+    trader: {
+        name: string;
+        id: string;
+    };
 } 

@@ -52,7 +52,7 @@ export default function UpcomingMeeting({ enable, setEnable }: Props) {
 										as='h3'
 										className='text-lg font-bold leading-6 text-green-600 mb-4'
 									>
-										Upcoming FaceTime
+										Upcoming TradeParty
 									</DialogTitle>
 
                                     <MeetingList />

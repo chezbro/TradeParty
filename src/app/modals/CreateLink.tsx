@@ -117,11 +117,11 @@ const MeetingForm = ({
 				as='h3'
 				className='text-lg font-bold leading-6 text-green-600'
 			>
-				Schedule a FaceTime
+				Schedule a TradeParty
 			</DialogTitle>
 
 			<Description className='text-xs opacity-40 mb-4'>
-				Schedule a FaceTime meeting with your cliq
+				Schedule a TradeParty meeting with your cliq
 			</Description>
 
 			<form className='w-full' onSubmit={handleStartMeeting}>
@@ -129,7 +129,7 @@ const MeetingForm = ({
 					className='block text-left text-sm font-medium text-gray-700'
 					htmlFor='description'
 				>
-					Meeting Description
+					Name
 				</label>
 				<input
 					type='text'
@@ -139,7 +139,7 @@ const MeetingForm = ({
 					onChange={(e) => setDescription(e.target.value)}
 					className='mt-1 block w-full text-sm py-3 px-4 border-gray-200 border-[1px] rounded mb-3'
 					required
-					placeholder='Enter a description for the meeting'
+					placeholder='Enter a name for this TradeParty session'
 				/>
 
 				<label
@@ -160,7 +160,7 @@ const MeetingForm = ({
 				/>
 
 				<button className='w-full bg-green-600 text-white py-3 rounded mt-4'>
-					Create FaceTime
+					Create TradeParty
 				</button>
 			</form>
 		</>
@@ -177,11 +177,11 @@ const MeetingLink = ({ facetimeLink }: { facetimeLink: string }) => {
 				as='h3'
 				className='text-lg font-bold leading-6 text-green-600'
 			>
-				Copy FaceTime Link
+				Copy TradeParty Link
 			</DialogTitle>
 
 			<Description className='text-xs opacity-40 mb-4'>
-				You can share the facetime link with your participants
+				You can share the TradeParty link with your participants
 			</Description>
 
 			<div className='bg-gray-100 p-4 rounded flex items-center justify-between'>

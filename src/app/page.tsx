@@ -31,7 +31,7 @@ export default function Dashboard() {
 								onClick={() => setJoinMeeting(true)}
 							>
 								<FaVideo className="text-white" />
-								<span>Join Trading Room</span>
+								<span>Join a TradeParty Room</span>
 							</button>
 							
 							<UserButton 
@@ -56,8 +56,8 @@ export default function Dashboard() {
 						<div className="bg-indigo-500/10 p-3 rounded-lg w-fit mb-4">
 							<FaVideo className="text-indigo-500 text-2xl" />
 						</div>
-						<h3 className="text-white text-xl font-semibold mb-2">Start Trading Room</h3>
-						<p className="text-gray-400">Host a live trading session and share your screen with others</p>
+						<h3 className="text-white text-xl font-semibold mb-2">Host a TradeParty</h3>
+						<p className="text-gray-400">Start a live trading session with friends. See your trades and chart analysis on stream.</p>
 					</div>
 
 					<div className="bg-[#1E293B] p-6 rounded-xl hover:bg-[#2D3B4E] transition-all cursor-pointer 
@@ -81,15 +81,7 @@ export default function Dashboard() {
 					</div>
 				</div>
 
-				<div className="text-center">
-					<div className="inline-flex items-center space-x-2 bg-[#1E293B] px-4 py-2 rounded-lg 
-									border border-gray-800/50">
-						<p className="text-gray-400">Powered by</p>
-						<a href="https://getstream.io" target="_blank" rel="noopener noreferrer">
-							<Image src="/stream-logo.png" alt="Stream Logo" width={80} height={20} />
-						</a>
-					</div>
-				</div>
+
 			</main>
 
 			{startInstantMeeting && (

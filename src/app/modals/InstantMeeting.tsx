@@ -117,11 +117,11 @@ const MeetingForm = ({
 				as='h3'
 				className='text-lg font-bold leading-6 text-green-600'
 			>
-				Create Instant FaceTime
+				Create Instant TradeParty
 			</DialogTitle>
 
 			<Description className='text-xs opacity-40 mb-4'>
-				You can start a new FaceTime instantly.
+				You can start a new TradeParty instantly.
 			</Description>
 
 			<form className='w-full' onSubmit={handleStartMeeting}>
@@ -129,7 +129,7 @@ const MeetingForm = ({
 					className='block text-left text-sm font-medium text-gray-700'
 					htmlFor='description'
 				>
-					Meeting Description
+					Session Name
 				</label>
 				<input
 					type='text'
@@ -138,8 +138,12 @@ const MeetingForm = ({
 					value={description}
 					required
 					onChange={(e) => setDescription(e.target.value)}
-					className='mt-1 block w-full text-sm py-3 px-4 border-gray-200 border-[1px] rounded mb-3'
-					placeholder='Enter a description for the meeting'
+					className='mt-1 block w-full text-sm py-3 px-4 rounded mb-3 
+					border border-gray-200 bg-white text-gray-900
+					focus:ring-2 focus:ring-green-500 focus:border-transparent
+					placeholder:text-gray-400 transition-all duration-200
+					outline-none'
+					placeholder='Enter a name for this TradeParty session'
 				/>
 
 				<button className='w-full bg-green-600 text-white py-3 rounded mt-4'>
@@ -160,11 +164,11 @@ const MeetingLink = ({ facetimeLink }: { facetimeLink: string }) => {
 				as='h3'
 				className='text-lg font-bold leading-6 text-green-600'
 			>
-				Copy FaceTime Link
+				Copy TradeParty Link
 			</DialogTitle>
 
 			<Description className='text-xs opacity-40 mb-4'>
-				You can start a new FaceTime instantly.
+				You can start a new TradeParty instantly.
 			</Description>
 
 			<div className='bg-gray-100 p-4 rounded flex items-center justify-between'>
@@ -183,7 +187,7 @@ const MeetingLink = ({ facetimeLink }: { facetimeLink: string }) => {
 			)}
 
 			<Link href={`${process.env.NEXT_PUBLIC_FACETIME_HOST}/${facetimeLink}`} className='w-full block bg-green-600 text-white py-3 rounded mt-4'>
-				Start FaceTime
+				Start TradeParty
 			</Link>
 		</>
 	);
