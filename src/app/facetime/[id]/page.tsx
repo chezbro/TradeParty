@@ -8,8 +8,7 @@ import {
 	SpeakerLayout,
 	CallControls,
 	StreamVideoParticipant,
-	useCall,
-	ConnectionQuality
+	useCall
 } from "@stream-io/video-react-sdk";
 import { useParams } from "next/navigation";
 import {  useEffect, useState, useCallback, useRef } from "react";
@@ -106,11 +105,11 @@ const mockParticipants: MockParticipant[] = [
 		// Add required StreamVideoParticipant properties
 		publishedTracks: [],
 		trackLookupPrefix: "",
-		connectionQuality: ConnectionQuality.Excellent,
+		connectionQuality: 'excellent' as const,
 		isSpeaking: false,
 		isDominantSpeaker: false,
 		audioLevel: 0,
-		viewportVisibility: 1,
+		viewportVisibilityState: 1,
 		videoTrack: null,
 		audioTrack: null,
 		screenShareTrack: null,
@@ -142,11 +141,11 @@ const mockParticipants: MockParticipant[] = [
 		// Add required StreamVideoParticipant properties
 		publishedTracks: [],
 		trackLookupPrefix: "",
-		connectionQuality: ConnectionQuality.Excellent,
+		connectionQuality: 'excellent' as const,
 		isSpeaking: false,
 		isDominantSpeaker: false,
 		audioLevel: 0,
-		viewportVisibility: 1,
+		viewportVisibilityState: 1,
 		videoTrack: null,
 		audioTrack: null,
 		screenShareTrack: null,
@@ -178,11 +177,11 @@ const mockParticipants: MockParticipant[] = [
 		// Add required StreamVideoParticipant properties
 		publishedTracks: [],
 		trackLookupPrefix: "",
-		connectionQuality: ConnectionQuality.Excellent,
+		connectionQuality: 'excellent' as const,
 		isSpeaking: false,
 		isDominantSpeaker: false,
 		audioLevel: 0,
-		viewportVisibility: 1,
+		viewportVisibilityState: 1,
 		videoTrack: null,
 		audioTrack: null,
 		screenShareTrack: null,
