@@ -92,8 +92,7 @@ const MultiChartGrid = ({
 
 // Update the StreamVideoParticipant interface to include the properties we're using
 interface EnhancedStreamVideoParticipant extends StreamVideoParticipant {
-	videoTrack?: MediaStreamTrack;
-	name?: string;
+	name: string;
 }
 
 // Update the Trade interface to match what's being used
