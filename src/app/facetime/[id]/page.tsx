@@ -321,6 +321,8 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 	const [isTradeEntryExpanded, setIsTradeEntryExpanded] = useState(true);
 	const [isMultiChartEnabled, setIsMultiChartEnabled] = useState(false);
 	const [chartLayouts, setChartLayouts] = useState<string[]>([currentSymbol]);
+	const [isVideosPanelExpanded, setIsVideosPanelExpanded] = useState(true);
+	const [videosPanelWidth, setVideosPanelWidth] = useState(300);
 
 	const handleResize = useCallback((e: any, { size }: { size: { width: number } }) => {
 		setPanelWidth(size.width);
@@ -847,7 +849,7 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 				onMouseMove={handleMouseMove}
 			>
 				<div className="relative flex size-full">
-					{/* Left Panel */}
+					{/* Left Panel - Trading Tools */}
 					<ResizableBox
 						width={panelWidth}
 						height={Infinity}
@@ -944,22 +946,59 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 						</div>
 					</ResizableBox>
 
-					{/* Main Content Area */}
+					{/* Main Content Area - Chart */}
 					<div className="flex-1 h-full flex flex-col bg-black/40">
 						<div className="flex-1 p-6">
 							<MainContentArea />
 						</div>
+					</div>
 
-						{/* Video Grid */}
-						<div className="h-1/3 p-4">
-							<div className="h-full rounded-xl overflow-hidden border border-white/5 
-								bg-gray-900/20 backdrop-blur-sm">
+					{/* New Right Panel - Video Feeds */}
+					<ResizableBox
+						width={videosPanelWidth}
+						height={Infinity}
+						minConstraints={[60, Infinity]}
+						maxConstraints={[600, Infinity]}
+						axis="x"
+						onResize={(e, { size }) => {
+							const panel = document.getElementById('right-video-panel');
+							if (panel) panel.style.transition = 'none';
+							setVideosPanelWidth(size.width);
+						}}
+						onResizeStop={() => {
+							const panel = document.getElementById('right-video-panel');
+							if (panel) panel.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+						}}
+						resizeHandles={['w']}
+						className="right-panel-resizable"
+					>
+						<div 
+							id="right-video-panel"
+							className={`h-full relative bg-gray-900/40 backdrop-blur-md border-l border-white/5
+								transition-all duration-300 ease-in-out ${!isVideosPanelExpanded ? 'w-[60px]' : ''}`}
+							style={{ width: isVideosPanelExpanded ? videosPanelWidth : 60 }}
+						>
+							{/* Move toggle button slightly to the left */}
+							<button
+								onClick={() => {
+									setIsVideosPanelExpanded(!isVideosPanelExpanded);
+									setVideosPanelWidth(isVideosPanelExpanded ? 60 : 300);
+								}}
+								className="absolute -left-8 top-1/2 transform -translate-y-1/2 z-50
+									bg-gray-800 rounded-full p-1.5 text-gray-300 hover:bg-gray-700
+									shadow-lg border border-white/10 transition-all duration-200
+									hover:scale-110 hover:text-emerald-400"
+							>
+								{isVideosPanelExpanded ? <IoMdContract size={16} /> : <IoMdExpand size={16} />}
+							</button>
+
+							{/* Video Grid - Only show when expanded */}
+							<div className={`h-full transition-all duration-300 ease-in-out
+								${isVideosPanelExpanded ? 'opacity-100 p-4' : 'opacity-0 p-0 w-0 overflow-hidden'}`}>
 								<PaginatedGridLayout
-									groupSize={6}
-									containerClassName="h-full w-full p-4"
-									participantsClassName="grid grid-cols-2 gap-4 h-full"
+									groupSize={4}
 									ParticipantViewUI={({ participant }) => (
-										<div className="relative h-full w-full rounded-lg overflow-hidden 
+										<div className="relative aspect-video w-full rounded-lg overflow-hidden 
 											bg-gray-900/50 backdrop-blur-sm border border-white/10 
 											transition-all duration-300 hover:border-emerald-500/30 
 											hover:shadow-lg hover:shadow-emerald-500/10">
@@ -1026,7 +1065,7 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 										</div>
 									)}
 									VideoPlaceholder={() => (
-										<div className="flex items-center justify-center h-full rounded-lg 
+										<div className="flex items-center justify-center aspect-video w-full rounded-lg 
 											bg-gray-800/50 border border-white/5">
 											<div className="flex flex-col items-center gap-2">
 												<FaVideo className="text-gray-400 text-3xl" />
@@ -1039,7 +1078,7 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 								/>
 							</div>
 						</div>
-					</div>
+					</ResizableBox>
 
 					{/* Updated Floating Controls */}
 					<div 
@@ -1068,28 +1107,9 @@ const MeetingRoom = ({ shareChart, sharedCharts, socket, meetingName = "Trading 
 								</button>
 							</div>
 							
-							{/* Controls Content */}
+							{/* Controls Content - Only CallControls */}
 							<div className="mt-4 flex items-center gap-4">
 								<CallControls onLeave={handleLeave} />
-								<div className="h-8 w-px bg-white/10" />
-								<button
-									onClick={() => setLayout(layout === "trading" ? "multi-chart" : "trading")}
-									className="flex items-center gap-2 px-4 py-2 rounded-lg
-										bg-gray-800 text-white/90 border border-white/10 
-										hover:bg-gray-700 transition-colors"
-								>
-									{layout === "trading" ? (
-										<>
-											<FaChartLine className="text-blue-400" />
-											<span>Multi Chart</span>
-										</>
-									) : (
-										<>
-											<FaChartLine className="text-green-400" />
-											<span>Single Chart</span>
-										</>
-									)}
-								</button>
 							</div>
 						</div>
 					</div>

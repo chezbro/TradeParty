@@ -19,11 +19,14 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<any>(null);
+  const scriptRef = useRef<HTMLScriptElement | null>(null);
   const [height, setHeight] = useState(500);
   const [isDragging, setIsDragging] = useState(false);
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
   
   const chartId = useRef(`tradingview_chart_${Math.random().toString(36).substring(7)}`);
 
+  // Handle drag resize
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging && containerRef.current) {
@@ -48,15 +51,44 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
     };
   }, [isDragging]);
 
+  // Load TradingView script only once
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!scriptRef.current && !isScriptLoaded) {
+      const script = document.createElement('script');
+      script.src = 'https://s3.tradingview.com/tv.js';
+      script.async = true;
+      script.onload = () => {
+        setIsScriptLoaded(true);
+      };
+      scriptRef.current = script;
+      document.head.appendChild(script);
+    }
 
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/tv.js';
-    script.async = true;
-    script.onload = () => {
+    return () => {
+      // Only remove script on full component unmount
+      if (scriptRef.current && !document.getElementById('tradingview-script')) {
+        scriptRef.current.remove();
+        scriptRef.current = null;
+        setIsScriptLoaded(false);
+      }
+    };
+  }, []);
+
+  // Create or update widget when symbol changes or script loads
+  useEffect(() => {
+    if (!isScriptLoaded || !containerRef.current) return;
+
+    // Only create new widget if it doesn't exist or symbol changed
+    if (!widgetRef.current || widgetRef.current._symbol !== symbol) {
+      if (widgetRef.current) {
+        const oldContainer = document.getElementById(chartId.current);
+        if (oldContainer) {
+          oldContainer.innerHTML = '';
+        }
+      }
+
       if (typeof TradingView !== 'undefined') {
-        const widget = new TradingView.widget({
+        widgetRef.current = new TradingView.widget({
           autosize: true,
           symbol: symbol,
           interval: "D",
@@ -69,33 +101,28 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
           hide_side_toolbar: false,
           allow_symbol_change: true,
           container_id: chartId.current,
-          
           charts_storage_url: "https://saveload.tradingview.com",
           charts_storage_api_version: "1.1",
           client_id: "tradingview.com",
           user_id: "public_user_id",
-          
           drawings_access: { 
             type: "localStorage", 
             tools: [{ name: "all", grayed: false }] 
           }
         });
-
-        widgetRef.current = widget;
+        
+        // Store the current symbol to check for changes
+        widgetRef.current._symbol = symbol;
       }
-    };
-    containerRef.current.appendChild(script);
+    }
 
+    // Cleanup only when component unmounts
     return () => {
-      if (containerRef.current) {
-        const scriptElement = containerRef.current.querySelector('script');
-        if (scriptElement) {
-          scriptElement.remove();
-        }
+      if (widgetRef.current && !document.getElementById(chartId.current)) {
+        widgetRef.current = null;
       }
-      widgetRef.current = null;
     };
-  }, [symbol]);
+  }, [symbol, isScriptLoaded]);
 
   return (
     <div 
