@@ -9,7 +9,8 @@ import {
 	CallControls,
 	StreamVideoParticipant,
 	useCall,
-	Call
+	Call,
+	TrackType
 } from "@stream-io/video-react-sdk";
 import { useParams } from "next/navigation";
 import {  useEffect, useState, useCallback, useRef, memo } from "react";
@@ -17,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { TraderStats } from "@/components/TraderStats";
 import { TradesFeed } from "@/components/TradesFeed";
 import { TradingDashboard } from "@/components/TradingDashboard";
-import { FaChartLine, FaUsers, FaVideo, FaStar, FaChevronDown, FaChevronRight } from 'react-icons/fa';
+import { FaChartLine, FaUsers, FaVideo, FaStar, FaChevronDown, FaChevronRight, FaMicrophone } from 'react-icons/fa';
 import { TradeEntryPanel } from '@/components/TradeEntryPanel';
 import { TradesProvider } from '@/context/TradesContext';
 import { ResizableBox } from 'react-resizable';
@@ -93,7 +94,10 @@ const MultiChartGrid = ({
 // Update the StreamVideoParticipant interface to include the properties we're using
 interface EnhancedStreamVideoParticipant extends StreamVideoParticipant {
 	videoTrack?: MediaStreamTrack;
-	name?: string;
+	name: string;
+	isOnline?: boolean;
+	isCameraEnabled?: boolean;
+	isMicrophoneEnabled?: boolean;
 }
 
 // Update the Trade interface to match what's being used
@@ -738,59 +742,88 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 							<div className="h-full p-2">
 								<PaginatedGridLayout
 									groupSize={4}
-									ParticipantViewUI={(props) => {
-										const participant = props.participant as EnhancedStreamVideoParticipant;
+									ParticipantViewUI={({ participant }) => {
+										// More robust check for participant status
+										const isOnline = participant?.status === 'online' || 
+											Boolean(participant?.tracks?.video?.enabled || participant?.tracks?.audio?.enabled);
+										const hasVideo = participant?.tracks?.video?.enabled;
+										const hasAudio = participant?.tracks?.audio?.enabled;
+										
 										return (
 											<div className="relative w-full aspect-video rounded-lg overflow-hidden 
-												bg-gray-900/50 backdrop-blur-sm border border-white/10 
-												transition-all duration-300 hover:border-emerald-500/30 
-												hover:shadow-lg hover:shadow-emerald-500/10 mb-2"
+													bg-gray-900/50 backdrop-blur-sm border border-white/10 
+														transition-all duration-300 hover:border-emerald-500/30 
+														hover:shadow-lg hover:shadow-emerald-500/10 mb-2"
 											>
 												{/* Video Container */}
 												<div className="absolute inset-0 bg-black/20">
-													{participant?.videoTrack ? (
+													{hasVideo ? (
 														<video
 															ref={(el) => {
-																if (el && participant.videoTrack) {
-																	el.srcObject = new MediaStream([participant.videoTrack]);
+																if (el && participant?.tracks?.video?.track) {
+																	el.srcObject = new MediaStream([participant.tracks.video.track]);
 																}
 															}}
 															autoPlay
 															playsInline
-															muted
-															className="h-full w-full object-cover"
+																muted
+																className="h-full w-full object-cover"
 														/>
 													) : (
-														<div className="h-full w-full flex items-center justify-center bg-gray-800">
+														<div className="h-full w-full flex items-center justify-center bg-gray-800 relative">
 															<img 
-																src={participant?.image || "https://picsum.photos/seed/default/200/200"}
-																alt={participant?.name || "Participant"}
+																src={participant?.profile?.imageUrl || "https://picsum.photos/seed/default/200/200"}
+																alt={participant?.profile?.name || "Participant"}
 																className="h-12 w-12 rounded-full"
 															/>
 														</div>
 													)}
 												</div>
 												
+												{/* Status Indicators */}
+												<div className="absolute top-2 right-2 flex flex-col gap-2">
+													{/* Connection Status */}
+													<div className="flex items-center gap-1.5 bg-gray-900/90 px-2 py-1 
+														rounded-full border border-white/10 backdrop-blur-sm">
+														<span className={`text-[8px] ${isOnline ? 'text-emerald-400' : 'text-yellow-400'}`}>
+															●
+														</span>
+														<span className="text-xs text-white/70">
+															{isOnline ? 'Online' : 'Waiting'}
+														</span>
+													</div>
+
+													{/* Device Status Icons */}
+													<div className="flex items-center gap-1.5 bg-gray-900/90 px-2 py-1.5 
+														rounded-full border border-white/10 backdrop-blur-sm">
+														{/* Camera Status */}
+														<div className={`p-1 rounded-full ${hasVideo ? 
+															'text-emerald-400' : 'text-red-400 bg-red-400/10'}`}>
+															<FaVideo size={12} className={hasVideo ? '' : 'opacity-75'} />
+														</div>
+
+														{/* Divider */}
+														<div className="w-px h-3 bg-white/10" />
+
+														{/* Microphone Status */}
+														<div className={`p-1 rounded-full ${hasAudio ? 
+															'text-emerald-400' : 'text-red-400 bg-red-400/10'}`}>
+															<FaMicrophone size={12} className={hasAudio ? '' : 'opacity-75'} />
+														</div>
+													</div>
+												</div>
+												
 												{/* Participant Name Overlay */}
-												<div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
+												<div className="absolute bottom-0 left-0 right-0 p-2 
+													bg-gradient-to-t from-black/80 to-transparent">
 													<p className="text-sm text-white truncate">
-														{participant?.name || "Participant"}
+														{participant?.profile?.name || "Participant"}
 													</p>
 												</div>
 											</div>
 										);
 									}}
-									VideoPlaceholder={() => (
-										<div className="flex items-center justify-center w-full aspect-video rounded-lg 
-											bg-gray-800/50 border border-white/5 mb-2">
-											<div className="flex flex-col items-center gap-1.5">
-												<FaVideo className="text-gray-400 text-2xl" />
-												<span className="text-xs text-gray-400">
-													Waiting...
-												</span>
-											</div>
-										</div>
-									)}
+									VideoPlaceholder={() => null}
 								/>
 							</div>
 						</div>
@@ -798,11 +831,11 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 
 					{/* Updated Floating Controls */}
 					<div 
-						className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] transition-all duration-300
-							${isControlsVisible && !isMinimized ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-						onMouseEnter={handleControlsMouseEnter}
-						onMouseLeave={handleControlsMouseLeave}
-					>
+							className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] transition-all duration-300
+								${isControlsVisible && !isMinimized ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+							onMouseEnter={handleControlsMouseEnter}
+							onMouseLeave={handleControlsMouseLeave}
+						>
 						<div className="flex items-center gap-4 p-4 rounded-2xl
 							bg-gray-900/90 backdrop-blur-md border border-white/10 shadow-xl
 								hover:border-white/20 transition-colors duration-200 relative
