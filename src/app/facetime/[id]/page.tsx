@@ -92,7 +92,7 @@ const mockParticipants: MockParticipant[] = [
 				entry: 175.50,
 				target: 180.00,
 				stopLoss: 173.00,
-				timestamp: new Date().toISOString(),
+				timestamp: new Date().getTime(),
 				status: "OPEN",
 				profitLoss: 250.75,
 				pnl: 250.75
@@ -112,7 +112,7 @@ const mockParticipants: MockParticipant[] = [
 				entry: 242.30,
 				target: 235.00,
 				stopLoss: 245.00,
-				timestamp: new Date().toISOString(),
+				timestamp: new Date().getTime(),
 				status: "OPEN",
 				profitLoss: -120.50,
 				pnl: -120.50
@@ -132,7 +132,7 @@ const mockParticipants: MockParticipant[] = [
 				entry: 480.25,
 				target: 495.00,
 				stopLoss: 475.00,
-				timestamp: new Date().toISOString(),
+				timestamp: new Date().getTime(),
 				status: "OPEN",
 				profitLoss: 875.25,
 				pnl: 875.25
