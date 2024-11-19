@@ -339,7 +339,22 @@ export default function FacetimePage() {
 		setSharedCharts(prev => [...prev, sharedChart]);
 	};
 
-	if (isCallLoading || !isLoaded || isMeetingLoading) return <p>Loading...</p>;
+	// Add debug logging
+	useEffect(() => {
+		console.log('Meeting Details:', {
+			meetingDetails,
+			isLoading: isMeetingLoading,
+			id
+		});
+	}, [meetingDetails, isMeetingLoading, id]);
+
+	if (isCallLoading || !isLoaded || isMeetingLoading) {
+		return (
+			<div className="min-h-screen w-full bg-black flex items-center justify-center">
+				<p className="text-white/70">Loading session...</p>
+			</div>
+		);
+	}
 
 	if (!call) return (<p>Call not found</p>);
 
@@ -352,13 +367,13 @@ export default function FacetimePage() {
 							shareChart={shareChart}
 							sharedCharts={sharedCharts}
 							socket={socket}
-							meetingName={meetingDetails?.name || "Unnamed Trading Session"}
+							meetingName={meetingDetails?.name || "Loading..."}
 						/>
 					) : (
 						<div className='h-screen w-full flex items-center justify-center bg-gradient-to-br from-gray-800 via-gray-900 to-black'>
 							<div className='flex flex-col items-center justify-center gap-6 p-10 bg-gray-800/70 backdrop-blur-lg rounded-2xl border border-gray-700 shadow-lg'>
 								<h1 className='text-5xl font-bold text-white mb-2'>
-									{meetingDetails?.name || "Join the Call"}
+									{meetingDetails?.name || "Loading..."}
 								</h1>
 								<p className='text-lg text-gray-300 mb-4'>Ready to join the TradeParty?</p>
 								<div className='flex gap-4'>

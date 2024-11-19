@@ -103,23 +103,35 @@ const MeetingForm = ({
 				},
 			});
 
-			const created_by_uuid = crypto.randomUUID();
 			const meeting_id = crypto.randomUUID();
+
+			const userId = user.id;
 
 			console.log('Attempting to insert meeting:', {
 				id: meeting_id,
 				name: description,
-				created_by: created_by_uuid,
+				created_by: userId,
 				call_id: call.id,
-				status: 'active'
+				status: 'active',
+				starts_at: new Date(Date.now()).toISOString()
 			});
+
+			const { data: existingMeeting } = await supabase
+				.from('meetings')
+				.select('id')
+				.eq('call_id', call.id)
+				.single();
+
+			if (existingMeeting) {
+				throw new Error('A meeting with this ID already exists');
+			}
 
 			const { data, error } = await supabase
 				.from('meetings')
 				.insert({
 					id: meeting_id,
 					name: description,
-					created_by: created_by_uuid,
+					created_by: userId,
 					call_id: call.id,
 					starts_at: new Date(Date.now()).toISOString(),
 					status: 'active'
@@ -138,8 +150,7 @@ const MeetingForm = ({
 			setShowMeetingLink(true);
 			console.log("Meeting Created!");
 		} catch (error) {
-			console.error('Detailed error:', error);
-			alert("Failed to create Meeting");
+			console.error('Error creating meeting:', error);
 		}
 	};
 

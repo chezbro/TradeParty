@@ -1,30 +1,20 @@
-create table meetings (
+-- First drop existing policies if they exist
+DROP POLICY IF EXISTS "Meetings are viewable by authenticated users" ON meetings;
+DROP POLICY IF EXISTS "Users can create meetings" ON meetings;
+DROP POLICY IF EXISTS "Users can update their own meetings" ON meetings;
+
+-- Create or replace the table
+DROP TABLE IF EXISTS meetings;
+CREATE TABLE meetings (
   id uuid default uuid_generate_v4() primary key,
   name text not null,
-  created_by uuid references auth.users(id),
+  created_by text not null,
   call_id text not null unique,
   created_at timestamp with time zone default now(),
+  starts_at timestamp with time zone,
   scheduled_for timestamp with time zone,
   status text default 'scheduled' check (status in ('scheduled', 'active', 'completed', 'cancelled'))
 );
 
--- Create RLS policies
-alter table meetings enable row level security;
-
--- Allow any authenticated user to read meetings
-create policy "Meetings are viewable by authenticated users"
-  on meetings for select
-  to authenticated
-  using (true);
-
--- Allow users to create meetings
-create policy "Users can create meetings"
-  on meetings for insert
-  to authenticated
-  with check (auth.uid() = created_by);
-
--- Allow users to update their own meetings
-create policy "Users can update their own meetings"
-  on meetings for update
-  to authenticated
-  using (auth.uid() = created_by); 
+-- Disable RLS
+ALTER TABLE meetings DISABLE ROW LEVEL SECURITY; 
