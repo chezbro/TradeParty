@@ -117,7 +117,28 @@ interface LiveChart {
 	sharedByName?: string;
 }
 
-// Memoize the MainContentArea component
+// Add this interface before the MainContentArea component
+interface MainContentAreaProps {
+	isMultiChartEnabled: boolean;
+	chartLayouts: string[];
+	currentSymbol: string;
+	handleSymbolChange: (symbol: string) => void;
+	handleStarClick: (symbol: string) => void;
+	watchlist: string[];
+	shareChart: (chartData: any) => void;
+	isLiveSharing: boolean;
+	handleToggleLiveShare: () => void;
+	broadcaster: { userId: string } | null;
+	user: { id: string } | null;
+	handleToggleMultiChart: () => void;
+	setChartLayouts: React.Dispatch<React.SetStateAction<string[]>>;
+	liveCharts: LiveChart[];
+	isChartFullscreen: boolean;
+	onToggleFullscreen: () => void;
+	onTogglePanels: () => void;
+}
+
+// Update the MainContentArea component definition
 const MainContentArea = memo(({ 
 	isMultiChartEnabled,
 	chartLayouts,
@@ -136,7 +157,7 @@ const MainContentArea = memo(({
 	isChartFullscreen,
 	onToggleFullscreen,
 	onTogglePanels
-}) => {
+}: MainContentAreaProps) => {
 	if (isMultiChartEnabled) {
 		return (
 			<div className={`grid ${isChartFullscreen ? '' : 'grid-cols-2'} gap-4 p-4 h-full`}>
