@@ -24,7 +24,6 @@ interface ChartViewerProps {
   isReadOnly?: boolean;
   onAddChart?: (symbol: string) => void;
   onFullscreenChange?: (isFullscreen: boolean) => void;
-  isFullscreen?: boolean;
 }
 
 // Cryptocurrency trading pairs (with USDT)
@@ -92,7 +91,6 @@ export const ChartViewer: FC<ChartViewerProps> = memo(({
   isReadOnly = false,
   onAddChart,
   onFullscreenChange,
-  isFullscreen,
 }) => {
   const [searchInput, setSearchInput] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
