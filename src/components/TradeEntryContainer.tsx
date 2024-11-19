@@ -12,7 +12,7 @@ export const TradeEntryContainer: React.FC<TradeEntryContainerProps> = ({
     onNewTrade, 
     currentSymbol 
 }) => {
-    const [isExpanded, setIsExpanded] = useState(true);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     return (
         <div className="rounded-lg bg-gray-900/50 border border-white/10 overflow-hidden">
@@ -33,6 +33,7 @@ export const TradeEntryContainer: React.FC<TradeEntryContainerProps> = ({
             {isExpanded && (
                 <div className="p-3 border-t border-white/5">
                     <TradeEntryPanel 
+                        key={currentSymbol}
                         onNewTrade={onNewTrade}
                         currentSymbol={currentSymbol}
                     />

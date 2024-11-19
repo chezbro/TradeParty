@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Trade } from '@/types/trade';
 import { TradeSuccessAnimation } from './TradeSuccessAnimation';
 import Confetti from 'react-confetti';
@@ -15,8 +15,8 @@ interface TradeEntryPanelProps {
 export const TradeEntryPanel: React.FC<TradeEntryPanelProps> = ({ onNewTrade, currentSymbol = '' }) => {
     const { user } = useUser();
     const { addTrade } = useTrades();
+    const [symbol, setSymbol] = useState(currentSymbol);
     const [tradeData, setTradeData] = useState({
-        symbol: currentSymbol,
         type: 'LONG',
         entry: '',
         target: '',
@@ -26,7 +26,10 @@ export const TradeEntryPanel: React.FC<TradeEntryPanelProps> = ({ onNewTrade, cu
     const [showSuccess, setShowSuccess] = useState<'LONG' | 'SHORT' | null>(null);
     const [showConfetti, setShowConfetti] = useState(false);
 
-    // Format user name as "FirstName L."
+    useEffect(() => {
+        setSymbol(currentSymbol);
+    }, [currentSymbol]);
+
     const formatUserName = () => {
         if (!user) return 'Anonymous Trader';
         
@@ -51,7 +54,7 @@ export const TradeEntryPanel: React.FC<TradeEntryPanelProps> = ({ onNewTrade, cu
         
         const trade: Trade = {
             id: Math.random().toString(36).substring(7),
-            symbol: tradeData.symbol,
+            symbol: symbol,
             type: tradeData.type as 'LONG' | 'SHORT',
             entry: parseFloat(tradeData.entry),
             target: parseFloat(tradeData.target),
@@ -71,19 +74,15 @@ export const TradeEntryPanel: React.FC<TradeEntryPanelProps> = ({ onNewTrade, cu
             await addTrade(trade);
             onNewTrade(trade);
             
-            // Show success animations
             setShowSuccess(trade.type);
             setShowConfetti(true);
             
-            // Clean up animations
             setTimeout(() => {
                 setShowSuccess(null);
                 setShowConfetti(false);
             }, 5000);
             
-            // Reset form
             setTradeData({
-                symbol: currentSymbol,
                 type: 'LONG',
                 entry: '',
                 target: '',
@@ -97,7 +96,6 @@ export const TradeEntryPanel: React.FC<TradeEntryPanelProps> = ({ onNewTrade, cu
 
     return (
         <>
-            {/* Only show Confetti when showConfetti is true */}
             {showConfetti && (
                 <Confetti
                     width={window.innerWidth}
@@ -116,16 +114,14 @@ export const TradeEntryPanel: React.FC<TradeEntryPanelProps> = ({ onNewTrade, cu
                 />
             )}
 
-            {/* Success animation */}
             {showSuccess && <TradeSuccessAnimation type={showSuccess} />}
 
-            {/* Form content remains the same */}
             <form onSubmit={handleSubmit} className="space-y-3">
                 <div className="space-y-2">
                     <div className="flex gap-2">
                         <SymbolSearch
-                            value={tradeData.symbol}
-                            onChange={(symbol) => setTradeData(prev => ({ ...prev, symbol }))}
+                            value={symbol}
+                            onChange={setSymbol}
                             className="flex-1 bg-gray-900 border border-white/10 rounded px-3 py-1.5 text-sm text-white/90
                                 focus:outline-none focus:border-emerald-500/50"
                         />
