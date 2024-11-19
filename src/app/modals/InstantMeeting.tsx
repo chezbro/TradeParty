@@ -117,11 +117,11 @@ const MeetingForm = ({
 				as='h3'
 				className='text-lg font-bold leading-6 text-green-600'
 			>
-				Create Instant TradeParty
+				Create a TradeParty
 			</DialogTitle>
 
 			<Description className='text-xs opacity-40 mb-4'>
-				You can start a new TradeParty instantly.
+				Start a new TradeParty and invite others to join.
 			</Description>
 
 			<form className='w-full' onSubmit={handleStartMeeting}>
@@ -164,11 +164,11 @@ const MeetingLink = ({ facetimeLink }: { facetimeLink: string }) => {
 				as='h3'
 				className='text-lg font-bold leading-6 text-green-600'
 			>
-				Copy TradeParty Link
+				Share Your TradeParty
 			</DialogTitle>
 
 			<Description className='text-xs opacity-40 mb-4'>
-				You can start a new TradeParty instantly.
+			Start a new TradeParty and invite others to join.
 			</Description>
 
 			<div className='bg-gray-100 p-4 rounded flex items-center justify-between'>
@@ -187,7 +187,7 @@ const MeetingLink = ({ facetimeLink }: { facetimeLink: string }) => {
 			)}
 
 			<Link href={`${process.env.NEXT_PUBLIC_FACETIME_HOST}/${facetimeLink}`} className='w-full block bg-green-600 text-white py-3 rounded mt-4'>
-				Start TradeParty
+				Ready to Start
 			</Link>
 		</>
 	);

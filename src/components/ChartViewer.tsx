@@ -186,9 +186,9 @@ export const ChartViewer: FC<ChartViewerProps> = memo(({
                   }}
                   onFocus={() => setShowDropdown(true)}
                   placeholder={isAddChart ? "Search for symbol to add..." : "Search symbol..."}
-                  className="bg-gray-700 text-white rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="bg-gray-700 text-white rounded-lg px-4 py-2 pl-14 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
-                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        
                 
                 {/* Dropdown Menu */}
                 {showDropdown && searchInput && (
@@ -244,7 +244,7 @@ export const ChartViewer: FC<ChartViewerProps> = memo(({
                         }`}
                     >
                       <span className={`${isLiveSharing ? 'animate-pulse' : ''} text-[8px]`}>●</span>
-                      <span className="text-sm">Share Live</span>
+                      <span className="text-sm">Share Chart Live</span>
                     </button>
                   )}
                   

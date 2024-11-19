@@ -165,7 +165,7 @@ export const TradingDashboard = ({ watchlist, onSymbolSelect, onStarClick }: Tra
             </div>
 
             {/* Trades Feed */}
-            <TradesFeed />
+            <TradesFeed hideHeader={true} />
         </div>
     );
 }; 

@@ -56,7 +56,7 @@ export const TradeEntryPanel: React.FC<TradeEntryPanelProps> = ({ onNewTrade, cu
             target: parseFloat(tradeData.target),
             stopLoss: parseFloat(tradeData.stopLoss),
             size: parseFloat(tradeData.size),
-            timestamp: Date.now(),
+            timestamp: Date.now().toString(),
             status: 'OPEN',
             profitLoss: 0,
             currentPrice: parseFloat(tradeData.entry),
@@ -70,7 +70,7 @@ export const TradeEntryPanel: React.FC<TradeEntryPanelProps> = ({ onNewTrade, cu
             await addTrade(trade);
             onNewTrade(trade);
             
-            // Trigger both animations
+            // Show success animations
             setShowSuccess(trade.type);
             setShowConfetti(true);
             
@@ -91,13 +91,12 @@ export const TradeEntryPanel: React.FC<TradeEntryPanelProps> = ({ onNewTrade, cu
             });
         } catch (error) {
             console.error('Error adding trade:', error);
-            // You might want to show an error message to the user here
         }
     };
 
     return (
         <>
-            {/* Confetti overlay */}
+            {/* Only show Confetti when showConfetti is true */}
             {showConfetti && (
                 <Confetti
                     width={window.innerWidth}
@@ -105,13 +104,7 @@ export const TradeEntryPanel: React.FC<TradeEntryPanelProps> = ({ onNewTrade, cu
                     recycle={false}
                     numberOfPieces={200}
                     gravity={0.3}
-                    colors={[
-                        '#10B981', // Emerald-500
-                        '#34D399', // Emerald-400
-                        '#6EE7B7', // Emerald-300
-                        '#A7F3D0', // Emerald-200
-                        '#D1FAE5'  // Emerald-100
-                    ]}
+                    colors={['#10B981', '#34D399', '#6EE7B7', '#A7F3D0']} // Green theme colors
                     style={{
                         position: 'fixed',
                         top: 0,
