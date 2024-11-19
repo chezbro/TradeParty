@@ -9,8 +9,7 @@ import {
 	CallControls,
 	StreamVideoParticipant,
 	useCall,
-	Call,
-	TrackType
+	Call
 } from "@stream-io/video-react-sdk";
 import { useParams } from "next/navigation";
 import {  useEffect, useState, useCallback, useRef, memo } from "react";
