@@ -3,6 +3,8 @@ import { TradesFeed } from './TradesFeed';
 import { WatchlistContainer } from './WatchlistContainer';
 import { FaChartBar, FaChevronDown } from 'react-icons/fa';
 import { TraderProfileModal } from './TraderProfileModal';
+import { useWatchlist } from '@/context/WatchlistContext';
+import toast from 'react-hot-toast';
 
 interface TraderData {
     userId: string;
@@ -14,18 +16,15 @@ interface TraderData {
 }
 
 interface TradingDashboardProps {
-    watchlist: string[];
-    onSymbolSelect: (symbol: string) => void;
-    onStarClick: (symbol: string) => void;
     currentSymbol: string;
+    onSymbolSelect: (symbol: string) => void;
 }
 
 export const TradingDashboard = ({ 
-    watchlist, 
-    onSymbolSelect, 
-    onStarClick,
-    currentSymbol 
+    currentSymbol,
+    onSymbolSelect 
 }: TradingDashboardProps) => {
+    const { watchlist, addToWatchlist, removeFromWatchlist, isLoading } = useWatchlist();
     const mockTraders: TraderData[] = [
         {
             userId: '1',
@@ -85,6 +84,21 @@ export const TradingDashboard = ({
         onSymbolSelect(symbol);
     };
 
+    const handleStarClick = async (symbol: string) => {
+        try {
+            if (watchlist.includes(symbol)) {
+                await removeFromWatchlist(symbol);
+                toast.success(`Removed ${symbol} from watchlist`);
+            } else {
+                await addToWatchlist(symbol);
+                toast.success(`Added ${symbol} to watchlist`);
+            }
+        } catch (error) {
+            console.error('Error managing watchlist:', error);
+            toast.error(`Failed to update watchlist: ${error.message}`);
+        }
+    };
+
     return (
         <div className="space-y-4">
             <TradesFeed 
@@ -94,7 +108,8 @@ export const TradingDashboard = ({
             <WatchlistContainer 
                 watchlist={watchlist}
                 onSymbolSelect={onSymbolSelect}
-                onStarClick={onStarClick}
+                onStarClick={handleStarClick}
+                isLoading={isLoading}
             />
 
             <div className="rounded-lg bg-gray-900/50 border border-white/10 overflow-hidden">

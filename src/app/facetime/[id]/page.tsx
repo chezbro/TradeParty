@@ -351,7 +351,7 @@ export default function FacetimePage() {
 	if (isCallLoading || !isLoaded || isMeetingLoading) {
 		return (
 			<div className="min-h-screen w-full bg-black flex items-center justify-center">
-				<p className="text-white/70">Loading session...</p>
+				<p className="text-white/70">Loading TradeParty...</p>
 			</div>
 		);
 	}
@@ -408,7 +408,7 @@ export const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedChart
 	console.log('Creator check:', {
 		createdBy: call?.state.createdBy,
 		userId: user?.id,
-		isCreator: call?.state.createdBy === user?.id
+		isCreator: call?.state.createdBy?.id === user?.id
 	});
 
 	const router = useRouter();
@@ -481,22 +481,68 @@ export const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedChart
 
 	const ParticipantView = ({ participant }: { participant: StreamVideoParticipant }) => {
 		const { user } = useUser();
+		const call = useCall();
 		
+		// Add debugging effect inside the ParticipantView component
+		useEffect(() => {
+			// Log participant data
+			console.log('Participant View Data:', {
+				participant,
+				userId: participant.userId,
+				isCreator: call?.state.createdBy?.id === participant.userId,
+				callCreator: call?.state.createdBy,
+				sessionId: participant.sessionId,
+				localParticipant: call?.state.localParticipant,
+				remoteParticipants: call?.state.remoteParticipants,
+				currentUserId: user?.id
+			});
+
+			// Log when participants join/leave
+			const logParticipants = () => {
+				console.log('All Participants:', {
+					localParticipant: call?.state.localParticipant,
+					remoteParticipants: call?.state.remoteParticipants,
+					createdBy: call?.state.createdBy,
+					currentUserId: user?.id
+				});
+			};
+
+			if (call) {
+				call.on('participantJoined', logParticipants);
+				call.on('participantLeft', logParticipants);
+
+				return () => {
+					call.off('participantJoined', logParticipants);
+					call.off('participantLeft', logParticipants);
+				};
+			}
+		}, [participant, call, user?.id]);
+
+		const isCreator = call?.state.createdBy?.id === participant.userId;
+
 		return (
 			<div className="relative rounded-xl overflow-hidden bg-gray-900/50 backdrop-blur-sm 
 				border border-gray-800/50 transition-all duration-300 hover:border-gray-700/50
-				hover:shadow-lg hover:shadow-emerald-500/5">
+						hover:shadow-lg hover:shadow-emerald-500/5">
 				<img 
-					src={user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
-					alt={participant?.name || "Participant"}
+					src={participant.image || user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
+					alt={participant.name || "Participant"}
 					className="w-full h-full object-cover"
 				/>
 				
 				<div className="absolute inset-0 flex flex-col justify-end">
 					<div className="p-3 bg-gradient-to-t from-gray-900/95 via-gray-900/80 to-transparent">
-						<p className="text-white font-medium">
-							{participant?.name || "Participant"}
-						</p>
+						<div className="flex items-center gap-2">
+							<p className="text-white font-medium">
+								{participant.name || "Participant"}
+							</p>
+							{isCreator && (
+								<span className="px-2 py-0.5 text-xs bg-emerald-500/20 text-emerald-400 
+									rounded-full border border-emerald-500/20">
+									Host
+								</span>
+							)}
+						</div>
 					</div>
 				</div>
 			</div>
@@ -690,6 +736,15 @@ export const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedChart
 												</div>
 												<span className="text-xs text-white/50">•</span>
 												<span className="text-xs text-white/50">{new Date().toLocaleTimeString()}</span>
+												{/* Add Host Badge */}
+												{call?.state.createdBy?.id === user?.id && (
+													<>
+														<span className="text-xs text-white/50">•</span>
+														<div className="flex items-center gap-1.5 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+															<span className="text-xs text-emerald-400 font-medium">Host</span>
+														</div>
+													</>
+												)}
 											</div>
 											
 											{/* Meeting Name */}
@@ -701,14 +756,7 @@ export const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedChart
 													<p className="text-sm text-white/50">
 														Trading Room
 													</p>
-													{console.log('Debug creator check:', {
-														createdBy: call?.state.createdBy,
-														userId: user?.id,
-														isCreator: call?.state.createdBy === user?.id,
-														call: call,
-														user: user
-													})}
-													{call?.state.createdBy === user?.id && (
+													{call?.state.createdBy?.id === user?.id && (
 														<button
 															onClick={() => {
 																navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_FACETIME_HOST}/${id}`);
