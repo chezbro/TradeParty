@@ -2,6 +2,7 @@ import { FC, useState, useEffect, useRef, useCallback, memo } from 'react';
 import { TradingViewChart } from './TradingViewChart';
 import { FaSearch, FaHistory, FaStar, FaChartLine, FaShare, FaExpand, FaCompress } from 'react-icons/fa';
 import { useCall } from "@stream-io/video-react-sdk";
+import { debounce } from '@/utils/debounce';
 
 interface ChartViewerProps {
   onShare: (symbol: string) => void;
@@ -143,6 +144,25 @@ export const ChartViewer: FC<ChartViewerProps> = memo(({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Update the debouncedSearch implementation
+  const debouncedSearch = useCallback(
+    debounce((searchTerm: string) => {
+      const filtered = ALL_SYMBOLS.filter(sym => 
+        sym.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        sym.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      ).slice(0, 8);
+      
+      setFilteredSymbols(filtered);
+    }, 300),
+    []
+  );
+
+  useEffect(() => {
+    if (searchInput) {
+      debouncedSearch(searchInput);
+    }
+  }, [searchInput, debouncedSearch]);
 
   return (
     <div className="bg-gray-800/50 backdrop-blur rounded-xl p-6 border border-gray-700/50">

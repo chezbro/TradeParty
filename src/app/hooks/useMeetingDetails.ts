@@ -14,16 +14,38 @@ export function useMeetingDetails(callId: string) {
   const [error, setError] = useState<Error | null>(null);
   const supabase = createClientComponentClient();
 
+  // Add caching
+  const queryKey = `meeting-${callId}`;
+  const [cachedData, setCachedData] = useState<any>(null);
+
   useEffect(() => {
     async function fetchMeetingDetails() {
+      // Check cache first
+      const cached = localStorage.getItem(queryKey);
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < 5 * 60 * 1000) { // 5 minutes cache
+          setCachedData(data);
+          return;
+        }
+      }
+
       try {
         const { data, error } = await supabase
           .from('meetings')
-          .select('*')
+          .select('name, created_by, scheduled_for, status') // Select only needed fields
           .eq('call_id', callId)
-          .single();
+          .single()
+          .limit(1); // Explicit limit
 
         if (error) throw error;
+        
+        // Cache the result
+        localStorage.setItem(queryKey, JSON.stringify({
+          data,
+          timestamp: Date.now()
+        }));
+        
         setMeetingDetails(data);
       } catch (err) {
         setError(err as Error);

@@ -1,31 +1,37 @@
 import { FaExchangeAlt, FaChevronDown, FaUser, FaClock, FaArrowUp, FaArrowDown } from 'react-icons/fa';
 import { BsCursor, BsArrowDownRight, BsArrowUpRight } from 'react-icons/bs';
 import { useTrades } from '@/context/TradesContext';
-import { useState } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import { Trade } from '@/types/trade';
 
 interface TradesFeedProps {
     hideHeader?: boolean;
 }
 
-export const TradesFeed = ({ hideHeader = false }: TradesFeedProps) => {
+export const TradesFeed = memo(({ hideHeader = false }: TradesFeedProps) => {
     const { trades } = useTrades();
     const [filter, setFilter] = useState<"ALL" | "LONG" | "SHORT">("ALL");
     const [isExpanded, setIsExpanded] = useState(false);
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
 
-    const filteredTrades = trades.filter(trade => 
-        filter === "ALL" ? true : trade.type === filter
+    const filteredTrades = useMemo(() => 
+        trades.filter(trade => filter === "ALL" ? true : trade.type === filter),
+        [trades, filter]
     );
 
-    // Helper function to get trader initials
-    const getTraderInitials = (trade: Trade) => {
-        return trade.trader?.name?.[0] || '?';
-    };
+    const paginatedTrades = useMemo(() => {
+        const startIndex = (page - 1) * ITEMS_PER_PAGE;
+        return filteredTrades.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    }, [filteredTrades, page]);
 
-    // Helper function to get trader name
-    const getTraderName = (trade: Trade) => {
+    const getTraderInitials = useCallback((trade: Trade) => {
+        return trade.trader?.name?.[0] || '?';
+    }, []);
+
+    const getTraderName = useCallback((trade: Trade) => {
         return trade.trader?.name || 'Anonymous Trader';
-    };
+    }, []);
 
     return (
         <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700/50 w-full max-w-full overflow-hidden">
@@ -73,8 +79,8 @@ export const TradesFeed = ({ hideHeader = false }: TradesFeedProps) => {
                         </div>
                     </div>
                     <div className="space-y-2 w-full">
-                        {filteredTrades.length > 0 ? (
-                            filteredTrades.map(trade => (
+                        {paginatedTrades.length > 0 ? (
+                            paginatedTrades.map(trade => (
                                 <div 
                                     key={trade.id} 
                                     className="w-full group bg-gray-700/30 hover:bg-gray-700/50 backdrop-blur rounded-lg p-2
@@ -153,8 +159,26 @@ export const TradesFeed = ({ hideHeader = false }: TradesFeedProps) => {
                             </div>
                         )}
                     </div>
+                    {filteredTrades.length > ITEMS_PER_PAGE && (
+                        <div className="flex justify-center mt-4">
+                            <button 
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className="px-3 py-1 bg-gray-700/30 rounded-lg mr-2"
+                            >
+                                Previous
+                            </button>
+                            <button 
+                                onClick={() => setPage(p => p + 1)}
+                                disabled={page * ITEMS_PER_PAGE >= filteredTrades.length}
+                                className="px-3 py-1 bg-gray-700/30 rounded-lg"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
     );
-}; 
+}); 

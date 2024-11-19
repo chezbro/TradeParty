@@ -34,6 +34,7 @@ import Draggable from 'react-draggable';
 import { WatchlistContainer } from '@/components/WatchlistContainer';
 import { TradeEntryContainer } from '@/components/TradeEntryContainer';
 import { useMeetingDetails } from '@/app/hooks/useMeetingDetails';
+import dynamic from 'next/dynamic';
 
 type CallLayoutType = "grid" | "speaker-left" | "speaker-right" | "trading" | "multi-chart";
 
@@ -288,13 +289,27 @@ export default function FaceTimePage() {
 			query: {
 				userId: user?.id,
 				roomId: id // from your params
-			}
+			},
+			reconnection: true,
+			reconnectionAttempts: 5,
+			reconnectionDelay: 1000,
+			reconnectionDelayMax: 5000,
+			timeout: 20000,
+			transports: ['websocket'], // Prefer WebSocket
+			pooling: true
 		});
+
+		// Add heartbeat to keep connection alive
+		const heartbeat = setInterval(() => {
+			if (socketInstance.connected) {
+				socketInstance.emit('ping');
+			}
+		}, 30000);
 
 		setSocket(socketInstance);
 
-		// Cleanup on unmount
 		return () => {
+			clearInterval(heartbeat);
 			socketInstance.disconnect();
 		};
 	}, [user?.id, id]);
@@ -743,7 +758,13 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 								<PaginatedGridLayout
 									groupSize={4}
 									ParticipantViewUI={({ participant }) => {
-										// More robust check for participant status
+										console.log('Participant data:', {
+											participant,
+											userData: participant?.user,
+											image: participant?.user?.image,
+											name: participant?.user?.name
+										});
+
 										const isOnline = participant?.status === 'online' || 
 											Boolean(participant?.tracks?.video?.enabled || participant?.tracks?.audio?.enabled);
 										const hasVideo = participant?.tracks?.video?.enabled;
@@ -772,8 +793,8 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 													) : (
 														<div className="h-full w-full flex items-center justify-center bg-gray-800 relative">
 															<img 
-																src={participant?.profile?.imageUrl || "https://picsum.photos/seed/default/200/200"}
-																alt={participant?.profile?.name || "Participant"}
+																src={participant?.user?.image || user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
+																alt={participant?.user?.name || user?.fullName || "Participant"}
 																className="h-12 w-12 rounded-full"
 															/>
 														</div>
@@ -817,14 +838,14 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 												<div className="absolute bottom-0 left-0 right-0 p-2 
 													bg-gradient-to-t from-black/80 to-transparent">
 													<p className="text-sm text-white truncate">
-														{participant?.profile?.name || "Participant"}
+														{participant?.user?.name || user?.fullName || user?.username || "Participant"}
 													</p>
 												</div>
 											</div>
 										);
 									}}
 									VideoPlaceholder={() => null}
-								/>
+									/>
 							</div>
 						</div>
 					</ResizableBox>
