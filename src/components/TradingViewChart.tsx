@@ -152,11 +152,17 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
     onFullscreenChange?.(!isFullscreen);
   };
 
+  // Add this style to prevent selection when dragging
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent text selection
+    setIsDragging(true);
+  };
+
   return (
     <div 
       ref={containerRef}
       style={{ height: isFullscreen ? '100vh' : `${height}px` }}
-      className={`relative bg-gray-900 rounded-lg overflow-hidden border border-gray-700
+      className={`relative bg-gray-900 rounded-lg overflow-hidden border border-gray-700 select-none
         ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}
     >
       <div className="absolute top-4 right-4 z-10">
@@ -174,8 +180,8 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
       
       {!isFullscreen && (
         <div 
-          className="absolute bottom-0 left-0 right-0 h-6 flex items-center justify-center cursor-ns-resize hover:bg-gray-800/50 transition-colors"
-          onMouseDown={() => setIsDragging(true)}
+          className="absolute bottom-0 left-0 right-0 h-6 flex items-center justify-center cursor-ns-resize hover:bg-gray-800/50 transition-colors select-none"
+          onMouseDown={handleMouseDown}
         >
           <FaGripLines className="text-gray-400" />
         </div>
