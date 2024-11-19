@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { TraderStats } from "@/components/TraderStats";
 import { TradesFeed } from "@/components/TradesFeed";
 import { TradingDashboard } from "@/components/TradingDashboard";
-import { FaChartLine, FaUsers, FaVideo, FaStar, FaChevronDown, FaChevronRight, FaMicrophone } from 'react-icons/fa';
+import { FaChartLine, FaUsers, FaVideo, FaStar, FaChevronDown, FaChevronRight, FaMicrophone, FaCopy } from 'react-icons/fa';
 import { TradeEntryPanel } from '@/components/TradeEntryPanel';
 import { TradesProvider } from '@/context/TradesContext';
 import { ResizableBox } from 'react-resizable';
@@ -35,6 +35,7 @@ import { WatchlistContainer } from '@/components/WatchlistContainer';
 import { TradeEntryContainer } from '@/components/TradeEntryContainer';
 import { useMeetingDetails } from '@/app/hooks/useMeetingDetails';
 import dynamic from 'next/dynamic';
+import { toast } from 'react-hot-toast';
 
 type CallLayoutType = "grid" | "speaker-left" | "speaker-right" | "trading" | "multi-chart";
 
@@ -131,15 +132,18 @@ const MainContentArea = memo(({
 	user,
 	handleToggleMultiChart,
 	setChartLayouts,
-	liveCharts
+	liveCharts,
+	isChartFullscreen,
+	onToggleFullscreen,
+	onTogglePanels
 }) => {
 	if (isMultiChartEnabled) {
 		return (
-			<div className="grid grid-cols-2 gap-4 p-4 h-full">
+			<div className={`grid ${isChartFullscreen ? '' : 'grid-cols-2'} gap-4 p-4 h-full`}>
 				{/* Your charts */}
 				{chartLayouts.map((symbol, index) => (
-					<div key={`${symbol}-${index}`} className="relative rounded-xl overflow-hidden border border-white/5 
-						bg-gray-900/20 backdrop-blur-sm">
+					<div key={`${symbol}-${index}`} className={`relative rounded-xl overflow-hidden border border-white/5 
+						bg-gray-900/20 backdrop-blur-sm ${isChartFullscreen ? 'col-span-full' : ''}`}>
 						<ChartViewer 
 							symbol={symbol}
 							onSymbolChange={(newSymbol) => {
@@ -149,17 +153,17 @@ const MainContentArea = memo(({
 							}}
 							onToggleFavorite={handleStarClick}
 							isFavorited={watchlist.includes(symbol)}
-							onShare={shareChart}
-							
-							compact={true}
+							compact={!isChartFullscreen}
+							isFullscreen={isChartFullscreen}
+							onFullscreenChange={onTogglePanels}
 						/>
-						{chartLayouts.length > 1 && (
+						{chartLayouts.length > 1 && !isChartFullscreen && (
 							<button
 								onClick={() => {
 									setChartLayouts(prev => prev.filter((_, i) => i !== index));
 								}}
 								className="absolute top-2 right-2 p-2 bg-red-500/20 hover:bg-red-500/30 
-									rounded-full text-red-400 transition-colors z-10"
+										rounded-full text-red-400 transition-colors z-10"
 							>
 								<IoMdRemove size={16} />
 							</button>
@@ -239,6 +243,8 @@ const MainContentArea = memo(({
 				isLiveSharing={isLiveSharing}
 				onToggleLiveShare={handleToggleLiveShare}
 				isReadOnly={Boolean(broadcaster && broadcaster.userId !== user?.id)}
+				isFullscreen={isChartFullscreen}
+				onFullscreenChange={onTogglePanels}
 			/>
 		</div>
 	);
@@ -246,7 +252,7 @@ const MainContentArea = memo(({
 
 MainContentArea.displayName = 'MainContentArea';
 
-export default function FaceTimePage() {
+export default function FacetimePage() {
 	const { id } = useParams<{ id: string }>();
 	const { isLoaded } = useUser();
 	const { call, isCallLoading } = useGetCallById(id);
@@ -257,6 +263,7 @@ export default function FaceTimePage() {
 	const [socket, setSocket] = useState<Socket | null>(null);
 	const { user } = useUser();
 	const { meetingDetails, isLoading: isMeetingLoading } = useMeetingDetails(id);
+	const [isChartFullscreen, setIsChartFullscreen] = useState(false);
 
 	useEffect(() => {
 		if (camMicEnabled) {
@@ -380,6 +387,15 @@ export default function FaceTimePage() {
 
 export const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, socket, meetingName }) => {
 	const { user } = useUser();
+	const { id } = useParams<{ id: string }>();
+	const call = useCall();
+	
+	console.log('Creator check:', {
+		createdBy: call?.state.createdBy,
+		userId: user?.id,
+		isCreator: call?.state.createdBy === user?.id
+	});
+
 	const router = useRouter();
 	const [layout, setLayout] = useState<CallLayoutType>("trading");
 	const [isPanelExpanded, setIsPanelExpanded] = useState(true);
@@ -391,7 +407,6 @@ export const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedChart
 	const [watchlist, setWatchlist] = useState<string[]>(['AAPL']);
 	const [isChartShared, setIsChartShared] = useState(false);
 	const [liveChartStreamer, setLiveChartStreamer] = useState<string | null>(null);
-	const call = useCall();
 	const [controlsPosition, setControlsPosition] = useState({ x: 0, y: 0 });
 	const [isDragging, setIsDragging] = useState(false);
 	const [isHovering, setIsHovering] = useState(false);
@@ -407,6 +422,8 @@ export const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedChart
 	const [isLiveSharing, setIsLiveSharing] = useState(false);
 	const [liveCharts, setLiveCharts] = useState<LiveChart[]>([]);
 	const [broadcaster, setBroadcaster] = useState<{ userId: string; symbol: string } | null>(null);
+	const [arePanelsVisible, setArePanelsVisible] = useState(true);
+	const [isChartFullscreen, setIsChartFullscreen] = useState(false);
 
 	// Create a trader object from the current user
 	const currentTrader = {
@@ -605,6 +622,13 @@ export const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedChart
 		});
 	}, [isLiveSharing, call, currentSymbol]);
 
+	const handleTogglePanels = (hideForFullscreen: boolean) => {
+		setArePanelsVisible(!hideForFullscreen);
+		setIsPanelExpanded(!hideForFullscreen);
+		setIsVideosPanelExpanded(!hideForFullscreen);
+		setIsChartFullscreen(hideForFullscreen);
+	};
+
 	// Use the memoized MainContentArea in your render
 	return (
 		<TradesProvider>
@@ -621,7 +645,9 @@ export const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedChart
 						maxConstraints={[600, Infinity]}
 						axis="x"
 						onResize={handleResize}
-						className="transition-all duration-300 ease-in-out"
+						className={`transition-all duration-300 ease-in-out ${
+							arePanelsVisible ? '' : 'hidden'
+						}`}
 					>
 						<div className="h-full relative bg-gray-900/40 backdrop-blur-md border-r border-white/5">
 							{/* Toggle Button */}
@@ -656,9 +682,31 @@ export const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedChart
 												<h1 className="text-xl font-bold text-white/90 truncate">
 													{meetingName}
 												</h1>
-												<p className="text-sm text-white/50">
-													Trading Room
-												</p>
+												<div className="flex items-center gap-2">
+													<p className="text-sm text-white/50">
+														Trading Room
+													</p>
+													{console.log('Debug creator check:', {
+														createdBy: call?.state.createdBy,
+														userId: user?.id,
+														isCreator: call?.state.createdBy === user?.id,
+														call: call,
+														user: user
+													})}
+													{call?.state.createdBy === user?.id && (
+														<button
+															onClick={() => {
+																navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_FACETIME_HOST}/${id}`);
+																toast.success('Meeting link copied to clipboard');
+															}}
+															className="p-1.5 hover:bg-white/5 rounded-lg transition-colors 
+																text-emerald-400 hover:text-emerald-300"
+															title="Copy invite link"
+														>
+															<FaCopy size={14} />
+														</button>
+													)}
+												</div>
 											</div>
 
 											{/* Participants Preview */}
@@ -723,6 +771,9 @@ export const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedChart
 								handleToggleMultiChart={handleToggleMultiChart}
 								setChartLayouts={setChartLayouts}
 								liveCharts={liveCharts}
+								isChartFullscreen={isChartFullscreen}
+								onToggleFullscreen={() => setIsChartFullscreen(!isChartFullscreen)}
+								onTogglePanels={handleTogglePanels}
 							/>
 						</div>
 					</div>
@@ -736,8 +787,10 @@ export const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedChart
 						axis="x"
 						onResize={(e, { size }) => setVideosPanelWidth(size.width)}
 						resizeHandles={['w']}
-						className={`transition-all duration-300 ease-in-out ${isVideosPanelExpanded ? '' : 'w-[60px]'}`}
-						>
+						className={`transition-all duration-300 ease-in-out ${
+							arePanelsVisible ? '' : 'hidden'
+						}`}
+					>
 						<div className="h-full relative bg-gray-900/40 backdrop-blur-md border-l border-white/5">
 							{/* Toggle Button */}
 							<button
@@ -754,98 +807,133 @@ export const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedChart
 							</button>
 
 							{/* Video Grid */}
-							<div className="h-full p-2">
-								<PaginatedGridLayout
-									groupSize={4}
-									ParticipantViewUI={({ participant }) => {
-										console.log('Participant data:', {
-											participant,
-											userData: participant?.user,
-											image: participant?.user?.image,
-											name: participant?.user?.name
-										});
+							<div className="h-full p-2 flex flex-col">
+								<div className="flex-1">
+									<PaginatedGridLayout
+										groupSize={4}
+										ParticipantViewUI={({ participant }) => {
+											console.log('Participant data:', {
+												participant,
+												userData: participant?.user,
+												image: participant?.user?.image,
+												name: participant?.user?.name
+											});
 
-										const isOnline = participant?.status === 'online' || 
-											Boolean(participant?.tracks?.video?.enabled || participant?.tracks?.audio?.enabled);
-										const hasVideo = participant?.tracks?.video?.enabled;
-										const hasAudio = participant?.tracks?.audio?.enabled;
-										
-										return (
-											<div className="relative w-full aspect-video rounded-lg overflow-hidden 
-													bg-gray-900/50 backdrop-blur-sm border border-white/10 
-														transition-all duration-300 hover:border-emerald-500/30 
-														hover:shadow-lg hover:shadow-emerald-500/10 mb-2"
-											>
-												{/* Video Container */}
-												<div className="absolute inset-0 bg-black/20">
-													{hasVideo ? (
-														<video
-															ref={(el) => {
-																if (el && participant?.tracks?.video?.track) {
-																	el.srcObject = new MediaStream([participant.tracks.video.track]);
-																}
-															}}
-															autoPlay
-															playsInline
-																muted
-																className="h-full w-full object-cover"
-														/>
-													) : (
-														<div className="h-full w-full flex items-center justify-center bg-gray-800 relative">
-															<img 
-																src={participant?.user?.image || user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
-																alt={participant?.user?.name || user?.fullName || "Participant"}
-																className="h-12 w-12 rounded-full"
+											const isOnline = participant?.status === 'online' || 
+												Boolean(participant?.tracks?.video?.enabled || participant?.tracks?.audio?.enabled);
+											const hasVideo = participant?.tracks?.video?.enabled;
+											const hasAudio = participant?.tracks?.audio?.enabled;
+											
+											return (
+												<div className="relative w-full aspect-video rounded-lg overflow-hidden 
+														bg-gray-900/50 backdrop-blur-sm border border-white/10 
+															transition-all duration-300 hover:border-emerald-500/30 
+															hover:shadow-lg hover:shadow-emerald-500/10 mb-2"
+												>
+													{/* Video Container */}
+													<div className="absolute inset-0 bg-black/20">
+														{hasVideo ? (
+															<video
+																ref={(el) => {
+																	if (el && participant?.tracks?.video?.track) {
+																		el.srcObject = new MediaStream([participant.tracks.video.track]);
+																	}
+																}}
+																autoPlay
+																playsInline
+																	muted
+																	className="h-full w-full object-cover"
 															/>
-														</div>
-													)}
-												</div>
-												
-												{/* Status Indicators */}
-												<div className="absolute top-2 right-2 flex flex-col gap-2">
-													{/* Connection Status */}
-													<div className="flex items-center gap-1.5 bg-gray-900/90 px-2 py-1 
-														rounded-full border border-white/10 backdrop-blur-sm">
-														<span className={`text-[8px] ${isOnline ? 'text-emerald-400' : 'text-yellow-400'}`}>
-															●
-														</span>
-														<span className="text-xs text-white/70">
-															{isOnline ? 'Online' : 'Waiting'}
-														</span>
+														) : (
+															<div className="h-full w-full flex items-center justify-center bg-gray-800 relative">
+																<img 
+																	src={participant?.user?.image || user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
+																	alt={participant?.user?.name || user?.fullName || "Participant"}
+																	className="h-12 w-12 rounded-full"
+																/>
+															</div>
+														)}
 													</div>
-
-													{/* Device Status Icons */}
-													<div className="flex items-center gap-1.5 bg-gray-900/90 px-2 py-1.5 
-														rounded-full border border-white/10 backdrop-blur-sm">
-														{/* Camera Status */}
-														<div className={`p-1 rounded-full ${hasVideo ? 
-															'text-emerald-400' : 'text-red-400 bg-red-400/10'}`}>
-															<FaVideo size={12} className={hasVideo ? '' : 'opacity-75'} />
+													
+													{/* Status Indicators */}
+													<div className="absolute top-2 right-2 flex flex-col gap-2">
+														{/* Connection Status */}
+														<div className="flex items-center gap-1.5 bg-gray-900/90 px-2 py-1 
+															rounded-full border border-white/10 backdrop-blur-sm">
+															<span className={`text-[8px] ${isOnline ? 'text-emerald-400' : 'text-yellow-400'}`}>
+																●
+															</span>
+															<span className="text-xs text-white/70">
+																{isOnline ? 'Online' : 'Waiting'}
+															</span>
 														</div>
 
-														{/* Divider */}
-														<div className="w-px h-3 bg-white/10" />
+														{/* Device Status Icons */}
+														<div className="flex items-center gap-1.5 bg-gray-900/90 px-2 py-1.5 
+															rounded-full border border-white/10 backdrop-blur-sm">
+															{/* Camera Status */}
+															<div className={`p-1 rounded-full ${hasVideo ? 
+																'text-emerald-400' : 'text-red-400 bg-red-400/10'}`}>
+																<FaVideo size={12} className={hasVideo ? '' : 'opacity-75'} />
+															</div>
 
-														{/* Microphone Status */}
-														<div className={`p-1 rounded-full ${hasAudio ? 
-															'text-emerald-400' : 'text-red-400 bg-red-400/10'}`}>
-															<FaMicrophone size={12} className={hasAudio ? '' : 'opacity-75'} />
+															{/* Divider */}
+															<div className="w-px h-3 bg-white/10" />
+
+															{/* Microphone Status */}
+															<div className={`p-1 rounded-full ${hasAudio ? 
+																'text-emerald-400' : 'text-red-400 bg-red-400/10'}`}>
+																<FaMicrophone size={12} className={hasAudio ? '' : 'opacity-75'} />
+															</div>
 														</div>
 													</div>
+													
+													{/* Participant Name Overlay */}
+													<div className="absolute bottom-0 left-0 right-0 p-2 
+														bg-gradient-to-t from-black/80 to-transparent">
+														<p className="text-sm text-white truncate">
+															{participant?.user?.name || user?.fullName || user?.username || "Participant"}
+														</p>
+													</div>
 												</div>
-												
-												{/* Participant Name Overlay */}
-												<div className="absolute bottom-0 left-0 right-0 p-2 
-													bg-gradient-to-t from-black/80 to-transparent">
-													<p className="text-sm text-white truncate">
-														{participant?.user?.name || user?.fullName || user?.username || "Participant"}
-													</p>
-												</div>
+											);
+										}}
+										VideoPlaceholder={() => null}
+										/>
+								</div>
+
+								{/* New Invite Section - Only visible to host */}
+								{call?.state.createdBy === user?.id && (
+									<div className="mt-4 p-4 bg-gray-900/40 rounded-xl border border-white/10">
+										<div className="flex flex-col gap-3">
+											<h3 className="text-sm font-medium text-white/90">
+												Invite Others
+											</h3>
+											
+											<div className="flex items-center gap-2 p-2 bg-black/20 rounded-lg border border-white/5">
+												<input 
+													type="text"
+													readOnly
+													value={`${process.env.NEXT_PUBLIC_FACETIME_HOST}/${id}`}
+													className="flex-1 bg-transparent text-xs text-white/70 outline-none"
+												/>
+												<button
+													onClick={() => {
+														navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_FACETIME_HOST}/${id}`);
+														// You might want to add a toast notification here
+													}}
+													className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+												>
+													<FaCopy className="w-3 h-3 text-emerald-400" />
+												</button>
 											</div>
-										);
-									}}
-									VideoPlaceholder={() => null}
-									/>
+
+											<p className="text-xs text-white/50">
+												Share this link with others to invite them to the trading session
+											</p>
+										</div>
+									</div>
+								)}
 							</div>
 						</div>
 					</ResizableBox>

@@ -28,24 +28,43 @@ interface TradingViewWidget {
     hide_side_toolbar?: boolean;
     allow_symbol_change?: boolean;
     container_id: string;
-    // Storage configuration
-    charts_storage_url: string;
-    charts_storage_api_version: string;
-    client_id: string;
-    user_id: string;
+    charts_storage_url?: string;
+    charts_storage_api_version?: string;
+    client_id?: string;
+    user_id?: string;
     drawings_access?: {
-      type: 'localStorage';
-      tools: Array<{
-        name: string;
-        grayed: boolean;
-      }>;
+      type: string;
+      tools: Array<{ name: string; grayed: boolean }>;
     };
-  }) => void;
+  }) => any;
 }
 
 declare global {
   interface Window {
-    TradingView: TradingViewWidget;
+    TradingView: {
+      widget: (config: {
+        autosize?: boolean;
+        symbol?: string;
+        interval?: string;
+        timezone?: string;
+        theme?: string;
+        style?: string;
+        locale?: string;
+        toolbar_bg?: string;
+        enable_publishing?: boolean;
+        hide_side_toolbar?: boolean;
+        allow_symbol_change?: boolean;
+        container_id: string;
+        charts_storage_url?: string;
+        charts_storage_api_version?: string;
+        client_id?: string;
+        user_id?: string;
+        drawings_access?: {
+          type: string;
+          tools: Array<{ name: string; grayed: boolean }>;
+        };
+      }) => any;
+    };
   }
 }
 

@@ -7,18 +7,25 @@ interface TradingViewChartProps {
   symbol: string;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
-  onShare?: () => void;
   compact?: boolean;
   isReadOnly?: boolean;
+  chartType?: 'tradingview' | 'dexscreener';
+  dexData?: {
+    chainId: string;
+    pairAddress: string;
+  };
+  onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 
 export const TradingViewChart: FC<TradingViewChartProps> = ({
   symbol,
   isFullscreen,
   onToggleFullscreen,
-  onShare,
   compact = false,
-  isReadOnly = false
+  isReadOnly = false,
+  chartType = 'tradingview',
+  dexData,
+  onFullscreenChange
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<any>(null);
@@ -79,19 +86,41 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
 
   // Create or update widget when symbol changes or script loads
   useEffect(() => {
-    if (!isScriptLoaded || !containerRef.current) return;
+    const container = document.getElementById(chartId.current);
+    if (!container) return;
 
-    // Only create new widget if it doesn't exist or symbol changed
+    // Clear existing content
+    container.innerHTML = '';
+
+    if (chartType === 'dexscreener' && dexData) {
+      // Create a wrapper div for proper sizing
+      const wrapper = document.createElement('div');
+      wrapper.style.width = '100%';
+      wrapper.style.height = '100%';
+      wrapper.style.position = 'absolute';
+      wrapper.style.top = '0';
+      wrapper.style.left = '0';
+      
+      // Create and append the iframe
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://dexscreener.com/${dexData.chainId}/${dexData.pairAddress}?embed=1&theme=dark`;
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.border = 'none';
+      iframe.setAttribute('frameborder', '0');
+      iframe.setAttribute('allowfullscreen', 'true');
+      
+      wrapper.appendChild(iframe);
+      container.appendChild(wrapper);
+      return;
+    }
+
+    // TradingView chart logic
+    if (!isScriptLoaded) return;
+
     if (!widgetRef.current || widgetRef.current._symbol !== symbol) {
-      if (widgetRef.current) {
-        const oldContainer = document.getElementById(chartId.current);
-        if (oldContainer) {
-          oldContainer.innerHTML = '';
-        }
-      }
-
-      if (typeof TradingView !== 'undefined') {
-        widgetRef.current = new TradingView.widget({
+      if (typeof window.TradingView !== 'undefined') {
+        widgetRef.current = new window.TradingView.widget({
           autosize: true,
           symbol: symbol,
           interval: "D",
@@ -113,38 +142,26 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
             tools: [{ name: "all", grayed: false }] 
           }
         });
-        
-        // Store the current symbol to check for changes
         widgetRef.current._symbol = symbol;
       }
     }
+  }, [symbol, isScriptLoaded, chartType, dexData]);
 
-    // Cleanup only when component unmounts
-    return () => {
-      if (widgetRef.current && !document.getElementById(chartId.current)) {
-        widgetRef.current = null;
-      }
-    };
-  }, [symbol, isScriptLoaded]);
+  const handleFullscreenToggle = () => {
+    onToggleFullscreen();
+    onFullscreenChange?.(!isFullscreen);
+  };
 
   return (
     <div 
       ref={containerRef}
-      style={{ height: isFullscreen ? '100%' : `${height}px` }}
+      style={{ height: isFullscreen ? '100vh' : `${height}px` }}
       className={`relative bg-gray-900 rounded-lg overflow-hidden border border-gray-700
         ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}
     >
-      <div className="absolute top-4 right-4 flex gap-2 z-10">
-        {onShare && (
-          <button
-            onClick={onShare}
-            className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white transition-colors"
-          >
-            <FaShare size={16} />
-          </button>
-        )}
+      <div className="absolute top-4 right-4 z-10">
         <button
-          onClick={onToggleFullscreen}
+          onClick={handleFullscreenToggle}
           className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white transition-colors"
         >
           {isFullscreen ? <FaCompress size={16} /> : <FaExpand size={16} />}
@@ -152,7 +169,7 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
       </div>
       <div 
         id={chartId.current}
-        className={`w-full h-full ${compact ? 'min-h-[300px]' : 'min-h-[400px]'}`}
+        className={`w-full h-full ${compact ? 'min-h-[300px]' : 'min-h-[400px]'} relative`}
       />
       
       {!isFullscreen && (
