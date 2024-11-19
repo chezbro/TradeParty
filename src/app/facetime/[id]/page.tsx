@@ -378,7 +378,7 @@ export default function FaceTimePage() {
 
 }
 
-const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, socket, meetingName }) => {
+export const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, socket, meetingName }) => {
 	const { user } = useUser();
 	const router = useRouter();
 	const [layout, setLayout] = useState<CallLayoutType>("trading");
@@ -387,7 +387,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 	const [selectedTrade, setSelectedTrade] = useState<null | ExtendedTrade>(null);
 	const [selectedTrader, setSelectedTrader] = useState<string>('');
 	const [isControlsVisible, setIsControlsVisible] = useState(false);
-	const [currentSymbol, setCurrentSymbol] = useState<string>('AAPL');
+	const [currentSymbol, setCurrentSymbol] = useState('BTCUSDT');
 	const [watchlist, setWatchlist] = useState<string[]>(['AAPL']);
 	const [isChartShared, setIsChartShared] = useState(false);
 	const [liveChartStreamer, setLiveChartStreamer] = useState<string | null>(null);
@@ -696,8 +696,8 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 												watchlist={watchlist}
 												onSymbolSelect={setCurrentSymbol}
 												onStarClick={handleStarClick}
+												currentSymbol={currentSymbol}
 											/>
-											<TradesFeed />
 										</div>
 									</div>
 								)}

@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import { TraderStats } from './TraderStats';
+import { useState } from 'react';
 import { TradesFeed } from './TradesFeed';
-import { FaChartBar, FaChevronDown, FaChevronRight, FaStar } from 'react-icons/fa';
+import { WatchlistContainer } from './WatchlistContainer';
+import { FaChartBar, FaChevronDown } from 'react-icons/fa';
+import { TraderProfileModal } from './TraderProfileModal';
 
 interface TraderData {
     userId: string;
@@ -16,9 +17,15 @@ interface TradingDashboardProps {
     watchlist: string[];
     onSymbolSelect: (symbol: string) => void;
     onStarClick: (symbol: string) => void;
+    currentSymbol: string;
 }
 
-export const TradingDashboard = ({ watchlist, onSymbolSelect, onStarClick }: TradingDashboardProps) => {
+export const TradingDashboard = ({ 
+    watchlist, 
+    onSymbolSelect, 
+    onStarClick,
+    currentSymbol 
+}: TradingDashboardProps) => {
     const mockTraders: TraderData[] = [
         {
             userId: '1',
@@ -72,100 +79,75 @@ export const TradingDashboard = ({ watchlist, onSymbolSelect, onStarClick }: Tra
 
     const [tradersData, setTradersData] = useState<TraderData[]>(mockTraders);
     const [isTopTradersExpanded, setIsTopTradersExpanded] = useState(false);
-    const [isWatchlistExpanded, setIsWatchlistExpanded] = useState(false);
+    const [selectedTrader, setSelectedTrader] = useState<TraderData | null>(null);
+
+    const handleTradeSelect = (symbol: string) => {
+        onSymbolSelect(symbol);
+    };
 
     return (
         <div className="space-y-4">
-            {/* Top Traders Section */}
-            <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700/50">
+            <TradesFeed 
+                onTradeSelect={handleTradeSelect}
+            />
+            
+            <WatchlistContainer 
+                watchlist={watchlist}
+                onSymbolSelect={onSymbolSelect}
+                onStarClick={onStarClick}
+            />
+
+            <div className="rounded-lg bg-gray-900/50 border border-white/10 overflow-hidden">
                 <button 
                     onClick={() => setIsTopTradersExpanded(!isTopTradersExpanded)}
-                    className="w-full p-4 flex items-center justify-between hover:bg-gray-700/30 transition-colors rounded-t-xl"
+                    className="w-full p-3 flex items-center justify-between hover:bg-white/5"
                 >
-                    <h2 className="text-xl text-white font-semibold flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                         <FaChartBar className="text-blue-400" />
-                        Top Traders
-                    </h2>
-                    {isTopTradersExpanded ? (
-                        <FaChevronDown className="text-gray-400" />
-                    ) : (
-                        <FaChevronRight className="text-gray-400" />
-                    )}
-                </button>
-                
-                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    isTopTradersExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
-                }`}>
-                    <div className="p-4 pt-0">
-                        <div className="flex flex-col gap-3">
-                            {tradersData.length > 0 ? (
-                                tradersData.map(trader => (
-                                    <TraderStats 
-                                        key={trader.userId}
-                                        trader={trader}
-                                    />
-                                ))
-                            ) : (
-                                <div className="text-center py-8 text-gray-400">
-                                    No active traders at the moment
-                                </div>
-                            )}
-                        </div>
+                        <span className="text-white/90 font-medium">Top Traders</span>
                     </div>
-                </div>
-            </div>
-
-            {/* Watchlist Section */}
-            <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700/50">
-                <button 
-                    onClick={() => setIsWatchlistExpanded(!isWatchlistExpanded)}
-                    className="w-full p-4 flex items-center justify-between hover:bg-gray-700/30 transition-colors rounded-t-xl"
-                >
-                    <h2 className="text-xl text-white font-semibold flex items-center gap-2">
-                        <FaStar className="text-yellow-400" />
-                        Watchlist
-                    </h2>
-                    {isWatchlistExpanded ? (
-                        <FaChevronDown className="text-gray-400" />
-                    ) : (
-                        <FaChevronRight className="text-gray-400" />
-                    )}
+                    <div className={`transform transition-transform duration-200 ${isTopTradersExpanded ? 'rotate-180' : ''}`}>
+                        <FaChevronDown className="text-white/50" />
+                    </div>
                 </button>
                 
-                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    isWatchlistExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
-                }`}>
-                    <div className="p-4 pt-0">
-                        <div className="flex flex-col gap-3">
-                            {watchlist.map((symbol) => (
+                {isTopTradersExpanded && (
+                    <div className="p-3 border-t border-white/5">
+                        <div className="grid gap-2">
+                            {tradersData.map((trader) => (
                                 <div 
-                                    key={symbol}
-                                    className="flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer text-gray-200"
-                                    onClick={() => onSymbolSelect(symbol)}
+                                    key={trader.userId}
+                                    className="flex items-center justify-between p-2.5 hover:bg-white/5 rounded-md transition-colors duration-200 cursor-pointer"
+                                    onClick={() => setSelectedTrader(trader)}
                                 >
-                                    <span>{symbol}</span>
-                                    <FaStar 
-                                        size={20}
-                                        className="text-yellow-500"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onStarClick(symbol);
-                                        }}
-                                    />
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-gray-800/50 border border-white/5 flex items-center justify-center text-sm text-white/80">
+                                            {trader.name[0]}
+                                        </div>
+                                        <div className="text-sm text-white/90">{trader.name}</div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className={`text-sm font-medium ${trader.profitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                            {trader.profitLoss >= 0 ? '+' : ''}${Math.abs(trader.profitLoss).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                        </div>
+                                        <div className="text-xs text-white/70 w-12 text-right">
+                                            {(trader.winRate * 100).toFixed(0)}% WR
+                                        </div>
+                                    </div>
                                 </div>
                             ))}
-                            {watchlist.length === 0 && (
-                                <div className="text-center py-8 text-gray-400">
-                                    No starred symbols yet
-                                </div>
-                            )}
                         </div>
                     </div>
-                </div>
+                )}
             </div>
 
-            {/* Trades Feed */}
-            <TradesFeed hideHeader={true} />
+            {selectedTrader && (
+                <TraderProfileModal
+                    trader={selectedTrader}
+                    isOpen={!!selectedTrader}
+                    onClose={() => setSelectedTrader(null)}
+                />
+            )}
         </div>
     );
 }; 

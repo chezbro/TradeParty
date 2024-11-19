@@ -6,9 +6,10 @@ import { Trade } from '@/types/trade';
 
 interface TradesFeedProps {
     hideHeader?: boolean;
+    onTradeSelect?: (symbol: string) => void;
 }
 
-export const TradesFeed = memo(({ hideHeader = false }: TradesFeedProps) => {
+export const TradesFeed = memo(({ hideHeader = false, onTradeSelect }: TradesFeedProps) => {
     const { trades } = useTrades();
     const [filter, setFilter] = useState<"ALL" | "LONG" | "SHORT">("ALL");
     const [isExpanded, setIsExpanded] = useState(false);
@@ -85,7 +86,8 @@ export const TradesFeed = memo(({ hideHeader = false }: TradesFeedProps) => {
                                     key={trade.id} 
                                     className="w-full group bg-gray-700/30 hover:bg-gray-700/50 backdrop-blur rounded-lg p-2
                                         border border-gray-600/30 hover:border-gray-500/50 
-                                        transition-all duration-200"
+                                        transition-all duration-200 cursor-pointer"
+                                    onClick={() => onTradeSelect?.(trade.symbol)}
                                 >
                                     <div className="flex items-center justify-between w-full">
                                         <div className="min-w-0 flex items-center gap-2">

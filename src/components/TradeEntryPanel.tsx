@@ -5,6 +5,7 @@ import Confetti from 'react-confetti';
 import { useUser } from '@clerk/nextjs';
 import { useTrades } from '@/context/TradesContext';
 import { ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { SymbolSearch } from './SymbolSearch';
 
 interface TradeEntryPanelProps {
     onNewTrade: (trade: Trade) => void;
@@ -122,11 +123,9 @@ export const TradeEntryPanel: React.FC<TradeEntryPanelProps> = ({ onNewTrade, cu
             <form onSubmit={handleSubmit} className="space-y-3">
                 <div className="space-y-2">
                     <div className="flex gap-2">
-                        <input
-                            type="text"
-                            placeholder="Symbol"
+                        <SymbolSearch
                             value={tradeData.symbol}
-                            onChange={(e) => setTradeData(prev => ({ ...prev, symbol: e.target.value.toUpperCase() }))}
+                            onChange={(symbol) => setTradeData(prev => ({ ...prev, symbol }))}
                             className="flex-1 bg-gray-900 border border-white/10 rounded px-3 py-1.5 text-sm text-white/90
                                 focus:outline-none focus:border-emerald-500/50"
                         />
