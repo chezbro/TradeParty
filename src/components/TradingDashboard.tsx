@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { TradesFeed } from './TradesFeed';
 import { WatchlistContainer } from './WatchlistContainer';
-import { FaChartBar, FaChevronDown } from 'react-icons/fa';
+import { FaChartBar, FaChevronDown, FaChevronRight } from 'react-icons/fa';
 import { TraderProfileModal } from './TraderProfileModal';
 import { useWatchlist } from '@/context/WatchlistContext';
 import toast from 'react-hot-toast';
@@ -121,8 +121,12 @@ export const TradingDashboard = ({
                         <FaChartBar className="text-blue-400" />
                         <span className="text-white/90 font-medium">Top Traders</span>
                     </div>
-                    <div className={`transform transition-transform duration-200 ${isTopTradersExpanded ? 'rotate-180' : ''}`}>
-                        <FaChevronDown className="text-white/50" />
+                    <div className="transform transition-transform duration-200">
+                        {isTopTradersExpanded ? (
+                            <FaChevronDown className="text-white/50" />
+                        ) : (
+                            <FaChevronRight className="text-white/50" />
+                        )}
                     </div>
                 </button>
                 

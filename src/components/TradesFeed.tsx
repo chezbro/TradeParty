@@ -1,4 +1,4 @@
-import { FaExchangeAlt, FaChevronDown, FaUser, FaClock, FaArrowUp, FaArrowDown } from 'react-icons/fa';
+import { FaExchangeAlt, FaChevronDown, FaUser, FaClock, FaArrowUp, FaArrowDown, FaChevronRight } from 'react-icons/fa';
 import { BsCursor, BsArrowDownRight, BsArrowUpRight } from 'react-icons/bs';
 import { useTrades } from '@/context/TradesContext';
 import { useState, useMemo, useCallback, memo } from 'react';
@@ -46,8 +46,12 @@ export const TradesFeed = memo(({ hideHeader = false, onTradeSelect }: TradesFee
                         <FaExchangeAlt className="text-green-400 group-hover:rotate-12 transition-transform duration-200" />
                         Active Trades
                     </h2>
-                    <div className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
-                        <FaChevronDown className="text-gray-400 group-hover:text-gray-300" />
+                    <div className="transform transition-transform duration-200">
+                        {isExpanded ? (
+                            <FaChevronDown className="text-gray-400 group-hover:text-gray-300" />
+                        ) : (
+                            <FaChevronRight className="text-gray-400 group-hover:text-gray-300" />
+                        )}
                     </div>
                 </button>
             )}
