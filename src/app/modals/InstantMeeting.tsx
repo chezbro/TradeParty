@@ -13,6 +13,7 @@ import { Fragment, useState, Dispatch, SetStateAction } from "react";
 import { useStreamVideoClient, Call } from "@stream-io/video-react-sdk";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface Props {
 	enable: boolean;
@@ -83,6 +84,7 @@ const MeetingForm = ({
 
 	const client = useStreamVideoClient();
 	const { user } = useUser();
+	const supabase = createClientComponentClient();
 
 	const handleStartMeeting = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -101,12 +103,42 @@ const MeetingForm = ({
 				},
 			});
 
+			const created_by_uuid = crypto.randomUUID();
+			const meeting_id = crypto.randomUUID();
+
+			console.log('Attempting to insert meeting:', {
+				id: meeting_id,
+				name: description,
+				created_by: created_by_uuid,
+				call_id: call.id,
+				status: 'active'
+			});
+
+			const { data, error } = await supabase
+				.from('meetings')
+				.insert({
+					id: meeting_id,
+					name: description,
+					created_by: created_by_uuid,
+					call_id: call.id,
+					starts_at: new Date(Date.now()).toISOString(),
+					status: 'active'
+				})
+				.select();
+
+			if (error) {
+				console.error('Supabase error:', error);
+				throw error;
+			}
+
+			console.log('Meeting saved:', data);
+
 			setCallDetail(call);
 			setFacetimeLink(`${call.id}`);
 			setShowMeetingLink(true);
 			console.log("Meeting Created!");
 		} catch (error) {
-			console.error(error);
+			console.error('Detailed error:', error);
 			alert("Failed to create Meeting");
 		}
 	};
@@ -156,7 +188,12 @@ const MeetingForm = ({
 
 const MeetingLink = ({ facetimeLink }: { facetimeLink: string }) => {
 	const [copied, setCopied] = useState<boolean>(false);
+	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const handleCopy = () => setCopied(true);
+
+	const handleStartMeeting = () => {
+		setIsLoading(true);
+	};
 
 	return (
 		<>
@@ -168,7 +205,7 @@ const MeetingLink = ({ facetimeLink }: { facetimeLink: string }) => {
 			</DialogTitle>
 
 			<Description className='text-xs opacity-40 mb-4'>
-			Start a new TradeParty and invite others to join.
+				Start a new TradeParty and invite others to join.
 			</Description>
 
 			<div className='bg-gray-100 p-4 rounded flex items-center justify-between'>
@@ -186,8 +223,19 @@ const MeetingLink = ({ facetimeLink }: { facetimeLink: string }) => {
 				<p className='text-red-600 text-xs mt-2'>Link copied to clipboard</p>
 			)}
 
-			<Link href={`${process.env.NEXT_PUBLIC_FACETIME_HOST}/${facetimeLink}`} className='w-full block bg-green-600 text-white py-3 rounded mt-4'>
-				Ready to Start
+			<Link 
+				href={`${process.env.NEXT_PUBLIC_FACETIME_HOST}/${facetimeLink}`} 
+				className='w-full block bg-green-600 text-white py-3 rounded mt-4 relative'
+				onClick={handleStartMeeting}
+			>
+				{isLoading ? (
+					<div className="flex items-center justify-center">
+						<div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin"></div>
+						<span className="ml-2">Cooking it up...</span>
+					</div>
+				) : (
+					"Ready to Start"
+				)}
 			</Link>
 		</>
 	);

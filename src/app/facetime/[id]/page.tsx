@@ -360,13 +360,13 @@ export default function FacetimePage() {
 								<h1 className='text-5xl font-bold text-white mb-2'>
 									{meetingDetails?.name || "Join the Call"}
 								</h1>
-								<p className='text-lg text-gray-300 mb-4'>Ready to dive into the conversation?</p>
+								<p className='text-lg text-gray-300 mb-4'>Ready to join the TradeParty?</p>
 								<div className='flex gap-4'>
 									<button 
 										onClick={handleJoin} 
 										className='px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-transform transform hover:scale-105 duration-200'
 									>
-										Join Now
+										{call?.state.createdBy === user?.id ? 'Start Now' : 'Join Now'}
 									</button>
 									<button 
 										onClick={() => router.push("/")} 
