@@ -1025,7 +1025,7 @@ export default function FacetimePage() {
 			reconnectionDelayMax: 5000,
 			timeout: 20000,
 			transports: ['websocket'], // Prefer WebSocket
-			polling: true
+			forcePolling: true
 		});
 
 		// Add heartbeat to keep connection alive
