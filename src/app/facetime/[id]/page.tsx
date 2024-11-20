@@ -92,13 +92,6 @@ const MultiChartGrid = ({
 	);
 };
 
-// Update the StreamVideoParticipant interface to include the user property
-interface ParticipantUser {
-	id?: string;
-	name?: string;
-	image?: string;
-}
-
 // Update the StreamVideoParticipant interface to include the properties we're using
 interface EnhancedStreamVideoParticipant extends StreamVideoParticipant {
 	videoTrack?: MediaStreamTrack;
@@ -278,112 +271,6 @@ const MainContentArea = memo<MainContentAreaProps>(({
 
 MainContentArea.displayName = 'MainContentArea';
 
-// Update the component props interface
-interface ParticipantViewProps {
-	participant: StreamVideoParticipant & {
-		user?: ParticipantUser;
-		status?: string;
-		tracks?: {
-			video?: { enabled?: boolean; track?: MediaStreamTrack };
-			audio?: { enabled?: boolean };
-		};
-	};
-}
-
-// Update the ParticipantView component
-const ParticipantView: React.FC<ParticipantViewProps> = ({ participant }) => {
-	console.log('Participant data:', {
-		participant,
-		userData: participant?.user,
-		image: participant?.user?.image,
-		name: participant?.user?.name
-	});
-
-	const isOnline = participant?.status === 'online' || 
-		Boolean(participant?.tracks?.video?.enabled || participant?.tracks?.audio?.enabled);
-	const hasVideo = participant?.tracks?.video?.enabled;
-	const hasAudio = participant?.tracks?.audio?.enabled;
-	
-	return (
-		<div className="relative w-full aspect-video rounded-lg overflow-hidden 
-			bg-gray-900/50 backdrop-blur-sm border border-white/10 
-			transition-all duration-300 hover:border-emerald-500/30 
-			hover:shadow-lg hover:shadow-emerald-500/10 mb-2"
-		>
-			{/* Video Container */}
-			<div className="absolute inset-0 bg-black/20">
-				{hasVideo ? (
-					<video
-						ref={(el) => {
-							if (el && participant?.tracks?.video?.track) {
-								el.srcObject = new MediaStream([participant.tracks.video.track]);
-							}
-						}}
-						autoPlay
-						playsInline
-						muted
-						className="h-full w-full object-cover"
-					/>
-				) : (
-					<div className="h-full w-full flex items-center justify-center bg-gray-800 relative">
-						<img 
-							src={participant?.user?.image || "https://picsum.photos/seed/default/200/200"}
-							alt={participant?.user?.name || "Participant"}
-							className="h-12 w-12 rounded-full"
-						/>
-					</div>
-				)}
-			</div>
-			
-			{/* Status Indicators */}
-			<div className="absolute top-2 right-2 flex flex-col gap-2">
-				{/* Connection Status */}
-				<div className="flex items-center gap-1.5 bg-gray-900/90 px-2 py-1 
-					rounded-full border border-white/10 backdrop-blur-sm">
-					<span className={`text-[8px] ${isOnline ? 'text-emerald-400' : 'text-yellow-400'}`}>
-						●
-					</span>
-					<span className="text-xs text-white/70">
-						{isOnline ? 'Online' : 'Waiting'}
-					</span>
-				</div>
-
-				{/* Device Status Icons */}
-				<div className="flex items-center gap-1.5 bg-gray-900/90 px-2 py-1.5 
-					rounded-full border border-white/10 backdrop-blur-sm">
-					{/* Camera Status */}
-					<div className={`p-1 rounded-full ${hasVideo ? 
-						'text-emerald-400' : 'text-red-400 bg-red-400/10'}`}>
-						<FaVideo size={12} className={hasVideo ? '' : 'opacity-75'} />
-					</div>
-
-					{/* Divider */}
-					<div className="w-px h-3 bg-white/10" />
-
-					{/* Microphone Status */}
-					<div className={`p-1 rounded-full ${hasAudio ? 
-						'text-emerald-400' : 'text-red-400 bg-red-400/10'}`}>
-						<FaMicrophone size={12} className={hasAudio ? '' : 'opacity-75'} />
-					</div>
-				</div>
-			</div>
-			
-			{/* Participant Name Overlay */}
-			<div className="absolute bottom-0 left-0 right-0 p-2 
-				bg-gradient-to-t from-black/80 to-transparent">
-				<p className="text-sm text-white truncate">
-					{participant?.user?.name || "Participant"}
-				</p>
-			</div>
-		</div>
-	);
-};
-
-// Add this wrapper component before the PaginatedGridLayout usage
-const ParticipantViewWrapper = () => {
-	return (props: any) => <ParticipantView participant={props.participant} />;
-};
-
 // Move MeetingRoom component definition above FacetimePage
 const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, socket, meetingName }) => {
 	const { user } = useUser();
@@ -462,6 +349,76 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 		// Implement actual trade handling logic here
 		console.log("New trade:", trade);
 		// You can emit this to your socket or handle it however needed
+	};
+
+	const ParticipantView = ({ participant }: { participant: StreamVideoParticipant }) => {
+		const { user } = useUser();
+		const call = useCall();
+		
+		// Add debugging effect inside the ParticipantView component
+		useEffect(() => {
+			// Log participant data
+			console.log('Participant View Data:', {
+				participant,
+				userId: participant.userId,
+				isCreator: call?.state.createdBy?.id === participant.userId,
+				callCreator: call?.state.createdBy,
+				sessionId: participant.sessionId,
+				localParticipant: call?.state.localParticipant,
+				remoteParticipants: call?.state.remoteParticipants,
+				currentUserId: user?.id
+			});
+
+			// Log when participants join/leave
+			const logParticipants = () => {
+				console.log('All Participants:', {
+					localParticipant: call?.state.localParticipant,
+					remoteParticipants: call?.state.remoteParticipants,
+					createdBy: call?.state.createdBy,
+					currentUserId: user?.id
+				});
+			};
+
+			if (call) {
+				call.on('participantJoined', logParticipants);
+				call.on('participantLeft', logParticipants);
+
+				return () => {
+					call.off('participantJoined', logParticipants);
+					call.off('participantLeft', logParticipants);
+				};
+			}
+		}, [participant, call, user?.id]);
+
+		const isCreator = call?.state.createdBy?.id === participant.userId;
+
+		return (
+			<div className="relative rounded-xl overflow-hidden bg-gray-900/50 backdrop-blur-sm 
+				border border-gray-800/50 transition-all duration-300 hover:border-gray-700/50
+						hover:shadow-lg hover:shadow-emerald-500/5">
+				<img 
+					src={participant.image || user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
+					alt={participant.name || "Participant"}
+					className="w-full h-full object-cover"
+				/>
+				
+				<div className="absolute inset-0 flex flex-col justify-end">
+					<div className="p-3 bg-gradient-to-t from-gray-900/95 via-gray-900/80 to-transparent">
+						<div className="flex items-center gap-2">
+							<p className="text-white font-medium">
+								{participant.name || "Participant"}
+							</p>
+							{isCreator && (
+								<span className="px-2 py-0.5 text-xs bg-emerald-500/20 text-emerald-400 
+									rounded-full border border-emerald-500/20">
+									Host
+								</span>
+							)}
+						</div>
+					</div>
+				</div>
+			</div>
+		);
 	};
 
 	const handleStarClick = useCallback((symbol: string) => {
@@ -787,7 +744,93 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 								<div className="flex-1">
 									<PaginatedGridLayout
 										groupSize={4}
-										ParticipantViewUI={ParticipantViewWrapper()}
+										ParticipantViewUI={({ participant }: { participant: StreamVideoParticipant }) => {
+											console.log('Participant data:', {
+												participant,
+												userData: participant?.user,
+												image: participant?.user?.image,
+												name: participant?.user?.name
+											});
+
+											const isOnline = participant?.status === 'online' || 
+												Boolean(participant?.tracks?.video?.enabled || participant?.tracks?.audio?.enabled);
+											const hasVideo = participant?.tracks?.video?.enabled;
+											const hasAudio = participant?.tracks?.audio?.enabled;
+											
+											return (
+												<div className="relative w-full aspect-video rounded-lg overflow-hidden 
+														bg-gray-900/50 backdrop-blur-sm border border-white/10 
+															transition-all duration-300 hover:border-emerald-500/30 
+															hover:shadow-lg hover:shadow-emerald-500/10 mb-2"
+												>
+													{/* Video Container */}
+													<div className="absolute inset-0 bg-black/20">
+														{hasVideo ? (
+															<video
+																ref={(el) => {
+																	if (el && participant?.tracks?.video?.track) {
+																		el.srcObject = new MediaStream([participant.tracks.video.track]);
+																	}
+																}}
+																autoPlay
+																playsInline
+																	muted
+																	className="h-full w-full object-cover"
+															/>
+														) : (
+															<div className="h-full w-full flex items-center justify-center bg-gray-800 relative">
+																<img 
+																	src={participant?.user?.image || user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
+																	alt={participant?.user?.name || user?.fullName || "Participant"}
+																	className="h-12 w-12 rounded-full"
+																/>
+															</div>
+														)}
+													</div>
+													
+													{/* Status Indicators */}
+													<div className="absolute top-2 right-2 flex flex-col gap-2">
+														{/* Connection Status */}
+														<div className="flex items-center gap-1.5 bg-gray-900/90 px-2 py-1 
+															rounded-full border border-white/10 backdrop-blur-sm">
+															<span className={`text-[8px] ${isOnline ? 'text-emerald-400' : 'text-yellow-400'}`}>
+																●
+															</span>
+															<span className="text-xs text-white/70">
+																{isOnline ? 'Online' : 'Waiting'}
+															</span>
+														</div>
+
+														{/* Device Status Icons */}
+														<div className="flex items-center gap-1.5 bg-gray-900/90 px-2 py-1.5 
+															rounded-full border border-white/10 backdrop-blur-sm">
+															{/* Camera Status */}
+															<div className={`p-1 rounded-full ${hasVideo ? 
+																'text-emerald-400' : 'text-red-400 bg-red-400/10'}`}>
+																<FaVideo size={12} className={hasVideo ? '' : 'opacity-75'} />
+															</div>
+
+															{/* Divider */}
+															<div className="w-px h-3 bg-white/10" />
+
+															{/* Microphone Status */}
+															<div className={`p-1 rounded-full ${hasAudio ? 
+																'text-emerald-400' : 'text-red-400 bg-red-400/10'}`}>
+																<FaMicrophone size={12} className={hasAudio ? '' : 'opacity-75'} />
+															</div>
+														</div>
+													</div>
+													
+													{/* Participant Name Overlay */}
+													<div className="absolute bottom-0 left-0 right-0 p-2 
+														bg-gradient-to-t from-black/80 to-transparent">
+														<p className="text-sm text-white truncate">
+															{participant?.user?.name || user?.fullName || user?.username || "Participant"}
+														</p>
+													</div>
+												</div>
+											);
+										}}
 										VideoPlaceholder={() => null}
 										/>
 								</div>
@@ -960,7 +1003,7 @@ export default function FacetimePage() {
 			reconnectionDelayMax: 5000,
 			timeout: 20000,
 			transports: ['websocket'], // Prefer WebSocket
-			pooling: true
+			polling: true
 		});
 
 		// Add heartbeat to keep connection alive
