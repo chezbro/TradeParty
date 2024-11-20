@@ -263,7 +263,6 @@ const MainContentArea = memo<MainContentAreaProps>(({
 				isLiveSharing={isLiveSharing}
 				onToggleLiveShare={handleToggleLiveShare}
 				isReadOnly={Boolean(broadcaster && broadcaster.userId !== user?.id)}
-				isFullscreen={isChartFullscreen}
 				onFullscreenChange={onTogglePanels}
 			/>
 		</div>
