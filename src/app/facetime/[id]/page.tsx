@@ -130,7 +130,7 @@ interface MainContentAreaProps {
 	broadcaster: { userId: string; symbol: string } | null;
 	user: any; // Replace with proper user type if available
 	handleToggleMultiChart: () => void;
-	setChartLayouts: (layouts: string[]) => void;
+	setChartLayouts: (layouts: string[] | ((prev: string[]) => string[])) => void;
 	liveCharts: LiveChart[];
 	isChartFullscreen: boolean;
 	onToggleFullscreen: () => void;
