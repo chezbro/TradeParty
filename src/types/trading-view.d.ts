@@ -15,7 +15,7 @@ interface SaveLoadAdapter {
 }
 
 interface TradingViewWidget {
-  widget(config: {
+  new (config: {
     autosize: boolean;
     symbol: string;
     interval: string;
@@ -39,9 +39,13 @@ interface TradingViewWidget {
   }): any;
 }
 
+interface TradingViewStatic {
+  widget: TradingViewWidget;
+}
+
 declare global {
   interface Window {
-    TradingView: TradingViewWidget;
+    TradingView: TradingViewStatic;
   }
 }
 
