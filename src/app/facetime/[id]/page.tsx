@@ -180,7 +180,7 @@ const MainContentArea = memo<MainContentAreaProps>(({
 						{chartLayouts.length > 1 && !isChartFullscreen && (
 							<button
 								onClick={() => {
-									setChartLayouts(prev => prev.filter((_, i) => i !== index));
+									setChartLayouts((prev: string[]) => prev.filter((_, i) => i !== index));
 								}}
 								className="absolute top-2 right-2 p-2 bg-red-500/20 hover:bg-red-500/30 
 										rounded-full text-red-400 transition-colors z-10"
