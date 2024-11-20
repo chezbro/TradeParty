@@ -676,10 +676,8 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 												onNewTrade={handleNewTrade}
 											/>
 											<TradingDashboard
-												watchlist={watchlist}
-												onSymbolSelect={setCurrentSymbol}
-												onStarClick={handleStarClick}
 												currentSymbol={currentSymbol}
+												onSymbolSelect={setCurrentSymbol}
 											/>
 										</div>
 									</div>
