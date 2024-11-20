@@ -174,8 +174,8 @@ const MainContentArea = memo<MainContentAreaProps>(({
 							onToggleFavorite={handleStarClick}
 							isFavorited={watchlist.includes(symbol)}
 							compact={!isChartFullscreen}
-							isFullscreen={isChartFullscreen}
 							onFullscreenChange={onTogglePanels}
+							onShare={shareChart}
 						/>
 						{chartLayouts.length > 1 && !isChartFullscreen && (
 							<button
