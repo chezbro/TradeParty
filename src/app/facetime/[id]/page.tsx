@@ -252,168 +252,8 @@ const MainContentArea = memo(({
 
 MainContentArea.displayName = 'MainContentArea';
 
-export default function FacetimePage() {
-	const { id } = useParams<{ id: string }>();
-	const { isLoaded } = useUser();
-	const { call, isCallLoading } = useGetCallById(id);
-	const [confirmJoin, setConfirmJoin] = useState<boolean>(false);
-	const [camMicEnabled, setCamMicEnabled] = useState<boolean>(false);
-	const router = useRouter();
-	const [sharedCharts, setSharedCharts] = useState<SharedChart[]>([]);
-	const [socket, setSocket] = useState<Socket | null>(null);
-	const { user } = useUser();
-	const { meetingDetails, isLoading: isMeetingLoading } = useMeetingDetails(id);
-	const [isChartFullscreen, setIsChartFullscreen] = useState(false);
-
-	useEffect(() => {
-		if (camMicEnabled) {
-			call?.camera.enable();
-			call?.microphone.enable();
-		} else {
-			
-			call?.camera.disable();
-			call?.microphone.disable();
-		}
-
-	}, [call, camMicEnabled]);
-
-	useEffect(() => {
-		if (!socket) return;
-
-		// Listen for shared charts from other users
-		socket.on('chart-shared', (chart: SharedChart) => {
-			setSharedCharts(prev => [...prev, chart]);
-		});
-
-		return () => {
-			socket.off('chart-shared');
-		};
-	}, [socket]);
-
-	useEffect(() => {
-		// Initialize socket connection
-		const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001', {
-			query: {
-				userId: user?.id,
-				roomId: id // from your params
-			},
-			reconnection: true,
-			reconnectionAttempts: 5,
-			reconnectionDelay: 1000,
-			reconnectionDelayMax: 5000,
-			timeout: 20000,
-			transports: ['websocket'], // Prefer WebSocket
-			pooling: true
-		});
-
-		// Add heartbeat to keep connection alive
-		const heartbeat = setInterval(() => {
-			if (socketInstance.connected) {
-				socketInstance.emit('ping');
-			}
-		}, 30000);
-
-		setSocket(socketInstance);
-
-		return () => {
-			clearInterval(heartbeat);
-			socketInstance.disconnect();
-		};
-	}, [user?.id, id]);
-
-	const handleJoin = () => { 
-		call?.join();
-		setConfirmJoin(true)
-	}
-
-	const shareChart = (chartData: any) => {
-		if (!socket || !user) return;
-
-		const sharedChart: SharedChart = {
-			id: Math.random().toString(36).substring(7),
-			data: chartData,
-			sharedBy: user.id,
-		};
-
-		socket.emit('share-chart', sharedChart);
-		setSharedCharts(prev => [...prev, sharedChart]);
-	};
-
-	// Add debug logging
-	useEffect(() => {
-		console.log('Meeting Details:', {
-			meetingDetails,
-			isLoading: isMeetingLoading,
-			id
-		});
-	}, [meetingDetails, isMeetingLoading, id]);
-
-	// Add debug logging before the render
-	useEffect(() => {
-		console.log('Host Check:', {
-			callCreatedBy: call?.state.createdBy,
-			userId: user?.id,
-			isHost: call?.state.createdBy === user?.id,
-			fullCallState: call?.state,
-			userDetails: user
-		});
-	}, [call?.state.createdBy, user?.id, call?.state, user]);
-
-	if (isCallLoading || !isLoaded || isMeetingLoading) {
-		return (
-			<div className="min-h-screen w-full bg-black flex items-center justify-center">
-				<p className="text-white/70">Loading TradeParty...</p>
-			</div>
-		);
-	}
-
-	if (!call) return (<p>Call not found</p>);
-
-	return (
-		<main className='min-h-screen w-full bg-black'>
-			<StreamCall call={call}>
-				<StreamTheme>
-					{confirmJoin ? (
-						<MeetingRoom 
-							shareChart={shareChart}
-							sharedCharts={sharedCharts}
-							socket={socket}
-							meetingName={meetingDetails?.name || "Loading..."}
-						/>
-					) : (
-						<div className='h-screen w-full flex items-center justify-center bg-gradient-to-br from-gray-800 via-gray-900 to-black'>
-							<div className='flex flex-col items-center justify-center gap-6 p-10 bg-gray-800/70 backdrop-blur-lg rounded-2xl border border-gray-700 shadow-lg'>
-								<h1 className='text-5xl font-bold text-white mb-2'>
-									{meetingDetails?.name || "Loading..."}
-								</h1>
-								<p className='text-lg text-gray-300 mb-4'>
-									{call?.state.createdBy?.id === user?.id 
-										? "Ready to Host a TradeParty?"
-										: "Ready to join the TradeParty?"}
-								</p>
-								<div className='flex gap-4'>
-									<button 
-										onClick={handleJoin} 
-										className='px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-transform transform hover:scale-105 duration-200'
-									>
-										{call?.state.createdBy?.id === user?.id ? 'Start Now' : 'Join Now'}
-									</button>
-									<button 
-										onClick={() => router.push("/")} 
-										className='px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-transform transform hover:scale-105 duration-200'
-									>
-										Cancel
-									</button>
-								</div>
-							</div>
-						</div>
-					)}
-				</StreamTheme>
-			</StreamCall>
-		</main>
-	);
-
-}export const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, socket, meetingName }) => {
+// Move MeetingRoom component definition above FacetimePage
+const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, socket, meetingName }) => {
 	const { user } = useUser();
 	const { id } = useParams<{ id: string }>();
 	const call = useCall();
@@ -1094,4 +934,167 @@ export default function FacetimePage() {
 });
 
 MeetingRoom.displayName = 'MeetingRoom';
+
+export default function FacetimePage() {
+	const { id } = useParams<{ id: string }>();
+	const { isLoaded } = useUser();
+	const { call, isCallLoading } = useGetCallById(id);
+	const [confirmJoin, setConfirmJoin] = useState<boolean>(false);
+	const [camMicEnabled, setCamMicEnabled] = useState<boolean>(false);
+	const router = useRouter();
+	const [sharedCharts, setSharedCharts] = useState<SharedChart[]>([]);
+	const [socket, setSocket] = useState<Socket | null>(null);
+	const { user } = useUser();
+	const { meetingDetails, isLoading: isMeetingLoading } = useMeetingDetails(id);
+	const [isChartFullscreen, setIsChartFullscreen] = useState(false);
+
+	useEffect(() => {
+		if (camMicEnabled) {
+			call?.camera.enable();
+			call?.microphone.enable();
+		} else {
+			
+			call?.camera.disable();
+			call?.microphone.disable();
+		}
+
+	}, [call, camMicEnabled]);
+
+	useEffect(() => {
+		if (!socket) return;
+
+		// Listen for shared charts from other users
+		socket.on('chart-shared', (chart: SharedChart) => {
+			setSharedCharts(prev => [...prev, chart]);
+		});
+
+		return () => {
+			socket.off('chart-shared');
+		};
+	}, [socket]);
+
+	useEffect(() => {
+		// Initialize socket connection
+		const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001', {
+			query: {
+				userId: user?.id,
+				roomId: id // from your params
+			},
+			reconnection: true,
+			reconnectionAttempts: 5,
+			reconnectionDelay: 1000,
+			reconnectionDelayMax: 5000,
+			timeout: 20000,
+			transports: ['websocket'], // Prefer WebSocket
+			pooling: true
+		});
+
+		// Add heartbeat to keep connection alive
+		const heartbeat = setInterval(() => {
+			if (socketInstance.connected) {
+				socketInstance.emit('ping');
+			}
+		}, 30000);
+
+		setSocket(socketInstance);
+
+		return () => {
+			clearInterval(heartbeat);
+			socketInstance.disconnect();
+		};
+	}, [user?.id, id]);
+
+	const handleJoin = () => { 
+		call?.join();
+		setConfirmJoin(true)
+	}
+
+	const shareChart = (chartData: any) => {
+		if (!socket || !user) return;
+
+		const sharedChart: SharedChart = {
+			id: Math.random().toString(36).substring(7),
+			data: chartData,
+			sharedBy: user.id,
+		};
+
+		socket.emit('share-chart', sharedChart);
+		setSharedCharts(prev => [...prev, sharedChart]);
+	};
+
+	// Add debug logging
+	useEffect(() => {
+		console.log('Meeting Details:', {
+			meetingDetails,
+			isLoading: isMeetingLoading,
+			id
+		});
+	}, [meetingDetails, isMeetingLoading, id]);
+
+	// Add debug logging before the render
+	useEffect(() => {
+		console.log('Host Check:', {
+			callCreatedBy: call?.state.createdBy,
+			userId: user?.id,
+			isHost: call?.state.createdBy === user?.id,
+			fullCallState: call?.state,
+			userDetails: user
+		});
+	}, [call?.state.createdBy, user?.id, call?.state, user]);
+
+	if (isCallLoading || !isLoaded || isMeetingLoading) {
+		return (
+			<div className="min-h-screen w-full bg-black flex items-center justify-center">
+				<p className="text-white/70">Loading TradeParty...</p>
+			</div>
+		);
+	}
+
+	if (!call) return (<p>Call not found</p>);
+
+	return (
+		<main className='min-h-screen w-full bg-black'>
+			<StreamCall call={call}>
+				<StreamTheme>
+					{confirmJoin ? (
+						<MeetingRoom 
+							shareChart={shareChart}
+							sharedCharts={sharedCharts}
+							socket={socket}
+							meetingName={meetingDetails?.name || "Loading..."}
+						/>
+					) : (
+						<div className='h-screen w-full flex items-center justify-center bg-gradient-to-br from-gray-800 via-gray-900 to-black'>
+							<div className='flex flex-col items-center justify-center gap-6 p-10 bg-gray-800/70 backdrop-blur-lg rounded-2xl border border-gray-700 shadow-lg'>
+								<h1 className='text-5xl font-bold text-white mb-2'>
+									{meetingDetails?.name || "Loading..."}
+								</h1>
+								<p className='text-lg text-gray-300 mb-4'>
+									{call?.state.createdBy?.id === user?.id 
+										? "Ready to Host a TradeParty?"
+										: "Ready to join the TradeParty?"}
+								</p>
+								<div className='flex gap-4'>
+									<button 
+										onClick={handleJoin} 
+										className='px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-transform transform hover:scale-105 duration-200'
+									>
+										{call?.state.createdBy?.id === user?.id ? 'Start Now' : 'Join Now'}
+									</button>
+									<button 
+										onClick={() => router.push("/")} 
+										className='px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-transform transform hover:scale-105 duration-200'
+									>
+										Cancel
+									</button>
+								</div>
+							</div>
+						</div>
+					)}
+				</StreamTheme>
+			</StreamCall>
+		</main>
+	);
+
+}
 
