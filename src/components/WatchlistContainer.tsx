@@ -4,10 +4,16 @@ import { FaStar, FaChevronDown, FaChevronRight } from 'react-icons/fa';
 interface WatchlistContainerProps {
     watchlist: string[];
     onSymbolSelect: (symbol: string) => void;
-    onStarClick: (symbol: string) => void;
+    onStarClick: (symbol: string) => Promise<void>;
+    isLoading?: boolean;
 }
 
-export const WatchlistContainer = ({ watchlist, onSymbolSelect, onStarClick }: WatchlistContainerProps) => {
+export const WatchlistContainer = ({ 
+    watchlist, 
+    onSymbolSelect, 
+    onStarClick,
+    isLoading = false
+}: WatchlistContainerProps) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     return (
