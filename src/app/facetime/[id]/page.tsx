@@ -345,7 +345,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 		setSelectedTrader(traderName);
 	};
 
-	const handleNewTrade = (trade: ExtendedTrade) => {
+	const handleNewTrade = (trade: Trade) => {
 		// Implement actual trade handling logic here
 		console.log("New trade:", trade);
 		// You can emit this to your socket or handle it however needed
