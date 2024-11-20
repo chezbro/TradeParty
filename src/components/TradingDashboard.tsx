@@ -85,9 +85,10 @@ export const TradingDashboard = ({
                 await addToWatchlist(symbol);
                 toast.success(`Added ${symbol} to watchlist`);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error managing watchlist:', error);
-            toast.error(`Failed to update watchlist: ${error.message}`);
+            const errorMessage = error.message || 'Unknown error occurred';
+            toast.error(`Failed to update watchlist: ${errorMessage}`);
         }
     };
 
