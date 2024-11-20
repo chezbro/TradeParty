@@ -706,7 +706,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 								liveCharts={liveCharts}
 								isChartFullscreen={isChartFullscreen}
 								onToggleFullscreen={() => setIsChartFullscreen(!isChartFullscreen)}
-								onTogglePanels={handleTogglePanels}
+								onTogglePanels={() => handleTogglePanels(!isChartFullscreen)}
 							/>
 						</div>
 					</div>
