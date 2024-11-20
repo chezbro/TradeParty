@@ -379,6 +379,11 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ participant }) => {
 	);
 };
 
+// Add this wrapper component before the PaginatedGridLayout usage
+const ParticipantViewWrapper = () => {
+	return (props: any) => <ParticipantView participant={props.participant} />;
+};
+
 // Move MeetingRoom component definition above FacetimePage
 const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, socket, meetingName }) => {
 	const { user } = useUser();
@@ -782,7 +787,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 								<div className="flex-1">
 									<PaginatedGridLayout
 										groupSize={4}
-										ParticipantViewUI={ParticipantView}
+										ParticipantViewUI={ParticipantViewWrapper()}
 										VideoPlaceholder={() => null}
 										/>
 								</div>
