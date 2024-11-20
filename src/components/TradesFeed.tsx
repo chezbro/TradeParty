@@ -19,10 +19,10 @@ export const TradesFeed = memo(({ hideHeader = false, onTradeSelect }: TradesFee
 
     useEffect(() => {
         // Start price updates for all unique symbols in trades
-        const symbols = [...new Set(trades.map(t => t.symbol))];
+        const symbols = Array.from(new Set(trades.map(t => t.symbol)));
         const cleanup = startPriceUpdates(symbols, updateCurrentPrices);
         return cleanup;
-    }, [trades.map(t => t.symbol).join(',')]);
+    }, [trades]);
 
     const filteredTrades = useMemo(() => 
         trades.filter(trade => filter === "ALL" ? true : trade.type === filter),
