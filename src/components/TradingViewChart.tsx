@@ -3,18 +3,21 @@ import { FC, useEffect, useRef, useState } from 'react';
 import { FaExpand, FaCompress, FaShare } from 'react-icons/fa';
 import { FaGripLines } from 'react-icons/fa6';
 
+interface DexData {
+  chainId: string;
+  pairAddress: string;
+}
+
 interface TradingViewChartProps {
   symbol: string;
-  isFullscreen: boolean;
-  onToggleFullscreen: () => void;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
   compact?: boolean;
   isReadOnly?: boolean;
   chartType?: 'tradingview' | 'dexscreener';
-  dexData?: {
-    chainId: string;
-    pairAddress: string;
-  };
+  dexData?: DexData;
   onFullscreenChange?: (isFullscreen: boolean) => void;
+  onShare?: () => void;
 }
 
 export const TradingViewChart: FC<TradingViewChartProps> = ({
@@ -25,7 +28,8 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
   isReadOnly = false,
   chartType = 'tradingview',
   dexData,
-  onFullscreenChange
+  onFullscreenChange,
+  onShare
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<any>(null);
@@ -148,7 +152,7 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
   }, [symbol, isScriptLoaded, chartType, dexData]);
 
   const handleFullscreenToggle = () => {
-    onToggleFullscreen();
+    onToggleFullscreen?.();
     onFullscreenChange?.(!isFullscreen);
   };
 
