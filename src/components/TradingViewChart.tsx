@@ -20,6 +20,11 @@ interface TradingViewChartProps {
   onShare?: () => void;
 }
 
+// Add type for the widget reference
+interface WidgetRef {
+    _symbol?: string;
+}
+
 export const TradingViewChart: FC<TradingViewChartProps> = ({
   symbol,
   isFullscreen,
@@ -32,7 +37,7 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
   onShare
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const widgetRef = useRef<any>(null);
+  const widgetRef = useRef<WidgetRef | null>(null);
   const scriptRef = useRef<HTMLScriptElement | null>(null);
   const [height, setHeight] = useState(500);
   const [isDragging, setIsDragging] = useState(false);
