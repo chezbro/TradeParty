@@ -272,9 +272,24 @@ const MainContentArea = memo<MainContentAreaProps>(({
 
 MainContentArea.displayName = 'MainContentArea';
 
-// Add this component definition before the MeetingRoom component
+// Add this interface near the top with other interfaces
+interface ParticipantUser {
+	name?: string;
+	image?: string;
+}
+
+interface ParticipantWithUser extends StreamVideoParticipant {
+	user?: ParticipantUser;
+	status?: string;
+	tracks?: {
+		video?: { enabled?: boolean; track?: MediaStreamTrack };
+		audio?: { enabled?: boolean };
+	};
+}
+
+// Update the ParticipantViewUI component
 const ParticipantViewUI: React.FC = (props: any) => {
-	const participant = props.participant as StreamVideoParticipant;
+	const participant = props.participant as ParticipantWithUser;
 	const { user } = useUser();
 	
 	console.log('Participant data:', {
