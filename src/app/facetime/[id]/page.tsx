@@ -92,6 +92,13 @@ const MultiChartGrid = ({
 	);
 };
 
+// Update the StreamVideoParticipant interface to include the user property
+interface ParticipantUser {
+	id?: string;
+	name?: string;
+	image?: string;
+}
+
 // Update the StreamVideoParticipant interface to include the properties we're using
 interface EnhancedStreamVideoParticipant extends StreamVideoParticipant {
 	videoTrack?: MediaStreamTrack;
@@ -271,8 +278,20 @@ const MainContentArea = memo<MainContentAreaProps>(({
 
 MainContentArea.displayName = 'MainContentArea';
 
-// Add this component definition before the MeetingRoom component
-const ParticipantView: React.FC<{ participant: StreamVideoParticipant }> = ({ participant }) => {
+// Update the component props interface
+interface ParticipantViewProps {
+	participant: StreamVideoParticipant & {
+		user?: ParticipantUser;
+		status?: string;
+		tracks?: {
+			video?: { enabled?: boolean; track?: MediaStreamTrack };
+			audio?: { enabled?: boolean };
+		};
+	};
+}
+
+// Update the ParticipantView component
+const ParticipantView: React.FC<ParticipantViewProps> = ({ participant }) => {
 	console.log('Participant data:', {
 		participant,
 		userData: participant?.user,
