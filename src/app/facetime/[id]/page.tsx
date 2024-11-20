@@ -9,8 +9,7 @@ import {
 	CallControls,
 	StreamVideoParticipant,
 	useCall,
-	Call,
-	TrackType
+	Call
 } from "@stream-io/video-react-sdk";
 import { useParams } from "next/navigation";
 import {  useEffect, useState, useCallback, useRef, memo } from "react";
@@ -714,7 +713,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 									setIsVideosPanelExpanded(!isVideosPanelExpanded);
 									setVideosPanelWidth(isVideosPanelExpanded ? 60 : 300);
 								}}
-								className="absolute -left-3 top-1/2 transform -translate-y-1/2 z-10
+									className="absolute -left-3 top-1/2 transform -translate-y-1/2 z-10
 									bg-gray-800 rounded-full p-1.5 text-gray-300 hover:bg-gray-700
 									shadow-lg border border-white/10 transition-all duration-200
 									hover:scale-110 hover:text-emerald-400"
