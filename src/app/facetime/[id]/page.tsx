@@ -744,7 +744,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 								<div className="flex-1">
 									<PaginatedGridLayout
 										groupSize={4}
-										ParticipantViewUI={({ participant }) => {
+										ParticipantViewUI={({ participant }: { participant: StreamVideoParticipant }) => {
 											console.log('Participant data:', {
 												participant,
 												userData: participant?.user,
