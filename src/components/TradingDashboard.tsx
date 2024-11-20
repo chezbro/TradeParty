@@ -5,15 +5,7 @@ import { FaChartBar, FaChevronDown, FaChevronRight } from 'react-icons/fa';
 import { TraderProfileModal } from './TraderProfileModal';
 import { useWatchlist } from '@/context/WatchlistContext';
 import toast from 'react-hot-toast';
-
-interface TraderData {
-    userId: string;
-    name: string;
-    profitLoss: number;
-    winRate: number;
-    openPositions: number;
-    totalTrades: number;
-}
+import { TraderData } from '@/types/trader';
 
 interface TradingDashboardProps {
     currentSymbol: string;

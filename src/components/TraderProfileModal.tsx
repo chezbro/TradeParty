@@ -1,6 +1,6 @@
 import { Dialog } from '@headlessui/react';
 import { FaTimes, FaChartLine, FaHistory, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
-import { TraderData } from './TradingDashboard';
+import { TraderData } from '@/types/trader';
 
 interface TraderProfileModalProps {
     trader: TraderData;
