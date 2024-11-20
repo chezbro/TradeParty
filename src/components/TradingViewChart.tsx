@@ -129,7 +129,7 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
 
     if (!widgetRef.current || widgetRef.current._symbol !== symbol) {
       if (typeof window.TradingView !== 'undefined') {
-        widgetRef.current = new window.TradingView.widget({
+        const widget = new window.TradingView.widget({
           autosize: true,
           symbol: symbol,
           interval: "D",
@@ -151,7 +151,8 @@ export const TradingViewChart: FC<TradingViewChartProps> = ({
             tools: [{ name: "all", grayed: false }] 
           }
         });
-        widgetRef.current._symbol = symbol;
+        
+        widgetRef.current = { _symbol: symbol };
       }
     }
   }, [symbol, isScriptLoaded, chartType, dexData]);
