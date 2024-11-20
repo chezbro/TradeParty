@@ -271,6 +271,98 @@ const MainContentArea = memo<MainContentAreaProps>(({
 
 MainContentArea.displayName = 'MainContentArea';
 
+// Add this component definition before the MeetingRoom component
+const ParticipantViewUI: React.FC = (props: any) => {
+	const participant = props.participant as StreamVideoParticipant;
+	const { user } = useUser();
+	
+	console.log('Participant data:', {
+		participant,
+		userData: participant?.user,
+		image: participant?.user?.image,
+		name: participant?.user?.name
+	});
+
+	const isOnline = participant?.status === 'online' || 
+		Boolean(participant?.tracks?.video?.enabled || participant?.tracks?.audio?.enabled);
+	const hasVideo = participant?.tracks?.video?.enabled;
+	const hasAudio = participant?.tracks?.audio?.enabled;
+	
+	return (
+		<div className="relative w-full aspect-video rounded-lg overflow-hidden 
+			bg-gray-900/50 backdrop-blur-sm border border-white/10 
+			transition-all duration-300 hover:border-emerald-500/30 
+			hover:shadow-lg hover:shadow-emerald-500/10 mb-2"
+		>
+			{/* Video Container */}
+			<div className="absolute inset-0 bg-black/20">
+				{hasVideo ? (
+					<video
+						ref={(el) => {
+							if (el && participant?.tracks?.video?.track) {
+								el.srcObject = new MediaStream([participant.tracks.video.track]);
+							}
+						}}
+						autoPlay
+						playsInline
+							muted
+							className="h-full w-full object-cover"
+					/>
+				) : (
+					<div className="h-full w-full flex items-center justify-center bg-gray-800 relative">
+						<img 
+							src={participant?.user?.image || user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
+							alt={participant?.user?.name || user?.fullName || "Participant"}
+							className="h-12 w-12 rounded-full"
+						/>
+					</div>
+				)}
+			</div>
+			
+			{/* Status Indicators */}
+			<div className="absolute top-2 right-2 flex flex-col gap-2">
+				{/* Connection Status */}
+				<div className="flex items-center gap-1.5 bg-gray-900/90 px-2 py-1 
+					rounded-full border border-white/10 backdrop-blur-sm">
+					<span className={`text-[8px] ${isOnline ? 'text-emerald-400' : 'text-yellow-400'}`}>
+						●
+					</span>
+					<span className="text-xs text-white/70">
+						{isOnline ? 'Online' : 'Waiting'}
+					</span>
+				</div>
+
+				{/* Device Status Icons */}
+				<div className="flex items-center gap-1.5 bg-gray-900/90 px-2 py-1.5 
+					rounded-full border border-white/10 backdrop-blur-sm">
+					{/* Camera Status */}
+					<div className={`p-1 rounded-full ${hasVideo ? 
+						'text-emerald-400' : 'text-red-400 bg-red-400/10'}`}>
+						<FaVideo size={12} className={hasVideo ? '' : 'opacity-75'} />
+					</div>
+
+					{/* Divider */}
+					<div className="w-px h-3 bg-white/10" />
+
+					{/* Microphone Status */}
+					<div className={`p-1 rounded-full ${hasAudio ? 
+						'text-emerald-400' : 'text-red-400 bg-red-400/10'}`}>
+						<FaMicrophone size={12} className={hasAudio ? '' : 'opacity-75'} />
+					</div>
+				</div>
+			</div>
+			
+			{/* Participant Name Overlay */}
+			<div className="absolute bottom-0 left-0 right-0 p-2 
+				bg-gradient-to-t from-black/80 to-transparent">
+				<p className="text-sm text-white truncate">
+					{participant?.user?.name || user?.fullName || user?.username || "Participant"}
+				</p>
+			</div>
+		</div>
+	);
+};
+
 // Move MeetingRoom component definition above FacetimePage
 const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, socket, meetingName }) => {
 	const { user } = useUser();
@@ -744,93 +836,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 								<div className="flex-1">
 									<PaginatedGridLayout
 										groupSize={4}
-										ParticipantViewUI={({ participant }: { participant: StreamVideoParticipant }) => {
-											console.log('Participant data:', {
-												participant,
-												userData: participant?.user,
-												image: participant?.user?.image,
-												name: participant?.user?.name
-											});
-
-											const isOnline = participant?.status === 'online' || 
-												Boolean(participant?.tracks?.video?.enabled || participant?.tracks?.audio?.enabled);
-											const hasVideo = participant?.tracks?.video?.enabled;
-											const hasAudio = participant?.tracks?.audio?.enabled;
-											
-											return (
-												<div className="relative w-full aspect-video rounded-lg overflow-hidden 
-														bg-gray-900/50 backdrop-blur-sm border border-white/10 
-															transition-all duration-300 hover:border-emerald-500/30 
-															hover:shadow-lg hover:shadow-emerald-500/10 mb-2"
-												>
-													{/* Video Container */}
-													<div className="absolute inset-0 bg-black/20">
-														{hasVideo ? (
-															<video
-																ref={(el) => {
-																	if (el && participant?.tracks?.video?.track) {
-																		el.srcObject = new MediaStream([participant.tracks.video.track]);
-																	}
-																}}
-																autoPlay
-																playsInline
-																	muted
-																	className="h-full w-full object-cover"
-															/>
-														) : (
-															<div className="h-full w-full flex items-center justify-center bg-gray-800 relative">
-																<img 
-																	src={participant?.user?.image || user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
-																	alt={participant?.user?.name || user?.fullName || "Participant"}
-																	className="h-12 w-12 rounded-full"
-																/>
-															</div>
-														)}
-													</div>
-													
-													{/* Status Indicators */}
-													<div className="absolute top-2 right-2 flex flex-col gap-2">
-														{/* Connection Status */}
-														<div className="flex items-center gap-1.5 bg-gray-900/90 px-2 py-1 
-															rounded-full border border-white/10 backdrop-blur-sm">
-															<span className={`text-[8px] ${isOnline ? 'text-emerald-400' : 'text-yellow-400'}`}>
-																●
-															</span>
-															<span className="text-xs text-white/70">
-																{isOnline ? 'Online' : 'Waiting'}
-															</span>
-														</div>
-
-														{/* Device Status Icons */}
-														<div className="flex items-center gap-1.5 bg-gray-900/90 px-2 py-1.5 
-															rounded-full border border-white/10 backdrop-blur-sm">
-															{/* Camera Status */}
-															<div className={`p-1 rounded-full ${hasVideo ? 
-																'text-emerald-400' : 'text-red-400 bg-red-400/10'}`}>
-																<FaVideo size={12} className={hasVideo ? '' : 'opacity-75'} />
-															</div>
-
-															{/* Divider */}
-															<div className="w-px h-3 bg-white/10" />
-
-															{/* Microphone Status */}
-															<div className={`p-1 rounded-full ${hasAudio ? 
-																'text-emerald-400' : 'text-red-400 bg-red-400/10'}`}>
-																<FaMicrophone size={12} className={hasAudio ? '' : 'opacity-75'} />
-															</div>
-														</div>
-													</div>
-													
-													{/* Participant Name Overlay */}
-													<div className="absolute bottom-0 left-0 right-0 p-2 
-														bg-gradient-to-t from-black/80 to-transparent">
-														<p className="text-sm text-white truncate">
-															{participant?.user?.name || user?.fullName || user?.username || "Participant"}
-														</p>
-													</div>
-												</div>
-											);
-										}}
+										ParticipantViewUI={ParticipantViewUI}
 										VideoPlaceholder={() => null}
 										/>
 								</div>
