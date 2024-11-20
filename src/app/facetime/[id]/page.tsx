@@ -766,8 +766,8 @@ export default function FacetimePage() {
 													{meetingName}
 												</h1>
 												<div className="flex items-center gap-2">
-													<p className="text-sm text-white/50">
-														Trading Room
+													<p className="text-xs text-white/60">
+														Invite Others
 													</p>
 													{call?.state.createdBy?.id === user?.id && (
 														<button
@@ -779,7 +779,7 @@ export default function FacetimePage() {
 																text-emerald-400 hover:text-emerald-300"
 															title="Copy invite link"
 														>
-															<FaCopy size={14} />
+															<FaCopy size={12} />
 														</button>
 													)}
 												</div>
