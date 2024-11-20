@@ -116,8 +116,29 @@ interface LiveChart {
 	sharedByName?: string;
 }
 
-// Memoize the MainContentArea component
-const MainContentArea = memo(({ 
+// Add this interface before the MainContentArea component
+interface MainContentAreaProps {
+	isMultiChartEnabled: boolean;
+	chartLayouts: string[];
+	currentSymbol: string;
+	handleSymbolChange: (symbol: string) => void;
+	handleStarClick: (symbol: string) => void;
+	watchlist: string[];
+	shareChart: (chartData: any) => void;
+	isLiveSharing: boolean;
+	handleToggleLiveShare: () => void;
+	broadcaster: { userId: string; symbol: string } | null;
+	user: any; // Replace with proper user type if available
+	handleToggleMultiChart: () => void;
+	setChartLayouts: (layouts: string[]) => void;
+	liveCharts: LiveChart[];
+	isChartFullscreen: boolean;
+	onToggleFullscreen: () => void;
+	onTogglePanels: () => void;
+}
+
+// Update the component definition to use the interface
+const MainContentArea = memo<MainContentAreaProps>(({ 
 	isMultiChartEnabled,
 	chartLayouts,
 	currentSymbol,
