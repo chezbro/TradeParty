@@ -115,23 +115,21 @@ export const TradingDashboard = ({
             <div className="rounded-lg bg-gray-900/50 border border-white/10 overflow-hidden">
                 <button 
                     onClick={() => setIsTopTradersExpanded(!isTopTradersExpanded)}
-                    className="w-full p-3 flex items-center justify-between hover:bg-white/5"
+                    className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
                 >
-                    <div className="flex items-center gap-3">
-                        <FaChartBar className="text-blue-400" />
-                        <span className="text-white/90 font-medium">Top Traders</span>
-                    </div>
-                    <div className="transform transition-transform duration-200">
-                        {isTopTradersExpanded ? (
-                            <FaChevronDown className="text-white/50" />
-                        ) : (
-                            <FaChevronRight className="text-white/50" />
-                        )}
-                    </div>
+                    <h2 className="text-xl text-white font-semibold flex items-center gap-3">
+                        <FaChartBar className="text-gray-400" />
+                        Top Traders
+                    </h2>
+                    {isTopTradersExpanded ? (
+                        <FaChevronDown className="text-gray-400" />
+                    ) : (
+                        <FaChevronRight className="text-gray-400" />
+                    )}
                 </button>
                 
                 {isTopTradersExpanded && (
-                    <div className="p-3 border-t border-white/5">
+                    <div className="p-4 border-t border-white/5">
                         <div className="grid gap-2">
                             {tradersData.map((trader) => (
                                 <div 

@@ -12,13 +12,13 @@ export const WatchlistContainer = ({ watchlist, onSymbolSelect, onStarClick }: W
 
     return (
         <div className="space-y-4">
-            <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700/50">
+            <div className="bg-gray-900/50 border border-white/10 rounded-lg overflow-hidden">
                 <button 
                     onClick={() => setIsExpanded(!isExpanded)}
-                    className="w-full p-4 flex items-center justify-between hover:bg-gray-700/30 transition-colors rounded-t-xl"
+                    className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
                 >
-                    <h2 className="text-xl text-white font-semibold flex items-center gap-2">
-                        <FaStar className="text-yellow-400" />
+                    <h2 className="text-xl text-white font-semibold flex items-center gap-3">
+                        <FaStar className="text-gray-400" />
                         Watchlist
                     </h2>
                     {isExpanded ? (
@@ -31,7 +31,7 @@ export const WatchlistContainer = ({ watchlist, onSymbolSelect, onStarClick }: W
                 <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
                     isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
                 }`}>
-                    <div className="p-4 pt-0">
+                    <div className="p-4 border-t border-white/5">
                         <div className="flex flex-col gap-3">
                             {watchlist.map((symbol) => (
                                 <div 

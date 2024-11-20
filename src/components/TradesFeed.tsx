@@ -1,8 +1,9 @@
 import { FaExchangeAlt, FaChevronDown, FaUser, FaClock, FaArrowUp, FaArrowDown, FaChevronRight } from 'react-icons/fa';
 import { BsCursor, BsArrowDownRight, BsArrowUpRight } from 'react-icons/bs';
 import { useTrades } from '@/context/TradesContext';
-import { useState, useMemo, useCallback, memo } from 'react';
+import { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { Trade } from '@/types/trade';
+import { startPriceUpdates } from '@/services/priceService';
 
 interface TradesFeedProps {
     hideHeader?: boolean;
@@ -10,11 +11,18 @@ interface TradesFeedProps {
 }
 
 export const TradesFeed = memo(({ hideHeader = false, onTradeSelect }: TradesFeedProps) => {
-    const { trades } = useTrades();
+    const { trades, updateCurrentPrices } = useTrades();
     const [filter, setFilter] = useState<"ALL" | "LONG" | "SHORT">("ALL");
     const [isExpanded, setIsExpanded] = useState(false);
     const [page, setPage] = useState(1);
     const ITEMS_PER_PAGE = 10;
+
+    useEffect(() => {
+        // Start price updates for all unique symbols in trades
+        const symbols = [...new Set(trades.map(t => t.symbol))];
+        const cleanup = startPriceUpdates(symbols, updateCurrentPrices);
+        return cleanup;
+    }, [trades.map(t => t.symbol).join(',')]);
 
     const filteredTrades = useMemo(() => 
         trades.filter(trade => filter === "ALL" ? true : trade.type === filter),
@@ -35,29 +43,27 @@ export const TradesFeed = memo(({ hideHeader = false, onTradeSelect }: TradesFee
     }, []);
 
     return (
-        <div className="bg-gray-800/50 backdrop-blur rounded-xl border border-gray-700/50 w-full max-w-full overflow-hidden">
+        <div className="bg-gray-900/50 border border-white/10 rounded-lg overflow-hidden">
             {!hideHeader && (
                 <button 
                     onClick={() => setIsExpanded(!isExpanded)}
-                    className="w-full p-3 flex items-center justify-between hover:bg-gray-700/30 
-                        transition-all duration-200 rounded-t-xl group"
+                    className="w-full p-4 flex items-center justify-between hover:bg-white/5 
+                        transition-colors"
                 >
-                    <h2 className="text-lg text-white font-semibold flex items-center gap-2">
-                        <FaExchangeAlt className="text-green-400 group-hover:rotate-12 transition-transform duration-200" />
+                    <h2 className="text-xl text-white font-semibold flex items-center gap-3">
+                        <FaExchangeAlt className="text-gray-400" />
                         Active Trades
                     </h2>
-                    <div className="transform transition-transform duration-200">
-                        {isExpanded ? (
-                            <FaChevronDown className="text-gray-400 group-hover:text-gray-300" />
-                        ) : (
-                            <FaChevronRight className="text-gray-400 group-hover:text-gray-300" />
-                        )}
-                    </div>
+                    {isExpanded ? (
+                        <FaChevronDown className="text-gray-400" />
+                    ) : (
+                        <FaChevronRight className="text-gray-400" />
+                    )}
                 </button>
             )}
             
             {(isExpanded || hideHeader) && (
-                <div className="p-2 w-full">
+                <div className="p-4 border-t border-white/5">
                     <div className="flex justify-center w-full mb-2">
                         <div className="inline-flex bg-gray-700/50 backdrop-blur rounded-lg p-0.5 gap-0.5">
                             {[

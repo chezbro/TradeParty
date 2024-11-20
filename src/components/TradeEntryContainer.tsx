@@ -18,20 +18,22 @@ export const TradeEntryContainer: React.FC<TradeEntryContainerProps> = ({
         <div className="rounded-lg bg-gray-900/50 border border-white/10 overflow-hidden">
             {/* Header */}
             <div 
-                className="flex items-center justify-between p-3 cursor-pointer hover:bg-white/5 transition-colors"
+                className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-colors"
                 onClick={() => setIsExpanded(!isExpanded)}
             >
                 <div className="flex items-center gap-3">
-                    <span className="text-white/90 font-medium">Enter Trade</span>     
+                    <span className="text-xl text-white font-semibold">Enter Trade</span>     
                 </div>
-                <button className="text-white/50 hover:text-white/90 transition-colors">
-                    {isExpanded ? <FaChevronDown size={16} /> : <FaChevronRight size={16} />}
-                </button>
+                {isExpanded ? (
+                    <FaChevronDown className="text-gray-400" />
+                ) : (
+                    <FaChevronRight className="text-gray-400" />
+                )}
             </div>
 
             {/* Content */}
             {isExpanded && (
-                <div className="p-3 border-t border-white/5">
+                <div className="p-4 border-t border-white/5">
                     <TradeEntryPanel 
                         key={currentSymbol}
                         onNewTrade={onNewTrade}

@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { Trade } from '@/types/trade';
 import { createClient } from '@supabase/supabase-js';
+import { calculateTradePnL, calculateTraderStats } from '@/utils/tradeCalculations';
+import { v4 as uuidv4 } from 'uuid';
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,7 +13,14 @@ interface TradesContextType {
     trades: Trade[];
     addTrade: (trade: Trade) => Promise<void>;
     updateTrade: (trade: Trade) => Promise<void>;
-    deleteTrade: (tradeId: string) => Promise<void>;
+    closeTrade: (tradeId: string, exitPrice: number) => Promise<void>;
+    updateCurrentPrices: (prices: Record<string, number>) => void;
+    getTraderStats: (traderId: string) => {
+        totalPnL: number;
+        winRate: number;
+        openPositions: number;
+        totalTrades: number;
+    };
 }
 
 // Helper function to convert camelCase to snake_case for Supabase
@@ -25,9 +34,12 @@ const toSnakeCase = (trade: Trade) => ({
     size: trade.size,
     timestamp: trade.timestamp,
     status: trade.status,
+    exit_price: trade.exitPrice,
+    exit_timestamp: trade.exitTimestamp,
     profit_loss: trade.profitLoss,
     current_price: trade.currentPrice,
-    trader: trade.trader
+    trader_id: trade.trader.id,
+    trader_name: trade.trader.name
 });
 
 // Helper function to convert snake_case back to camelCase
@@ -41,9 +53,14 @@ const toCamelCase = (data: any): Trade => ({
     size: data.size,
     timestamp: data.timestamp,
     status: data.status,
+    exitPrice: data.exit_price,
+    exitTimestamp: data.exit_timestamp,
     profitLoss: data.profit_loss,
     currentPrice: data.current_price,
-    trader: data.trader
+    trader: {
+        id: data.trader_id,
+        name: data.trader_name
+    }
 });
 
 const TradesContext = createContext<TradesContextType | undefined>(undefined);
@@ -94,8 +111,18 @@ export const TradesProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     const addTrade = async (trade: Trade) => {
+        // Generate a new UUID for the trade
+        const newTrade = {
+            ...trade,
+            id: uuidv4(),
+            timestamp: new Date().toISOString(),
+            status: 'OPEN' as const,
+            profitLoss: 0,
+            currentPrice: trade.entry
+        };
+
         // Convert to snake_case for Supabase
-        const supabaseTrade = toSnakeCase(trade);
+        const supabaseTrade = toSnakeCase(newTrade);
         
         const { error } = await supabase
             .from('trades')
@@ -106,7 +133,7 @@ export const TradesProvider = ({ children }: { children: React.ReactNode }) => {
             throw error;
         }
 
-        setTrades(prev => [trade, ...prev]);
+        setTrades(prev => [newTrade, ...prev]);
     };
 
     const updateTrade = async (trade: Trade) => {
@@ -126,22 +153,61 @@ export const TradesProvider = ({ children }: { children: React.ReactNode }) => {
         setTrades(prev => prev.map(t => t.id === trade.id ? trade : t));
     };
 
-    const deleteTrade = async (tradeId: string) => {
+    const updateCurrentPrices = (prices: Record<string, number>) => {
+        setTrades(prevTrades => 
+            prevTrades.map(trade => ({
+                ...trade,
+                currentPrice: prices[trade.symbol] || trade.currentPrice,
+                profitLoss: calculateTradePnL({
+                    ...trade,
+                    currentPrice: prices[trade.symbol] || trade.currentPrice
+                })
+            }))
+        );
+    };
+
+    const closeTrade = async (tradeId: string, exitPrice: number) => {
+        const trade = trades.find(t => t.id === tradeId);
+        if (!trade) return;
+
+        const updatedTrade = {
+            ...trade,
+            status: 'CLOSED' as const,
+            exitPrice,
+            exitTimestamp: new Date().toISOString(),
+            profitLoss: calculateTradePnL({
+                ...trade,
+                currentPrice: exitPrice,
+                status: 'CLOSED'
+            })
+        };
+
         const { error } = await supabase
             .from('trades')
-            .delete()
+            .update(toSnakeCase(updatedTrade))
             .eq('id', tradeId);
 
-        if (error) {
-            console.error('Error deleting trade:', error);
-            throw error;
-        }
+        if (error) throw error;
+        
+        setTrades(prev => prev.map(t => 
+            t.id === tradeId ? updatedTrade : t
+        ));
+    };
 
-        setTrades(prev => prev.filter(t => t.id !== tradeId));
+    const getTraderStats = (traderId: string) => {
+        const traderTrades = trades.filter(t => t.trader.id === traderId);
+        return calculateTraderStats(traderTrades);
     };
 
     return (
-        <TradesContext.Provider value={{ trades, addTrade, updateTrade, deleteTrade }}>
+        <TradesContext.Provider value={{
+            trades,
+            addTrade,
+            updateTrade,
+            closeTrade,
+            updateCurrentPrices,
+            getTraderStats
+        }}>
             {children}
         </TradesContext.Provider>
     );

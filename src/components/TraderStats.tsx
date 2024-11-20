@@ -1,5 +1,6 @@
+import { FC } from 'react';
 import { FaUser, FaChartLine, FaPercent, FaExchangeAlt } from 'react-icons/fa';
-import { useUser } from "@clerk/nextjs";
+import { useTrades } from '@/context/TradesContext';
 
 interface TraderData {
     userId: string;
@@ -14,69 +15,58 @@ interface TraderStatsProps {
     trader: TraderData;
 }
 
-export const TraderStats: React.FC<TraderStatsProps> = ({ trader }) => {
-    const { user } = useUser();
+export const TraderStats: FC<TraderStatsProps> = ({ trader }) => {
+    const { getTraderStats } = useTrades();
+    const stats = getTraderStats(trader.userId);
 
     return (
-        <div className="rounded-lg bg-gray-900/50 border border-white/10 overflow-hidden">
-            {/* Header */}
-            <div className="p-3 border-b border-white/5">
-                <div className="flex items-center gap-3">
-                    {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10">
-                        <img 
-                            src={user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
-                            alt={trader.name}
-                            className="w-full h-full object-cover"
-                        />
-                    </div>
-                    {/* Trader Info */}
-                    <div>
-                        <h3 className="font-medium text-white">{trader.name}</h3>
-                        <p className="text-sm text-emerald-400">Active Trader</p>
-                    </div>
+        <div className="grid grid-cols-2 gap-4">
+            <div className="bg-gray-800/50 p-4 rounded-lg border border-white/5 hover:bg-gray-800/70 
+                transition-all duration-200 group">
+                <div className="flex items-center gap-2 mb-2">
+                    <FaChartLine className="text-blue-400 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="text-gray-400 text-sm">Total P&L</span>
+                </div>
+                <div className={`text-lg font-semibold truncate ${
+                    stats.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'
+                }`}>
+                    {stats.totalPnL >= 0 ? '+' : ''}${Math.abs(stats.totalPnL).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}
                 </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 gap-px bg-white/5 p-px">
-                <div className="bg-gray-900/50 p-3">
-                    <div className="flex items-center gap-2 text-white/50 text-sm mb-1">
-                        <FaChartLine />
-                        <span>P/L</span>
-                    </div>
-                    <div className={`text-lg font-semibold ${
-                        trader.profitLoss >= 0 ? 'text-green-400' : 'text-red-400'
-                    }`}>
-                        ${trader.profitLoss.toFixed(2)}
-                    </div>
+            <div className="bg-gray-800/50 p-4 rounded-lg border border-white/5 hover:bg-gray-800/70 
+                transition-all duration-200 group">
+                <div className="flex items-center gap-2 mb-2">
+                    <FaPercent className="text-green-400 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="text-gray-400 text-sm">Win Rate</span>
                 </div>
-                <div className="bg-gray-900/50 p-3">
-                    <div className="flex items-center gap-2 text-white/50 text-sm mb-1">
-                        <FaPercent />
-                        <span>Win Rate</span>
-                    </div>
-                    <div className="text-lg font-semibold text-white">
-                        {trader.winRate}%
-                    </div>
+                <div className="text-lg font-semibold text-white">
+                    {(stats.winRate * 100).toFixed(1)}%
                 </div>
-                <div className="bg-gray-900/50 p-3">
-                    <div className="flex items-center gap-2 text-white/50 text-sm mb-1">
-                        <FaUser />
-                        <span>Positions</span>
-                    </div>
-                    <div className="text-lg font-semibold text-white">
-                        {trader.openPositions || 0}
-                    </div>
+            </div>
+
+            <div className="bg-gray-800/50 p-4 rounded-lg border border-white/5 hover:bg-gray-800/70 
+                transition-all duration-200 group">
+                <div className="flex items-center gap-2 mb-2">
+                    <FaExchangeAlt className="text-purple-400 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="text-gray-400 text-sm">Open Positions</span>
                 </div>
-                <div className="bg-gray-900/50 p-3">
-                    <div className="flex items-center gap-2 text-white/50 text-sm mb-1">
-                        <FaExchangeAlt />
-                        <span>Trades</span>
-                    </div>
-                    <div className="text-lg font-semibold text-white">
-                        {trader.totalTrades}
-                    </div>
+                <div className="text-lg font-semibold text-white">
+                    {stats.openPositions}
+                </div>
+            </div>
+
+            <div className="bg-gray-800/50 p-4 rounded-lg border border-white/5 hover:bg-gray-800/70 
+                transition-all duration-200 group">
+                <div className="flex items-center gap-2 mb-2">
+                    <FaUser className="text-orange-400 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="text-gray-400 text-sm">Total Trades</span>
+                </div>
+                <div className="text-lg font-semibold text-white">
+                    {stats.totalTrades}
                 </div>
             </div>
         </div>

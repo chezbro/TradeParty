@@ -5,16 +5,15 @@ export interface Trade {
     entry: number;
     target: number;
     stopLoss: number;
+    size: number;
     timestamp: string;
     status: 'OPEN' | 'CLOSED';
+    exitPrice?: number;
+    exitTimestamp?: string;
     profitLoss: number;
-    pnl: number;
-    trader: {
-        name: string;
-        id: string;
-    };
-    direction: 'long' | 'short';
-    entryPrice: number;
     currentPrice: number;
-    size: number;
+    trader: {
+        id: string;
+        name: string;
+    };
 } 
