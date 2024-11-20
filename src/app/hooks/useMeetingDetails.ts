@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 interface MeetingDetails {
   name: string;
   created_by: string;
-  scheduled_for: string | null;
+  scheduled_for?: string | null;
   status: string;
 }
 
@@ -21,7 +21,7 @@ export function useMeetingDetails(callId: string) {
         
         const { data, error } = await supabase
           .from('meetings')
-          .select('name, created_by, status')
+          .select('name, created_by, status, scheduled_for')
           .eq('call_id', callId)
           .single();
 
