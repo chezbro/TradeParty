@@ -31,9 +31,10 @@ export default function RootLayout({
 		<ClerkProvider
 			appearance={{
 				baseTheme: undefined,
-				signIn: {
-					baseUrl: process.env.NEXT_PUBLIC_APP_URL,
-				},
+				elements: {
+					formButtonPrimary: 'bg-emerald-500 hover:bg-emerald-600',
+					footerActionLink: 'text-emerald-500 hover:text-emerald-600'
+				}
 			}}
 		>
 			<WatchlistProvider>
