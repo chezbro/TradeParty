@@ -6,8 +6,8 @@ export default clerkMiddleware((auth, req: NextRequest) => {
   // Debug logging
   console.log('Middleware executing with:', {
     pathname: req.nextUrl.pathname,
-    userId: auth.userId,
-    sessionId: auth.sessionId,
+    userId: auth.session?.userId,
+    sessionId: auth.session?.id,
     env: process.env.NODE_ENV,
     baseUrl: process.env.NEXT_PUBLIC_APP_URL,
     signInUrl: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL
@@ -28,7 +28,7 @@ export default clerkMiddleware((auth, req: NextRequest) => {
   }
 
   // If user is not authenticated
-  if (!auth.userId) {
+  if (!auth.session) {
     console.log('User not authenticated, preparing redirect');
 
     // Get the sign-in URL from environment
