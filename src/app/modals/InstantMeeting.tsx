@@ -20,6 +20,11 @@ interface Props {
 	setEnable: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+interface MeetingFormProps {
+	setShowMeetingLink: Dispatch<SetStateAction<boolean>>;
+	setFacetimeLink: Dispatch<SetStateAction<string>>;
+}
+
 export default function InstantMeeting({ enable, setEnable }: Props) {
 	const [showMeetingLink, setShowMeetingLink] = useState(false);
 	const [facetimeLink, setFacetimeLink] = useState<string>("");

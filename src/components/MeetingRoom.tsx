@@ -19,10 +19,17 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
     getUser();
   }, []);
 
-  // ... rest of your component code
-
   return (
-    // Your JSX here
+    <div className="meeting-room">
+      <h2>Meeting: {meetingName}</h2>
+      <div className="shared-charts">
+        {sharedCharts.map((symbol) => (
+          <div key={symbol} className="shared-chart">
+            {symbol}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 });
 
