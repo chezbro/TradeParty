@@ -11,9 +11,8 @@ import { FaCopy } from "react-icons/fa";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { Fragment, SetStateAction, useState, Dispatch } from "react";
 import { useStreamVideoClient, Call } from "@stream-io/video-react-sdk";
-import { useUser } from "@clerk/nextjs";
-import { AddToCalendarButton } from 'add-to-calendar-button-react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { AddToCalendarButton } from 'add-to-calendar-button-react';
 
 interface Props {
 	enable: boolean;
@@ -94,13 +93,16 @@ const MeetingForm = ({
 	const [dateTime, setDateTime] = useState<string>("");
 	const [callDetail, setCallDetail] = useState<Call>();
 	const client = useStreamVideoClient();
-	const { user } = useUser();
 	const supabase = createClientComponentClient();
 
 	const handleStartMeeting = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		if (!client || !user) return;
+		if (!client) return;
 		try {
+			// Get current user session
+			const { data: { session } } = await supabase.auth.getSession();
+			if (!session?.user) throw new Error("User not authenticated");
+
 			const id = crypto.randomUUID();
 			const call = client.call("default", id);
 			if (!call) throw new Error("Failed to create meeting");
@@ -128,7 +130,7 @@ const MeetingForm = ({
 				.from('meetings')
 				.insert({
 					name: description,
-					created_by: user?.id,
+					created_by: session.user.id,  // Use Supabase user ID
 					call_id: call.id,
 					status: 'scheduled'
 				});

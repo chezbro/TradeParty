@@ -1,3 +1,4 @@
+'use client';
 import { createContext, useContext, useState, useEffect } from 'react';
 import { Trade } from '@/types/trade';
 import { createClient } from '@supabase/supabase-js';

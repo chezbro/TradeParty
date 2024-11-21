@@ -9,11 +9,11 @@ import {
 } from "@headlessui/react";
 import { FaCopy } from "react-icons/fa";
 import CopyToClipboard from "react-copy-to-clipboard";
-import { Fragment, useState, Dispatch, SetStateAction } from "react";
+import { Fragment, useState, Dispatch, SetStateAction, useCallback, memo } from "react";
 import { useStreamVideoClient, Call } from "@stream-io/video-react-sdk";
-import { useUser } from "@clerk/nextjs";
-import Link from "next/link";
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import Link from 'next/link';
+import { toast } from 'react-hot-toast';
 
 interface Props {
 	enable: boolean;
@@ -72,139 +72,78 @@ export default function InstantMeeting({ enable, setEnable }: Props) {
 	);
 }
 
-const MeetingForm = ({
-	setShowMeetingLink,
-	setFacetimeLink,
-}: {
-	setShowMeetingLink: Dispatch<SetStateAction<boolean>>;
-	setFacetimeLink: Dispatch<SetStateAction<string>>;
-}) => {
-	const [description, setDescription] = useState<string>("");
-	const [callDetail, setCallDetail] = useState<Call>();
-
+const MeetingForm = memo(({ setShowMeetingLink, setFacetimeLink }: MeetingFormProps) => {
+	const [meetingName, setMeetingName] = useState("");
+	const [isLoading, setIsLoading] = useState(false);
 	const client = useStreamVideoClient();
-	const { user } = useUser();
-	const supabase = createClientComponentClient();
 
-	const handleStartMeeting = async (e: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		if (!client || !user) return;
+		if (!client) return;
+		setIsLoading(true);
+
 		try {
-			const id = crypto.randomUUID();
-			const call = client.call("default", id);
-			if (!call) throw new Error("Failed to create meeting");
-
-			await call.getOrCreate({
-				data: {
-					starts_at: new Date(Date.now()).toISOString(),
-					custom: {
-						description,
-					},
-				},
-			});
-
-			const meeting_id = crypto.randomUUID();
-
-			const userId = user.id;
-
-			console.log('Attempting to insert meeting:', {
-				id: meeting_id,
-				name: description,
-				created_by: userId,
-				call_id: call.id,
-				status: 'active',
-				starts_at: new Date(Date.now()).toISOString()
-			});
-
-			const { data: existingMeeting } = await supabase
-				.from('meetings')
-				.select('id')
-				.eq('call_id', call.id)
-				.single();
-
-			if (existingMeeting) {
-				throw new Error('A meeting with this ID already exists');
-			}
-
-			const { data, error } = await supabase
-				.from('meetings')
-				.insert({
-					id: meeting_id,
-					name: description,
-					created_by: userId,
-					call_id: call.id,
-					starts_at: new Date(Date.now()).toISOString(),
-					status: 'active'
-				})
-				.select();
-
-			if (error) {
-				console.error('Supabase error:', error);
-				throw error;
-			}
-
-			console.log('Meeting saved:', data);
-
-			setCallDetail(call);
-			setFacetimeLink(`${call.id}`);
+			const call = await client.call("default", crypto.randomUUID());
+			await call.getOrCreate();
+			setFacetimeLink(call.id);
 			setShowMeetingLink(true);
-			console.log("Meeting Created!");
 		} catch (error) {
-			console.error('Error creating meeting:', error);
+			console.error("Error creating meeting:", error);
+			toast.error("Failed to create meeting");
+		} finally {
+			setIsLoading(false);
 		}
-	};
+	}, [client, setFacetimeLink, setShowMeetingLink]);
 
 	return (
 		<>
-			<DialogTitle
-				as='h3'
-				className='text-lg font-bold leading-6 text-green-600'
-			>
+			<DialogTitle as="h3" className="text-lg font-bold leading-6 text-green-600">
 				Create a TradeParty
 			</DialogTitle>
 
 			<Description className='text-xs opacity-40 mb-4'>
-				Start a new TradeParty and invite others to join.
+				Start an instant TradeParty meeting with your cliq
 			</Description>
 
-			<form className='w-full' onSubmit={handleStartMeeting}>
+			<form className='w-full' onSubmit={handleSubmit}>
 				<label
 					className='block text-left text-sm font-medium text-gray-700'
 					htmlFor='description'
 				>
-					Session Name
+					Name
 				</label>
 				<input
 					type='text'
 					name='description'
 					id='description'
-					value={description}
+					value={meetingName}
+					onChange={(e) => setMeetingName(e.target.value)}
+					className='mt-1 block w-full text-sm py-3 px-4 border-gray-200 border-[1px] rounded mb-3'
 					required
-					onChange={(e) => setDescription(e.target.value)}
-					className='mt-1 block w-full text-sm py-3 px-4 rounded mb-3 
-					border border-gray-200 bg-white text-gray-900
-					focus:ring-2 focus:ring-green-500 focus:border-transparent
-					placeholder:text-gray-400 transition-all duration-200
-					outline-none'
 					placeholder='Enter a name for this TradeParty session'
 				/>
 
 				<button className='w-full bg-green-600 text-white py-3 rounded mt-4'>
-					Proceed
+					Create TradeParty
 				</button>
 			</form>
 		</>
 	);
-};
+});
 
-const MeetingLink = ({ facetimeLink }: { facetimeLink: string }) => {
-	const [copied, setCopied] = useState<boolean>(false);
-	const [isLoading, setIsLoading] = useState<boolean>(false);
-	const handleCopy = () => setCopied(true);
+MeetingForm.displayName = 'MeetingForm';
 
-	const handleStartMeeting = () => {
+const MeetingLink = memo(({ facetimeLink }: { facetimeLink: string }) => {
+	const [copied, setCopied] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
+
+	const handleCopy = useCallback(() => {
+		setCopied(true);
+	}, []);
+
+	const handleStartMeeting = useCallback(() => {
 		setIsLoading(true);
-	};
+	}, []);
 
 	return (
 		<>
@@ -250,4 +189,6 @@ const MeetingLink = ({ facetimeLink }: { facetimeLink: string }) => {
 			</Link>
 		</>
 	);
-};
+});
+
+MeetingLink.displayName = 'MeetingLink';

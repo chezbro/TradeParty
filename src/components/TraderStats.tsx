@@ -1,6 +1,7 @@
 import { FC } from 'react';
 import { FaUser, FaChartLine, FaPercent, FaExchangeAlt } from 'react-icons/fa';
 import { useTrades } from '@/context/TradesContext';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface TraderData {
     userId: string;

@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useUser } from '@clerk/nextjs';
 
 interface WatchlistContextType {
   watchlist: string[];
@@ -17,27 +16,17 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClientComponentClient();
-  const { user } = useUser();
 
   useEffect(() => {
-    if (!user?.id) {
-      console.log('No user ID available yet');
-      return;
-    }
-
     const fetchWatchlist = async () => {
       try {
-        console.log('Fetching watchlist for user:', user.id);
-        
         const { data, error } = await supabase
           .from('watchlist')
           .select('symbol')
-          .eq('user_id', user.id)
           .order('created_at', { ascending: true });
 
         if (error) throw error;
 
-        console.log('Fetched watchlist data:', data);
         setWatchlist(data.map(item => item.symbol));
       } catch (error) {
         console.error('Error fetching watchlist:', error);
@@ -56,10 +45,8 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
           event: '*', 
           schema: 'public', 
           table: 'watchlist',
-          filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('Realtime update received:', payload);
           if (payload.eventType === 'INSERT') {
             setWatchlist(prev => [...prev, payload.new.symbol]);
           } else if (payload.eventType === 'DELETE') {
@@ -72,34 +59,22 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, supabase]);
+  }, [supabase]);
 
   const addToWatchlist = async (symbol: string) => {
-    if (!user?.id) {
-      console.error('No user ID available');
-      return;
-    }
-    
     try {
-      console.log('Adding to watchlist:', { symbol, userId: user.id });
-      
-      // Optimistically update the UI
       setWatchlist(prev => [...prev, symbol]);
 
       const { error } = await supabase
         .from('watchlist')
         .insert({
-          user_id: user.id,
           symbol
         });
 
       if (error) {
-        // Revert optimistic update if there's an error
         setWatchlist(prev => prev.filter(s => s !== symbol));
         throw error;
       }
-
-      console.log('Successfully added to watchlist');
     } catch (error) {
       console.error('Error adding to watchlist:', error);
       throw error;
@@ -107,13 +82,10 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
   };
 
   const removeFromWatchlist = async (symbol: string) => {
-    if (!user?.id) return;
-
     try {
       const { error } = await supabase
         .from('watchlist')
         .delete()
-        .eq('user_id', user.id)
         .eq('symbol', symbol);
 
       if (error) throw error;

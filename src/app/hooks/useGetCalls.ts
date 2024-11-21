@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Call, useStreamVideoClient } from "@stream-io/video-react-sdk";
 
 export const useGetCalls = () => {
-	const { user } = useUser();
+	const supabase = createClientComponentClient();
 	const client = useStreamVideoClient();
 	const [calls, setCalls] = useState<Call[]>();
 	const [isLoading, setIsLoading] = useState(false);
 
 	useEffect(() => {
 		const loadCalls = async () => {
-			if (!client || !user?.id) return;
+			const { data: { session } } = await supabase.auth.getSession();
+			if (!client || !session?.user?.id) return;
 
 			setIsLoading(true);
 
@@ -20,8 +21,8 @@ export const useGetCalls = () => {
 					filter_conditions: {
 						starts_at: { $exists: true },
 						$or: [
-							{ created_by_user_id: user.id },
-							{ members: { $in: [user.id] } },
+							{ created_by_user_id: session.user.id },
+							{ members: { $in: [session.user.id] } },
 						],
 					},
 				});
@@ -35,7 +36,7 @@ export const useGetCalls = () => {
 		};
 
 		loadCalls();
-	}, [client, user?.id]);
+	}, [client, supabase]);
 
 	const now = new Date();
 

@@ -1,3 +1,4 @@
+'use client';
 import { useState } from 'react';
 import { TradesFeed } from './TradesFeed';
 import { WatchlistContainer } from './WatchlistContainer';
@@ -6,6 +7,7 @@ import { TraderProfileModal } from './TraderProfileModal';
 import { useWatchlist } from '@/context/WatchlistContext';
 import toast from 'react-hot-toast';
 import { TraderData } from '@/types/trader';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface TradingDashboardProps {
     currentSymbol: string;

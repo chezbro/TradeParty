@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Trade } from '@/types/trade';
 import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
 import { TradeEntryPanel } from './TradeEntryPanel';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface TradeEntryContainerProps {
     onNewTrade: (trade: Trade) => void;

@@ -1,6 +1,6 @@
 "use client";
 import { useGetCallById } from "@/app/hooks/useGetCallById";
-import { useUser } from "@clerk/nextjs";
+import supabase from '@/lib/supabase-client';
 import {
 	StreamCall,
 	StreamTheme,
@@ -12,7 +12,7 @@ import {
 	Call
 } from "@stream-io/video-react-sdk";
 import { useParams } from "next/navigation";
-import {  useEffect, useState, useCallback, useRef, memo } from "react";
+import { useEffect, useState, useCallback, useRef, memo } from "react";
 import { useRouter } from "next/navigation";
 import { TraderStats } from "@/components/TraderStats";
 import { TradesFeed } from "@/components/TradesFeed";
@@ -288,7 +288,7 @@ interface ParticipantViewProps {
 
 // Create a separate ParticipantViewUI component
 const ParticipantViewUI: React.FC<any> = (props) => {
-    const { user } = useUser();
+    const { user } = useSupabaseUser();
     const participant = props.participant;
 
     console.log('Participant data:', {
@@ -317,7 +317,7 @@ const ParticipantViewUI: React.FC<any> = (props) => {
 
 // Move MeetingRoom component definition above FacetimePage
 const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, socket, meetingName }) => {
-	const { user } = useUser();
+	const { user } = useSupabaseUser();
 	const { id } = useParams<{ id: string }>();
 	const call = useCall();
 	
@@ -396,7 +396,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 	};
 
 	const ParticipantView = ({ participant }: { participant: StreamVideoParticipant }) => {
-		const { user } = useUser();
+		const { user } = useSupabaseUser();
 		const call = useCall();
 		
 		// Add debugging effect inside the ParticipantView component
@@ -866,7 +866,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 					{/* Updated minimized indicator */}
 					{isMinimized && (
 						<div 
-							className="fixed bottom-2 left-1/2 -translate-x-1/2 z-[100] 
+								className="fixed bottom-2 left-1/2 -translate-x-1/2 z-[100] 
 								cursor-pointer transition-all duration-200
 								hover:opacity-100 hover:translate-y-0
 								opacity-50 translate-y-2"
@@ -910,16 +910,40 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 
 MeetingRoom.displayName = 'MeetingRoom';
 
+// Create a custom hook for Supabase user
+const useSupabaseUser = () => {
+  const [user, setUser] = useState<any>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+      setIsLoaded(true);
+    };
+
+    getUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+      setIsLoaded(true);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  return { user, isLoaded };
+};
+
 export default function FacetimePage() {
+	const { user, isLoaded } = useSupabaseUser();
 	const { id } = useParams<{ id: string }>();
-	const { isLoaded } = useUser();
 	const { call, isCallLoading } = useGetCallById(id);
 	const [confirmJoin, setConfirmJoin] = useState<boolean>(false);
 	const [camMicEnabled, setCamMicEnabled] = useState<boolean>(false);
 	const router = useRouter();
 	const [sharedCharts, setSharedCharts] = useState<SharedChart[]>([]);
 	const [socket, setSocket] = useState<Socket | null>(null);
-	const { user } = useUser();
 	const { meetingDetails, isLoading: isMeetingLoading } = useMeetingDetails(id);
 	const [isChartFullscreen, setIsChartFullscreen] = useState(false);
 
@@ -1015,6 +1039,10 @@ export default function FacetimePage() {
 			userDetails: user
 		});
 	}, [call?.state.createdBy, user?.id, call?.state, user]);
+
+	if (!user) {
+		return <div>Loading...</div>;
+	}
 
 	if (isCallLoading || !isLoaded || isMeetingLoading) {
 		return (

@@ -1,43 +1,68 @@
 "use client";
-import { useUser } from "@clerk/nextjs";
-import { tokenProvider } from "@/actions/stream.actions";
+import supabase from '@/lib/supabase-client';
 import { StreamVideo, StreamVideoClient } from "@stream-io/video-react-sdk";
-import { useState, ReactNode, useEffect } from "react";
+import { tokenProvider } from "@/actions/stream.actions";
+import { PropsWithChildren, useEffect, useState, useCallback } from "react";
 
 const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY!;
 
-export const StreamVideoProvider = ({ children }: { children: ReactNode }) => {
+export const StreamVideoProvider = ({ children }: PropsWithChildren) => {
 	const [videoClient, setVideoClient] = useState<StreamVideoClient>();
-	const { user, isLoaded } = useUser();
+
+	const setupClient = useCallback(async () => {
+		console.log('Setting up Stream client...');
+		const { data: { session } } = await supabase.auth.getSession();
+		if (!session?.user || !apiKey) return;
+
+		try {
+			const user = {
+				id: session.user.id,
+				name: session.user.email || 'Anonymous',
+				image: session.user.user_metadata?.avatar_url || '',
+			};
+
+			const client = new StreamVideoClient({
+				apiKey,
+				user,
+				tokenProvider: async () => {
+					const token = await tokenProvider();
+					return token;
+				},
+			});
+
+			await client.connectUser({ id: user.id, name: user.name, image: user.image });
+
+			setVideoClient(client);
+
+			return () => {
+				if (client) {
+					client.disconnectUser();
+				}
+			};
+		} catch (error) {
+			console.error('Error setting up Stream client:', error);
+		}
+	}, []);
 
 	useEffect(() => {
-		if (!isLoaded || !user || !apiKey) return;
-		if (!tokenProvider) return;
+		let cleanupFn: (() => void) | undefined;
 
-		console.log('Clerk user data:', {
-			id: user.id,
-			name: user.fullName,
-			image: user.imageUrl
+		setupClient().then(cleanup => {
+			cleanupFn = cleanup;
 		});
-
-		const client = new StreamVideoClient({
-			apiKey,
-			user: {
-				id: user.id,
-				name: user.fullName || user.username || user.primaryEmailAddress?.emailAddress || 'Anonymous',
-				image: user.imageUrl || '',
-			},
-			tokenProvider,
-		});
-
-		setVideoClient(client);
 
 		return () => {
-			client.disconnectUser();
+			if (cleanupFn) {
+				cleanupFn();
+			}
 		};
-	}, [user, isLoaded]);
+	}, [setupClient]);
 
-	if (!videoClient) return null;
+	if (!videoClient) return (
+		<div className="flex items-center justify-center min-h-screen">
+			<div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-500"></div>
+		</div>
+	);
 
 	return <StreamVideo client={videoClient}>{children}</StreamVideo>;
 };

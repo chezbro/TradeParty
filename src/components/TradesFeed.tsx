@@ -1,3 +1,4 @@
+'use client';
 import { FaExchangeAlt, FaChevronDown, FaUser, FaClock, FaArrowUp, FaArrowDown, FaChevronRight } from 'react-icons/fa';
 import { BsCursor, BsArrowDownRight, BsArrowUpRight } from 'react-icons/bs';
 import { useTrades } from '@/context/TradesContext';
