@@ -1,30 +1,28 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-// Create a matcher for public routes
-const publicRoutes = createRouteMatcher(["/"])
-
-export default clerkMiddleware((auth, req: NextRequest) => {
+export default clerkMiddleware((auth, req) => {
+  // Handle authenticated requests
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+  const signInUrl = process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL;
 
-  // Allow public routes
-  if (publicRoutes(req)) {
+  // Public routes that don't require authentication
+  const isPublicRoute = req.nextUrl.pathname === "/";
+  
+  // If it's a public route, allow access
+  if (isPublicRoute) {
     return NextResponse.next();
   }
 
-  // Handle users who aren't authenticated
-  if (!auth.userId && !publicRoutes(req)) {
-    const signInUrl = new URL('/sign-in', baseUrl);
-    signInUrl.searchParams.set('redirect_url', req.url);
-    return NextResponse.redirect(signInUrl);
+  // If the user is not authenticated and not on a public route
+  if (!auth.userId && !isPublicRoute) {
+    let redirectUrl = `${signInUrl}?redirect_url=${encodeURIComponent(req.url)}`;
+    return NextResponse.redirect(redirectUrl);
   }
 
-  // If the user is logged in and trying to access the sign-in page,
-  // redirect them to the dashboard
+  // If the user is signed in and trying to access sign-in page
   if (auth.userId && req.nextUrl.pathname === '/sign-in') {
-    const dashboard = new URL('/', baseUrl);
-    return NextResponse.redirect(dashboard);
+    return NextResponse.redirect(new URL('/', baseUrl));
   }
 
   return NextResponse.next();
