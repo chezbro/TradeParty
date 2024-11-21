@@ -17,21 +17,28 @@ export function useMeetingDetails(callId: string) {
   useEffect(() => {
     async function fetchMeetingDetails() {
       try {
-        console.log('Fetching meeting details for callId:', callId);
-        
-        const { data, error } = await supabase
+        if (!callId) {
+          setMeetingDetails(null);
+          return;
+        }
+
+        const { data, error: queryError } = await supabase
           .from('meetings')
           .select('name, created_by, status, scheduled_for')
           .eq('call_id', callId)
-          .single();
+          .maybeSingle();
 
-        if (error) {
-          console.error('Supabase error:', error);
-          throw error;
+        if (queryError) {
+          console.error('Supabase error:', queryError);
+          throw queryError;
         }
         
-        console.log('Meeting details fetched:', data);
-        setMeetingDetails(data);
+        if (data) {
+          setMeetingDetails(data);
+        } else {
+          console.log('No meeting found for callId:', callId);
+          setMeetingDetails(null);
+        }
       } catch (err) {
         console.error('Error fetching meeting details:', err);
         setError(err as Error);
@@ -40,9 +47,7 @@ export function useMeetingDetails(callId: string) {
       }
     }
 
-    if (callId) {
-      fetchMeetingDetails();
-    }
+    fetchMeetingDetails();
   }, [callId, supabase]);
 
   return { meetingDetails, isLoading, error };

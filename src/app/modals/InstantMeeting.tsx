@@ -81,6 +81,7 @@ const MeetingForm = memo(({ setShowMeetingLink, setFacetimeLink }: MeetingFormPr
 	const [meetingName, setMeetingName] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const client = useStreamVideoClient();
+	const supabase = createClientComponentClient();
 
 	const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -88,8 +89,25 @@ const MeetingForm = memo(({ setShowMeetingLink, setFacetimeLink }: MeetingFormPr
 		setIsLoading(true);
 
 		try {
+			// Get current user session
+			const { data: { session } } = await supabase.auth.getSession();
+			if (!session?.user) throw new Error("User not authenticated");
+
 			const call = await client.call("default", crypto.randomUUID());
 			await call.getOrCreate();
+
+			// Save meeting details to Supabase
+			const { error: insertError } = await supabase
+				.from('meetings')
+				.insert({
+					name: meetingName,
+					created_by: session.user.id,
+					call_id: call.id,
+					status: 'active'
+				});
+
+			if (insertError) throw insertError;
+
 			setFacetimeLink(call.id);
 			setShowMeetingLink(true);
 		} catch (error) {
@@ -98,7 +116,7 @@ const MeetingForm = memo(({ setShowMeetingLink, setFacetimeLink }: MeetingFormPr
 		} finally {
 			setIsLoading(false);
 		}
-	}, [client, setFacetimeLink, setShowMeetingLink]);
+	}, [client, setFacetimeLink, setShowMeetingLink, meetingName, supabase]);
 
 	return (
 		<>
