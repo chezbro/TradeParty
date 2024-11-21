@@ -28,7 +28,14 @@ export default function RootLayout({
 	children: React.ReactNode;
 }) {
 	return (
-		<ClerkProvider>
+		<ClerkProvider
+			appearance={{
+				baseTheme: undefined,
+				signIn: {
+					baseUrl: process.env.NEXT_PUBLIC_APP_URL,
+				},
+			}}
+		>
 			<WatchlistProvider>
 				<html lang='en'>
 					<body className={inter.className}>
