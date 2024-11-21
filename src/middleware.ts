@@ -1,8 +1,9 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { withClerkMiddleware, getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export default clerkMiddleware((auth, req) => {
-  // Handle authenticated requests
+export default withClerkMiddleware((req: NextRequest) => {
+  const auth = getAuth(req);
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
   const signInUrl = process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL;
 
