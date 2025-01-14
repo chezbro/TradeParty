@@ -30,7 +30,14 @@ export const StreamVideoProvider = ({ children }: PropsWithChildren) => {
 				},
 			});
 
-			await client.connectUser({ id: user.id, name: user.name, image: user.image });
+			await client.connectUser({ 
+				id: user.id, 
+				name: user.name, 
+				image: user.image,
+				custom: {
+					video_permissions: ['camera', 'microphone']
+				}
+			});
 
 			setVideoClient(client);
 

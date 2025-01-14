@@ -150,21 +150,9 @@ export const ChartViewer: FC<ChartViewerProps> = memo(({
   }, [onShare, symbol]);
 
   const handleToggleLiveShare = useCallback(() => {
-    if (onToggleLiveShare) {
-      onToggleLiveShare();
-      
-      // Send custom event through Stream Video
-      if (call) {
-        call.sendCustomEvent({
-          type: isLiveSharing ? 'stop_chart_share' : 'start_chart_share',
-          data: {
-            symbol,
-            sharedBy: call.state.localParticipant?.userId
-          }
-        });
-      }
-    }
-  }, [onToggleLiveShare, isLiveSharing, call, symbol]);
+    if (!call || !onToggleLiveShare) return;
+    onToggleLiveShare();
+  }, [call, onToggleLiveShare]);
 
   // Update the filter function to use memoized results
   const filteredSymbols = useMemo(() => {
@@ -196,6 +184,19 @@ export const ChartViewer: FC<ChartViewerProps> = memo(({
       setCurrentDexData(undefined);
     }
 
+    // If we're live sharing, broadcast the symbol change
+    if (isLiveSharing && call) {
+      console.log('Broadcasting symbol change:', { newSymbol });
+      call.sendCustomEvent({
+        type: 'chart_update',
+        data: {
+          symbol: newSymbol,
+          userId: call.state.localParticipant?.userId,
+          userName: call.state.localParticipant?.name || 'Anonymous'
+        }
+      });
+    }
+
     onSymbolChange(newSymbol, newSymbolData?.type === 'dex' ? {
       type: 'dex',
       chainId: newSymbolData.chainId!,
@@ -210,7 +211,7 @@ export const ChartViewer: FC<ChartViewerProps> = memo(({
     });
     setSearchInput('');
     setShowDropdown(false);
-  }, [isReadOnly, isAddChart, onAddChart, onSymbolChange]);
+  }, [isReadOnly, isAddChart, onAddChart, onSymbolChange, isLiveSharing, call]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

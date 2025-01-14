@@ -352,7 +352,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 	const [videosPanelWidth, setVideosPanelWidth] = useState(300);
 	const [isLiveSharing, setIsLiveSharing] = useState(false);
 	const [liveCharts, setLiveCharts] = useState<LiveChart[]>([]);
-	const [broadcaster, setBroadcaster] = useState<{ userId: string; symbol: string } | null>(null);
+	const [broadcaster, setBroadcaster] = useState<{ userId: string; symbol: string; userName?: string } | null>(null);
 	const [arePanelsVisible, setArePanelsVisible] = useState(true);
 	const [isChartFullscreen, setIsChartFullscreen] = useState(false);
 
@@ -399,67 +399,38 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 		const { user } = useSupabaseUser();
 		const call = useCall();
 		
-		// Add debugging effect inside the ParticipantView component
-		useEffect(() => {
-			// Log participant data
-			console.log('Participant View Data:', {
-				participant,
-				userId: participant.userId,
-				isCreator: call?.state.createdBy?.id === participant.userId,
-				callCreator: call?.state.createdBy,
-				sessionId: participant.sessionId,
-				localParticipant: call?.state.localParticipant,
-				remoteParticipants: call?.state.remoteParticipants,
-				currentUserId: user?.id
-			});
-
-			// Log when participants join/leave
-			const logParticipants = () => {
-				console.log('All Participants:', {
-					localParticipant: call?.state.localParticipant,
-					remoteParticipants: call?.state.remoteParticipants,
-					createdBy: call?.state.createdBy,
-					currentUserId: user?.id
-				});
-			};
-
-			if (call) {
-				call.on('participantJoined', logParticipants);
-				call.on('participantLeft', logParticipants);
-
-				return () => {
-					call.off('participantJoined', logParticipants);
-					call.off('participantLeft', logParticipants);
-				};
-			}
-		}, [participant, call, user?.id]);
-
-		const isCreator = call?.state.createdBy?.id === participant.userId;
-
 		return (
-			<div className="relative rounded-xl overflow-hidden bg-gray-900/50 backdrop-blur-sm 
-				border border-gray-800/50 transition-all duration-300 hover:border-gray-700/50
-						hover:shadow-lg hover:shadow-emerald-500/5">
-				<img 
-					src={participant.image || user?.imageUrl || "https://picsum.photos/seed/default/200/200"}
-					alt={participant.name || "Participant"}
-					className="w-full h-full object-cover"
-				/>
-				
-				<div className="absolute inset-0 flex flex-col justify-end">
-					<div className="p-3 bg-gradient-to-t from-gray-900/95 via-gray-900/80 to-transparent">
-						<div className="flex items-center gap-2">
-							<p className="text-white font-medium">
-								{participant.name || "Participant"}
-							</p>
-							{isCreator && (
-								<span className="px-2 py-0.5 text-xs bg-emerald-500/20 text-emerald-400 
-									rounded-full border border-emerald-500/20">
-									Host
-								</span>
-							)}
-						</div>
-					</div>
+			<div className="relative w-full aspect-video rounded-lg overflow-hidden 
+				bg-gray-900/50 backdrop-blur-sm border border-white/10 
+				transition-all duration-300 hover:border-emerald-500/30"
+			>
+				{/* This is the actual video element */}
+				<div className="absolute inset-0">
+					<video
+						ref={(el) => {
+							if (el) {
+								el.srcObject = participant.videoStream || null;
+							}
+						}}
+						autoPlay
+						playsInline
+						muted={participant.userId === user?.id}
+						className="w-full h-full object-cover"
+					/>
+				</div>
+
+				{/* Participant info overlay */}
+				<div className="absolute bottom-0 left-0 right-0 p-3 
+					bg-gradient-to-t from-black/90 to-transparent">
+					<p className="text-white text-sm font-medium">
+						{participant.name || 'Anonymous'}
+						{call?.state.createdBy?.id === participant.userId && (
+							<span className="ml-2 px-2 py-0.5 text-xs bg-emerald-500/20 
+								text-emerald-400 rounded-full border border-emerald-500/20">
+								Host
+							</span>
+						)}
+					</p>
 				</div>
 			</div>
 		);
@@ -559,20 +530,30 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 		if (!call) return;
 
 		const handleCustomEvent = (event: any) => {
-			console.log('Received event:', event);
+			console.log('Received custom event:', event);
 			
-			if (event.type === 'chart_update') {
-				const { symbol, userId } = event.data;
-				console.log('Chart update:', { symbol, userId, currentUser: user?.id });
+			// Extract the actual event data from the custom field
+			const eventType = event.custom.type;
+			const eventData = event.custom.data;
+			
+			console.log('Processed event:', { eventType, eventData });
+			
+			if (eventType === 'chart_update') {
+				const { symbol, userId, userName } = eventData;
+				console.log('Chart update:', { symbol, userId, userName, currentUser: user?.id });
 				
 				// If someone else is broadcasting, update our view
 				if (userId !== user?.id) {
 					setCurrentSymbol(symbol);
-					setBroadcaster({ userId, symbol });
+					setBroadcaster({ 
+						userId, 
+						symbol,
+						userName: event.user.name || userName // Fallback to event data if needed
+					});
 				}
-			} else if (event.type === 'stop_sharing') {
-				const { userId } = event.data;
-				if (userId !== user?.id) {
+			} else if (eventType === 'stop_sharing') {
+				const { userId } = eventData;
+				if (userId !== user?.id && broadcaster?.userId === userId) {
 					setBroadcaster(null);
 				}
 			}
@@ -580,7 +561,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 
 		call.on('custom', handleCustomEvent);
 		return () => call.off('custom', handleCustomEvent);
-	}, [call, user?.id]);
+	}, [call, user?.id, broadcaster]);
 
 	// Handle toggling live share
 	const handleToggleLiveShare = useCallback(() => {
@@ -594,7 +575,8 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 			type: newIsLiveSharing ? 'chart_update' : 'stop_sharing',
 			data: {
 				symbol: currentSymbol,
-				userId: call.state.localParticipant?.userId
+				userId: call.state.localParticipant?.userId,
+				userName: call.state.localParticipant?.name
 			}
 		});
 	}, [isLiveSharing, call, currentSymbol]);
@@ -749,8 +731,8 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 								setChartLayouts={setChartLayouts}
 								liveCharts={liveCharts}
 								isChartFullscreen={isChartFullscreen}
-								onToggleFullscreen={() => setIsChartFullscreen(!isChartFullscreen)}
-								onTogglePanels={() => handleTogglePanels(!isChartFullscreen)}
+								onToggleFullscreen={handleTogglePanels}
+								onTogglePanels={handleTogglePanels}
 							/>
 						</div>
 					</div>
@@ -858,7 +840,24 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 							
 							{/* Controls Content - Only CallControls */}
 							<div className="mt-4 flex items-center gap-4">
-								<CallControls onLeave={handleLeave} />
+								<CallControls
+									onLeave={handleLeave}
+									// Add these props to show the controls
+									showAudio={true}
+									showVideo={true}
+									showScreenShare={true}
+									showLeave={true}
+									// Style the controls
+									className="flex items-center gap-3 p-2"
+									// Custom style for each button
+									buttonStyles={{
+										button: "p-3 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors duration-200",
+										buttonOnPrimary: "bg-red-500 hover:bg-red-600",
+										buttonOffPrimary: "bg-gray-800 hover:bg-gray-700",
+										buttonOnSecondary: "bg-emerald-500 hover:bg-emerald-600",
+										buttonOffSecondary: "bg-gray-800 hover:bg-gray-700",
+									}}
+								/>
 							</div>
 						</div>
 					</div>
@@ -1039,6 +1038,21 @@ export default function FacetimePage() {
 			userDetails: user
 		});
 	}, [call?.state.createdBy, user?.id, call?.state, user]);
+
+	useEffect(() => {
+		if (call && confirmJoin) {
+			// Enable camera and microphone when joining
+			call.camera.enable();
+			call.microphone.enable();
+		}
+		
+		return () => {
+			if (call) {
+				call.camera.disable();
+				call.microphone.disable();
+			}
+		};
+	}, [call, confirmJoin]);
 
 	if (!user) {
 		return <div>Loading...</div>;

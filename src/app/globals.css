@@ -252,6 +252,7 @@ body {
     width: 100% !important;
     height: auto !important;
     aspect-ratio: 16/9 !important;
+    overflow: hidden !important;
 }
 
 /* Add these new styles */
@@ -406,4 +407,45 @@ button[type="submit"]:hover {
 
 input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(90%) contrast(80%);
+}
+
+/* Add or update these styles */
+.str-video__call-controls {
+    display: flex !important;
+    gap: 0.75rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 1rem !important;
+}
+
+.str-video__call-controls__button {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 9999px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+    background: rgba(31, 41, 55, 0.75) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    cursor: pointer !important;
+}
+
+.str-video__call-controls__button:hover {
+    background: rgba(55, 65, 81, 0.75) !important;
+    transform: translateY(-1px) !important;
+}
+
+.str-video__call-controls__button--on {
+    background: rgb(16, 185, 129) !important;
+}
+
+.str-video__call-controls__button--off {
+    background: rgb(239, 68, 68) !important;
+}
+
+.str-video__call-controls__button svg {
+    width: 20px !important;
+    height: 20px !important;
 }

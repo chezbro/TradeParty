@@ -1,15 +1,18 @@
 import { FC, memo, useState, useEffect } from 'react';
 import supabase from '@/lib/supabase-client';
+import { CallControls, PaginatedGridLayout } from "@stream-io/video-react-sdk";
+import { useRouter } from 'next/navigation';
 
 interface MeetingRoomProps {
   shareChart: (symbol: string) => void;
   sharedCharts: string[];
-  socket: any; // Replace with proper socket type if available
+  socket: any;
   meetingName: string;
 }
 
 const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, socket, meetingName }) => {
   const [user, setUser] = useState<any>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const getUser = async () => {
@@ -19,15 +22,32 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
     getUser();
   }, []);
 
+  const handleLeave = () => {
+    router.push('/');
+  };
+
   return (
-    <div className="meeting-room">
-      <h2>Meeting: {meetingName}</h2>
-      <div className="shared-charts">
-        {sharedCharts.map((symbol) => (
-          <div key={symbol} className="shared-chart">
-            {symbol}
-          </div>
-        ))}
+    <div className="flex flex-col h-screen">
+      {/* Video Grid */}
+      <div className="flex-1">
+        <PaginatedGridLayout />
+      </div>
+      
+      {/* Controls Bar */}
+      <div className="p-4 bg-gray-900/90 border-t border-white/10">
+        <div className="max-w-7xl mx-auto flex items-center justify-center">
+          <CallControls
+            onLeave={handleLeave}
+            className="flex items-center gap-3 p-2"
+            buttonStyles={{
+              button: "p-3 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors duration-200",
+              buttonOnPrimary: "bg-red-500 hover:bg-red-600",
+              buttonOffPrimary: "bg-gray-800 hover:bg-gray-700",
+              buttonOnSecondary: "bg-emerald-500 hover:bg-emerald-600",
+              buttonOffSecondary: "bg-gray-800 hover:bg-gray-700",
+            }}
+          />
+        </div>
       </div>
     </div>
   );
