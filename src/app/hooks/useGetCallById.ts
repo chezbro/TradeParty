@@ -4,6 +4,7 @@ import { Call, useStreamVideoClient } from "@stream-io/video-react-sdk";
 export const useGetCallById = (id: string | string[]) => {
 	const [call, setCall] = useState<Call>();
 	const [isCallLoading, setIsCallLoading] = useState(true);
+	const [sharingPermissions, setSharingPermissions] = useState<string[]>([]);
 
 	const client = useStreamVideoClient();
 
@@ -12,12 +13,18 @@ export const useGetCallById = (id: string | string[]) => {
 
 		const loadCall = async () => {
 			try {
-				// https://getstream.io/video/docs/react/guides/querying-calls/#filters
 				const { calls } = await client.queryCalls({
 					filter_conditions: { id },
 				});
 
-				if (calls.length > 0) setCall(calls[0]);
+				if (calls.length > 0) {
+					const loadedCall = calls[0];
+					setCall(loadedCall);
+					
+					if (loadedCall.state.createdBy) {
+						setSharingPermissions([loadedCall.state.createdBy.id]);
+					}
+				}
 
 				setIsCallLoading(false);
 			} catch (error) {
@@ -29,5 +36,5 @@ export const useGetCallById = (id: string | string[]) => {
 		loadCall();
 	}, [client, id]);
 
-	return { call, isCallLoading };
+	return { call, isCallLoading, sharingPermissions, setSharingPermissions };
 };

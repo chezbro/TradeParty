@@ -4,6 +4,7 @@ import { FaSearch, FaHistory, FaStar, FaChartLine, FaShare, FaExpand, FaCompress
 import { useCall } from "@stream-io/video-react-sdk";
 import { debounce } from '@/utils/debounce';
 import { searchDexScreener } from '@/utils/dexscreener';
+import { useSupabaseUser, User } from '@/app/hooks/useSupabaseUser';
 
 interface ChartViewerProps {
   onShare: (symbol: string) => void;
@@ -24,6 +25,7 @@ interface ChartViewerProps {
   isReadOnly?: boolean;
   onAddChart?: (symbol: string) => void;
   onFullscreenChange?: (isFullscreen: boolean) => void;
+  sharingPermissions?: string[];
 }
 
 // Cryptocurrency trading pairs (with USDT)
@@ -127,6 +129,7 @@ export const ChartViewer: FC<ChartViewerProps> = memo(({
   isReadOnly = false,
   onAddChart,
   onFullscreenChange,
+  sharingPermissions = [],
 }) => {
   const [searchInput, setSearchInput] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -137,6 +140,12 @@ export const ChartViewer: FC<ChartViewerProps> = memo(({
   const [dexResults, setDexResults] = useState<DexScreenerSymbol[]>([]);
   const [tradingViewResults, setTradingViewResults] = useState<SymbolOption[]>([]);
   const [currentDexData, setCurrentDexData] = useState<DexData | undefined>(undefined);
+  const { user } = useSupabaseUser();
+  const canShare = sharingPermissions.includes(user?.id || '');
+  const isHost = call?.state.createdBy?.id === user?.id;
+
+  // Update the live sharing button visibility
+  const showLiveShareButton = isHost || canShare;
 
   // Memoize callbacks that are passed to TradingViewChart
   const handleToggleFullscreen = useCallback(() => {
@@ -363,7 +372,7 @@ export const ChartViewer: FC<ChartViewerProps> = memo(({
               {!isAddChart && (
                 <>
                   {/* Live Share Button */}
-                  {onToggleLiveShare && (
+                  {showLiveShareButton && onToggleLiveShare && (
                     <button
                       onClick={handleToggleLiveShare}
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg
@@ -430,6 +439,17 @@ export const ChartViewer: FC<ChartViewerProps> = memo(({
             onFullscreenChange={handleFullscreenChange}
           />
         </>
+      )}
+
+      {/* Show message when someone else is sharing */}
+      {isLiveSharing && !canShare && (
+        <div className="absolute top-4 left-4 z-20 flex items-center gap-2 
+          bg-gray-900/90 px-3 py-2 rounded-full border border-emerald-500/20">
+          <span className="animate-pulse text-emerald-400 text-[8px]">●</span>
+          <span className="text-sm text-white/90">
+            Viewing Shared Chart
+          </span>
+        </div>
       )}
     </div>
   );

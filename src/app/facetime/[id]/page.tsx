@@ -355,6 +355,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 	const [broadcaster, setBroadcaster] = useState<{ userId: string; symbol: string; userName?: string } | null>(null);
 	const [arePanelsVisible, setArePanelsVisible] = useState(true);
 	const [isChartFullscreen, setIsChartFullscreen] = useState(false);
+	const [sharingPermissions, setSharingPermissions] = useState<string[]>([]);
 
 	// Create a trader object from the current user
 	const currentTrader = {
@@ -587,6 +588,41 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 		setIsVideosPanelExpanded(!hideForFullscreen);
 		setIsChartFullscreen(hideForFullscreen);
 	};
+
+	// Add permission handling
+	useEffect(() => {
+		if (!call) return;
+
+		const handleCustomEvent = (event: any) => {
+			const eventType = event.custom.type;
+			const eventData = event.custom.data;
+
+			if (eventType === 'sharing_permission') {
+				const { userId, action } = eventData;
+				setSharingPermissions(prev => {
+					if (action === 'grant' && !prev.includes(userId)) {
+						return [...prev, userId];
+					} else if (action === 'remove') {
+						return prev.filter(id => id !== userId);
+					}
+					return prev;
+				});
+			} else if (eventType === 'chart_update') {
+				// Only accept updates from users with permission
+				if (sharingPermissions.includes(eventData.userId)) {
+					setCurrentSymbol(eventData.symbol);
+					setBroadcaster({ 
+						userId: eventData.userId, 
+						symbol: eventData.symbol,
+						userName: event.user.name || eventData.userName
+					});
+				}
+			}
+		};
+
+		call.on('custom', handleCustomEvent);
+		return () => call.off('custom', handleCustomEvent);
+	}, [call, sharingPermissions]);
 
 	// Use the memoized MainContentArea in your render
 	return (
