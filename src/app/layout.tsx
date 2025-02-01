@@ -6,6 +6,7 @@ import { TradesProvider } from "@/context/TradesContext";
 import { usePathname } from 'next/navigation';
 import { memo } from 'react';
 import { Header } from "@/components/Header";
+import '@stream-io/video-react-sdk/dist/css/styles.css';
 import "./globals.css";
 
 const Providers = memo(({ children }: { children: React.ReactNode }) => {

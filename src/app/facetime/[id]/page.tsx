@@ -160,7 +160,27 @@ const MainContentArea = memo<MainContentAreaProps>(({
 	if (isMultiChartEnabled) {
 		return (
 			<div className={`grid ${isChartFullscreen ? '' : 'grid-cols-2'} gap-4 p-4 h-full`}>
-				{/* Your charts */}
+				{/* Add a header section for controls */}
+				<div className={`${isChartFullscreen ? 'col-span-full' : 'col-span-2'} flex items-center justify-between mb-4`}>
+					<div className="flex items-center gap-2">
+						{/* Single Chart View Button */}
+						<button
+							onClick={() => {
+								handleToggleMultiChart();
+								// This will use the first chart in the layout when switching back
+								handleSymbolChange(chartLayouts[0]);
+							}}
+							className="flex items-center gap-2 px-3 py-2 rounded-lg
+								bg-gray-700 text-gray-300 border border-gray-600 
+								hover:bg-gray-600 transition-colors"
+						>
+							<FaChartLine size={16} />
+							<span className="text-sm">Single Chart View</span>
+						</button>
+					</div>
+				</div>
+
+				{/* Existing chart grid */}
 				{chartLayouts.map((symbol, index) => (
 					<div key={`${symbol}-${index}`} className={`relative rounded-xl overflow-hidden border border-white/5 
 						bg-gray-900/20 backdrop-blur-sm ${isChartFullscreen ? 'col-span-full' : ''}`}>
@@ -878,14 +898,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 							<div className="mt-4 flex items-center gap-4">
 								<CallControls
 									onLeave={handleLeave}
-									// Add these props to show the controls
-									showAudio={true}
-									showVideo={true}
-									showScreenShare={true}
-									showLeave={true}
-									// Style the controls
 									className="flex items-center gap-3 p-2"
-									// Custom style for each button
 									buttonStyles={{
 										button: "p-3 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors duration-200",
 										buttonOnPrimary: "bg-red-500 hover:bg-red-600",
