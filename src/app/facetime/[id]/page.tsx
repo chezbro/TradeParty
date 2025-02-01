@@ -133,8 +133,8 @@ interface MainContentAreaProps {
 	setChartLayouts: (layouts: string[] | ((prev: string[]) => string[])) => void;
 	liveCharts: LiveChart[];
 	isChartFullscreen: boolean;
-	onToggleFullscreen: () => void;
-	onTogglePanels: () => void;
+	onToggleFullscreen: (hideForFullscreen: boolean) => void;
+	onTogglePanels: (hideForFullscreen: boolean) => void;
 }
 
 // Update the component definition to use the interface
@@ -787,7 +787,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 								setChartLayouts={setChartLayouts}
 								liveCharts={liveCharts}
 								isChartFullscreen={isChartFullscreen}
-								onToggleFullscreen={handleTogglePanels}
+								onToggleFullscreen={(hide) => handleTogglePanels(hide)}
 								onTogglePanels={handleTogglePanels}
 							/>
 						</div>
