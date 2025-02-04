@@ -37,13 +37,26 @@ export default function SignIn() {
   }
 
   const handleGoogleSignIn = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      });
+
+      if (error) {
+        toast.error(error.message);
       }
-    })
-  }
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      toast.error('Failed to sign in with Google');
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center py-2">

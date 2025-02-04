@@ -3,6 +3,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
+import { toast } from 'react-hot-toast'
 
 export default function SignUp() {
   const [email, setEmail] = useState('')
@@ -27,12 +28,25 @@ export default function SignUp() {
   }
 
   const handleGoogleSignUp = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      });
+
+      if (error) {
+        toast.error(error.message);
       }
-    })
+    } catch (error) {
+      console.error('Google sign up error:', error);
+      toast.error('Failed to sign up with Google');
+    }
   }
 
   return (
