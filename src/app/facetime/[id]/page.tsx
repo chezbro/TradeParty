@@ -133,7 +133,7 @@ interface MainContentAreaProps {
 	setChartLayouts: (layouts: string[] | ((prev: string[]) => string[])) => void;
 	liveCharts: LiveChart[];
 	isChartFullscreen: boolean;
-	onToggleFullscreen: (hideForFullscreen: boolean) => void;
+	onToggleFullscreen: () => void;
 	onTogglePanels: (hideForFullscreen: boolean) => void;
 }
 
@@ -194,7 +194,10 @@ const MainContentArea = memo<MainContentAreaProps>(({
 							onToggleFavorite={handleStarClick}
 							isFavorited={watchlist.includes(symbol)}
 							compact={!isChartFullscreen}
-							onFullscreenChange={onTogglePanels}
+							onFullscreenChange={(hide: boolean) => {
+								onTogglePanels(hide);
+								onToggleFullscreen();
+							}}
 							onShare={shareChart}
 						/>
 						{chartLayouts.length > 1 && !isChartFullscreen && (
@@ -283,7 +286,10 @@ const MainContentArea = memo<MainContentAreaProps>(({
 				isLiveSharing={isLiveSharing}
 				onToggleLiveShare={handleToggleLiveShare}
 				isReadOnly={Boolean(broadcaster && broadcaster.userId !== user?.id)}
-				onFullscreenChange={onTogglePanels}
+				onFullscreenChange={(hide: boolean) => {
+					onTogglePanels(hide);
+					onToggleFullscreen();
+				}}
 			/>
 		</div>
 	);
@@ -787,7 +793,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 								setChartLayouts={setChartLayouts}
 								liveCharts={liveCharts}
 								isChartFullscreen={isChartFullscreen}
-								onToggleFullscreen={(hide) => handleTogglePanels(hide)}
+								onToggleFullscreen={() => setIsChartFullscreen(!isChartFullscreen)}
 								onTogglePanels={handleTogglePanels}
 							/>
 						</div>
