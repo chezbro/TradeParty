@@ -15,7 +15,7 @@ export async function middleware(req: NextRequest) {
 
   // If no session and trying to access protected route
   if (!session && !isPublicRoute) {
-    const redirectUrl = new URL('/sign-in', req.url)
+    const redirectUrl = new URL('/', req.url)
     redirectUrl.searchParams.set('redirect_url', req.url)
     return NextResponse.redirect(redirectUrl)
   }
