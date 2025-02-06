@@ -30,6 +30,12 @@ const dummyProfile = {
     twitter: "https://twitter.com/alextrader",
     website: "https://alexthompson.trade",
     linkedin: "https://linkedin.com/in/alextrader"
+  },
+  meetings: {
+    hosted: 47,
+    participated: 156,
+    upcomingMeetings: 3,
+    totalHours: 204
   }
 };
 
@@ -132,6 +138,33 @@ export default function ProfileContent() {
             </motion.div>
           ))}
         </div>
+
+        {/* Add TradeParty Meetings Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-br from-indigo-900/30 to-purple-900/30 rounded-2xl p-6 border border-indigo-500/20 mb-8"
+        >
+          <h2 className="text-xl font-bold mb-6">TradeParty Engagement</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/50">
+              <h3 className="text-gray-400 text-sm mb-1">Meetings Hosted</h3>
+              <p className="text-2xl font-bold text-white">{dummyProfile.meetings.hosted}</p>
+            </div>
+            <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/50">
+              <h3 className="text-gray-400 text-sm mb-1">Meetings Joined</h3>
+              <p className="text-2xl font-bold text-white">{dummyProfile.meetings.participated}</p>
+            </div>
+            <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/50">
+              <h3 className="text-gray-400 text-sm mb-1">Upcoming Meetings</h3>
+              <p className="text-2xl font-bold text-white">{dummyProfile.meetings.upcomingMeetings}</p>
+            </div>
+            <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/50">
+              <h3 className="text-gray-400 text-sm mb-1">Total Hours</h3>
+              <p className="text-2xl font-bold text-white">{dummyProfile.meetings.totalHours}</p>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Recent Trades */}
         <motion.div
