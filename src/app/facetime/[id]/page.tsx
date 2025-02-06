@@ -1136,13 +1136,13 @@ export default function FacetimePage() {
 						/>
 					) : (
 						<div className='h-screen w-full flex items-center justify-center bg-gradient-to-br from-gray-800 via-gray-900 to-black'>
-							<div className='flex flex-col items-center justify-center gap-8 p-12 bg-gray-800/80 backdrop-blur-md rounded-3xl border border-gray-600 shadow-2xl max-w-lg mx-auto'>
-								<h1 className='text-6xl font-extrabold text-white mb-4 text-center'>
+							<div className='flex flex-col items-center justify-center gap-4 p-12 bg-gray-800/80 backdrop-blur-md rounded-3xl border border-gray-600 shadow-2xl max-w-lg mx-auto'>
+								<h1 className='text-6xl font-extrabold text-white mb-2 text-center'>
 									{meetingDetails?.name || "Loading..."}
 								</h1>
-								<p className='text-xl text-gray-300 mb-6 text-center'>
+								<p className='text-xl text-gray-300 mb-2 text-center'>
 									{call?.state.createdBy?.id === user?.id 
-										? "Ready to Host a TradeParty?"
+										? "You are the Host."
 										: "Ready to join the TradeParty?"}
 								</p>
 								<div className='flex gap-6'>
