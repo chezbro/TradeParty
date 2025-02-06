@@ -105,12 +105,32 @@ export default function Dashboard() {
 							</div>
 						</div>
 					</motion.div>
+
+					<motion.div
+						variants={cardVariants}
+						whileHover={{ scale: 1.02 }}
+						className="bg-[#1E293B] rounded-lg overflow-hidden"
+						onClick={() => window.location.href = '/discover'}
+					>
+						<div className="p-6 border border-gray-800 h-full flex flex-col hover:border-teal-500/50 transition-colors rounded-lg cursor-pointer">
+							<div className="bg-teal-500/10 p-3 rounded-lg w-fit mb-4">
+								<FaUsers className="text-teal-500 text-xl" />
+							</div>
+							<h3 className="text-white text-lg font-medium mb-2">Explore Sessions</h3>
+							<p className="text-gray-400 text-sm flex-grow">
+								Discover and join other live TradeParty meeting rooms
+							</p>
+							<div className="mt-4 flex items-center text-teal-400 text-sm font-medium">
+								Browse sessions <FaUsers className="ml-2 text-xs" />
+							</div>
+						</div>
+					</motion.div>
 				</motion.div>
 
 				<div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-fuchsia-500/10 rounded-xl p-8 border border-gray-800">
 					<div className="max-w-3xl mx-auto text-center">
 						<h2 className="text-2xl font-semibold text-white mb-4">
-							Ready to grow your trading community?
+							Ready to Host a TradeParty?
 						</h2>
 						<p className="text-gray-400 mb-6">
 							Start your first trading session and invite others to join your analysis
