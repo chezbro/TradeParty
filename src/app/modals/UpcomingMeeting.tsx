@@ -52,7 +52,7 @@ export default function UpcomingMeeting({ enable, setEnable }: Props) {
 								<DialogPanel className='w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 align-middle shadow-xl transition-all text-center'>
 									<DialogTitle
 										as='h3'
-										className='text-lg font-bold leading-6 text-green-600 mb-4'
+										className='text-lg font-bold leading-6 mb-4'
 									>
 										Upcoming TradeParty
 									</DialogTitle>
@@ -110,7 +110,7 @@ const MeetingList = () => {
                     </div>
                     
 						<div className="mt-4 flex gap-2">
-							<Link className='bg-green-500 text-sm px-4 py-2 hover:bg-green-700 text-white rounded-md shadow-sm'
+							<Link className='bg-blue-500 text-sm px-4 py-2 hover:bg-blue-700 text-white rounded-md shadow-sm'
 							href={`/facetime/${call.id}`}
 							>
 								Start now

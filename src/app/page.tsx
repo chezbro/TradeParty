@@ -38,14 +38,7 @@ export default function Dashboard() {
 	return (
 		<div className="min-h-screen bg-[#0F172A]">
 			<main className="container mx-auto px-4 py-12 max-w-6xl">
-				<div className="text-center mb-16">
-					<h1 className="text-4xl font-bold text-white mb-4">
-						Welcome to <span className="text-indigo-500">TradeParty</span>
-					</h1>
-					<p className="text-gray-400 text-lg max-w-2xl mx-auto">
-						Connect with traders, share insights, and learn together in real-time trading sessions
-					</p>
-				</div>
+		
 
 				<motion.div 
 					variants={containerVariants}

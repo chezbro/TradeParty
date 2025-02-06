@@ -53,7 +53,7 @@ export default function CreateLink({ enable, setEnable }: Props) {
 								leaveFrom='opacity-100 scale-100'
 								leaveTo='opacity-0 scale-95'
 							>
-								<DialogPanel className='w-full max-w-2xl transform overflow-visible rounded-2xl bg-white p-6 align-middle shadow-xl transition-all text-center relative'>
+								<DialogPanel className='w-full max-w-2xl transform overflow-visible rounded-lg bg-white p-8 align-middle shadow-2xl transition-all text-left relative border border-gray-200'>
 									{showMeetingLink ? (
 										<MeetingLink 
 											facetimeLink={facetimeLink} 
@@ -146,18 +146,18 @@ const MeetingForm = ({
 		<>
 			<DialogTitle
 				as='h3'
-				className='text-lg font-bold leading-6 text-green-600'
+				className='text-xl font-semibold leading-6 mb-2'
 			>
 				Schedule a TradeParty
 			</DialogTitle>
 
-			<Description className='text-xs opacity-40 mb-4'>
-				Schedule a TradeParty meeting with your cliq
+			<Description className='text-sm text-gray-500 mb-6'>
+				Schedule a TradeParty meeting with friends and peers.
 			</Description>
 
 			<form className='w-full' onSubmit={handleStartMeeting}>
 				<label
-					className='block text-left text-sm font-medium text-gray-700'
+					className='block text-left text-sm font-medium text-gray-700 mb-1'
 					htmlFor='description'
 				>
 					Name
@@ -168,13 +168,13 @@ const MeetingForm = ({
 					id='description'
 					value={description}
 					onChange={(e) => setDescription(e.target.value)}
-					className='mt-1 block w-full text-sm py-3 px-4 border-gray-200 border-[1px] rounded mb-3'
+					className='mt-1 block w-full text-sm py-2.5 px-3 bg-white border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors mb-4'
 					required
 					placeholder='Enter a name for this TradeParty session'
 				/>
 
 				<label
-					className='block text-left text-sm font-medium text-gray-700'
+					className='block text-left text-sm font-medium text-gray-700 mb-1'
 					htmlFor='date'
 				>
 					Date and Time
@@ -185,12 +185,12 @@ const MeetingForm = ({
 					id='date'
 					name='date'
 					required
-					className='mt-1 block w-full text-sm py-3 px-4 border-gray-200 border-[1px] rounded mb-3 [color-scheme:light]'
+					className='mt-1 block w-full text-sm py-2.5 px-3 bg-white border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors mb-4 [color-scheme:light]'
 					value={dateTime}
 					onChange={(e) => setDateTime(e.target.value)}
 				/>
 
-				<button className='w-full bg-green-600 text-white py-3 rounded mt-4'>
+				<button className='w-full bg-gradient-to-r from-indigo-500 to-blue-600 text-white py-2.5 px-4 rounded-md font-medium hover:from-indigo-600 hover:to-blue-700 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-2 shadow-sm'>
 					Create TradeParty
 				</button>
 			</form>
@@ -214,17 +214,17 @@ const MeetingLink = ({
 		<div className="space-y-4">
 			<DialogTitle
 				as='h3'
-				className='text-lg font-bold leading-6 text-green-600'
+				className='text-xl font-semibold leading-6 text-gray-900 mb-2'
 			>
 				Copy TradeParty Link
 			</DialogTitle>
 
-			<Description className='text-xs opacity-40'>
+			<Description className='text-sm text-gray-500 mb-6'>
 				You can share the TradeParty link with your participants
 			</Description>
 
-			<div className='bg-gray-100 p-4 rounded flex items-center justify-between'>
-				<p className='text-xs text-gray-500'>
+			<div className='bg-gray-50 p-4 rounded-md border border-gray-100 flex items-center justify-between'>
+				<p className='text-sm text-gray-600 font-mono'>
 					{`${process.env.NEXT_PUBLIC_FACETIME_HOST}/${facetimeLink}`}
 				</p>
 
@@ -232,12 +232,17 @@ const MeetingLink = ({
 					onCopy={handleCopy}
 					text={`${process.env.NEXT_PUBLIC_FACETIME_HOST}/${facetimeLink}`}
 				>
-					<FaCopy className='text-green-600 text-lg cursor-pointer' />
+					<button className='text-gray-500 hover:text-blue-600 transition-colors p-2 rounded-md hover:bg-blue-50'>
+						<FaCopy className='text-lg' />
+					</button>
 				</CopyToClipboard>
 			</div>
 
 			{copied && (
-				<p className='text-red-600 text-xs'>Link copied to clipboard</p>
+				<p className='text-blue-600 text-sm mt-2 flex items-center gap-2'>
+					<span className='w-1.5 h-1.5 bg-blue-600 rounded-full'></span>
+					Link copied to clipboard
+				</p>
 			)}
 
 			<div className='pt-4 pb-2'>				
@@ -252,7 +257,7 @@ const MeetingLink = ({
 						options={['Google', 'Apple', 'Microsoft365', 'Outlook.com', 'Yahoo']}
 						buttonStyle="default"
 						lightMode="light"
-						styleLight="--btn-background: #16a34a; --btn-text: #ffffff; --btn-shadow: #16a34a33; --btn-border: none;"
+						styleLight="--btn-background: linear-gradient(to right, rgb(99 102 241), rgb(37 99 235)); --btn-text: #ffffff; --btn-shadow: rgba(37 99 235 / 0.2); --btn-border: none;"
 						size="3"
 					/>
 				</div>

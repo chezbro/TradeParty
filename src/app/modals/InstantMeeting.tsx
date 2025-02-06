@@ -58,7 +58,7 @@ export default function InstantMeeting({ enable, setEnable }: Props) {
 								leaveFrom='opacity-100 scale-100'
 								leaveTo='opacity-0 scale-95'
 							>
-								<DialogPanel className='w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 align-middle shadow-xl transition-all text-center'>
+								<DialogPanel className='w-full max-w-2xl transform overflow-hidden rounded-lg bg-white p-8 align-middle shadow-2xl transition-all text-left relative border border-gray-200'>
 									{showMeetingLink ? (
 										<MeetingLink facetimeLink={facetimeLink} />
 									) : (
@@ -120,17 +120,17 @@ const MeetingForm = memo(({ setShowMeetingLink, setFacetimeLink }: MeetingFormPr
 
 	return (
 		<>
-			<DialogTitle as="h3" className="text-lg font-bold leading-6 text-green-600">
+			<DialogTitle as="h3" className="text-xl font-semibold leading-6 mb-2">
 				Create a TradeParty
 			</DialogTitle>
 
-			<Description className='text-xs opacity-40 mb-4'>
+			<Description className='text-sm text-gray-500 mb-6'>
 				Start an instant TradeParty meeting with your cliq
 			</Description>
 
 			<form className='w-full' onSubmit={handleSubmit}>
 				<label
-					className='block text-left text-sm font-medium text-gray-700'
+					className='block text-left text-sm font-medium text-gray-700 mb-1'
 					htmlFor='description'
 				>
 					Name
@@ -141,12 +141,12 @@ const MeetingForm = memo(({ setShowMeetingLink, setFacetimeLink }: MeetingFormPr
 					id='description'
 					value={meetingName}
 					onChange={(e) => setMeetingName(e.target.value)}
-					className='mt-1 block w-full text-sm py-3 px-4 border-gray-200 border-[1px] rounded mb-3'
+					className='mt-1 block w-full text-sm py-2.5 px-3 bg-white border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors mb-4'
 					required
 					placeholder='Enter a name for this TradeParty session'
 				/>
 
-				<button className='w-full bg-green-600 text-white py-3 rounded mt-4'>
+				<button className='w-full bg-gradient-to-r from-indigo-500 to-blue-600 text-white py-2.5 px-4 rounded-md font-medium hover:from-indigo-600 hover:to-blue-700 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-2 shadow-sm'>
 					Create TradeParty
 				</button>
 			</form>
@@ -172,38 +172,45 @@ const MeetingLink = memo(({ facetimeLink }: { facetimeLink: string }) => {
 		<>
 			<DialogTitle
 				as='h3'
-				className='text-lg font-bold leading-6 text-green-600'
+				className='text-xl font-semibold leading-6 text-gray-900 mb-2'
 			>
 				Share Your TradeParty
 			</DialogTitle>
 
-			<Description className='text-xs opacity-40 mb-4'>
+			<Description className='text-sm text-gray-500 mb-6'>
 				Start a new TradeParty and invite others to join.
 			</Description>
 
-			<div className='bg-gray-100 p-4 rounded flex items-center justify-between'>
-				<p className='text-xs text-gray-500'>{`${process.env.NEXT_PUBLIC_FACETIME_HOST}/${facetimeLink}`}</p>
+			<div className='bg-gray-50 p-4 rounded-md border border-gray-100 flex items-center justify-between'>
+				<p className='text-sm text-gray-600 font-mono'>
+					{`${process.env.NEXT_PUBLIC_FACETIME_HOST}/${facetimeLink}`}
+				</p>
 
 				<CopyToClipboard
 					onCopy={handleCopy}
 					text={`${process.env.NEXT_PUBLIC_FACETIME_HOST}/${facetimeLink}`}
 				>
-					<FaCopy className='text-green-600 text-lg cursor-pointer' />
+					<button className='text-gray-500 hover:text-blue-600 transition-colors p-2 rounded-md hover:bg-blue-50'>
+						<FaCopy className='text-lg' />
+					</button>
 				</CopyToClipboard>
 			</div>
 
 			{copied && (
-				<p className='text-red-600 text-xs mt-2'>Link copied to clipboard</p>
+				<p className='text-blue-600 text-sm mt-2 flex items-center gap-2'>
+					<span className='w-1.5 h-1.5 bg-blue-600 rounded-full'></span>
+					Link copied to clipboard
+				</p>
 			)}
 
 			<Link 
 				href={`${process.env.NEXT_PUBLIC_FACETIME_HOST}/${facetimeLink}`} 
-				className='w-full block bg-green-600 text-white py-3 rounded mt-4 relative'
+				className='w-full block bg-gradient-to-r from-indigo-500 to-blue-600 text-white py-2.5 px-4 rounded-md font-medium hover:from-indigo-600 hover:to-blue-700 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-2 shadow-sm text-center'
 				onClick={handleStartMeeting}
 			>
 				{isLoading ? (
 					<div className="flex items-center justify-center">
-						<div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin"></div>
+						<div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
 						<span className="ml-2">Cooking it up...</span>
 					</div>
 				) : (
