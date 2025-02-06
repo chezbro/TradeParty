@@ -172,7 +172,7 @@ const MeetingLink = memo(({ facetimeLink }: { facetimeLink: string }) => {
 		<>
 			<DialogTitle
 				as='h3'
-				className='text-xl font-semibold leading-6 text-gray-900 mb-2'
+				className='text-xl font-semibold leading-6 mb-2'
 			>
 				Share Your TradeParty
 			</DialogTitle>
@@ -181,7 +181,7 @@ const MeetingLink = memo(({ facetimeLink }: { facetimeLink: string }) => {
 				Start a new TradeParty and invite others to join.
 			</Description>
 
-			<div className='bg-gray-50 p-4 rounded-md border border-gray-100 flex items-center justify-between'>
+			<div className='p-4 rounded-md border border-gray-100 flex items-center justify-between'>
 				<p className='text-sm text-gray-600 font-mono'>
 					{`${process.env.NEXT_PUBLIC_FACETIME_HOST}/${facetimeLink}`}
 				</p>

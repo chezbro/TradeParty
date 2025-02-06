@@ -1136,25 +1136,25 @@ export default function FacetimePage() {
 						/>
 					) : (
 						<div className='h-screen w-full flex items-center justify-center bg-gradient-to-br from-gray-800 via-gray-900 to-black'>
-							<div className='flex flex-col items-center justify-center gap-6 p-10 bg-gray-800/70 backdrop-blur-lg rounded-2xl border border-gray-700 shadow-lg'>
-								<h1 className='text-5xl font-bold text-white mb-2'>
+							<div className='flex flex-col items-center justify-center gap-8 p-12 bg-gray-800/80 backdrop-blur-md rounded-3xl border border-gray-600 shadow-2xl max-w-lg mx-auto'>
+								<h1 className='text-6xl font-extrabold text-white mb-4 text-center'>
 									{meetingDetails?.name || "Loading..."}
 								</h1>
-								<p className='text-lg text-gray-300 mb-4'>
+								<p className='text-xl text-gray-300 mb-6 text-center'>
 									{call?.state.createdBy?.id === user?.id 
 										? "Ready to Host a TradeParty?"
 										: "Ready to join the TradeParty?"}
 								</p>
-								<div className='flex gap-4'>
+								<div className='flex gap-6'>
 									<button 
 										onClick={handleJoin} 
-										className='px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-transform transform hover:scale-105 duration-200'
+										className='px-10 py-4 bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-transform transform hover:scale-105 duration-200'
 									>
 										{call?.state.createdBy?.id === user?.id ? 'Start Now' : 'Join Now'}
 									</button>
 									<button 
 										onClick={() => router.push("/")} 
-										className='px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-transform transform hover:scale-105 duration-200'
+										className='px-10 py-4 bg-gradient-to-r from-gray-500 to-gray-700 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-transform transform hover:scale-105 duration-200'
 									>
 										Cancel
 									</button>
