@@ -66,19 +66,31 @@ export const Header = () => {
                                 <div className="absolute right-0 mt-2 w-48 bg-gray-900 border border-white/10 
                                     rounded-lg shadow-lg overflow-hidden">
                                     <Link
+                                        href={`/profile/${user.id}`}
+                                        className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 
+                                            hover:bg-white/5 transition-colors"
+                                        onClick={() => setShowDropdown(false)}
+                                    >
+                                        <FaUser className="text-blue-400" />
+                                        My Profile
+                                    </Link>
+
+                                    <Link
                                         href="/settings"
-                                        className="flex items-center gap-2 px-4 py-2 text-sm text-white/80 
-                                            hover:bg-white/5 transition-colors duration-200"
+                                        className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 
+                                            hover:bg-white/5 transition-colors"
+                                        onClick={() => setShowDropdown(false)}
                                     >
                                         <FaCog className="text-gray-400" />
                                         Settings
                                     </Link>
+
                                     <button
                                         onClick={handleSignOut}
-                                        className="flex items-center gap-2 px-4 py-2 text-sm text-white/80 
-                                            hover:bg-white/5 transition-colors duration-200 w-full"
+                                        className="w-full flex items-center gap-2 px-4 py-3 text-sm text-white/80 
+                                            hover:bg-white/5 transition-colors border-t border-white/5"
                                     >
-                                        <FaSignOutAlt className="text-gray-400" />
+                                        <FaSignOutAlt className="text-red-400" />
                                         Sign Out
                                     </button>
                                 </div>
