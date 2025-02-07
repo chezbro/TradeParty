@@ -42,7 +42,8 @@
     "stripe": "^17.6.0",
     "uuid": "^11.0.3",
     "zod": "^3.22.4",
-    "@sentry/nextjs": "^7.107.0"
+    "@sentry/nextjs": "^7.107.0",
+    "@upstash/redis": "^1.28.4"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.13",
