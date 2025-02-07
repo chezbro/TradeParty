@@ -1,50 +1,43 @@
-import React, { useEffect, useState } from 'react';
-import { StreamVideoClient } from '@stream-io/video-client';
+import { StreamVideo, StreamVideoClient } from "@stream-io/video-react-sdk";
+import { PropsWithChildren, useEffect, useState } from "react";
+import { useSupabaseUser } from "@/app/hooks/useSupabaseUser";
 
-const StreamVideoProvider = ({ children }: { children: React.ReactNode }) => {
-  const [streamClient, setStreamClient] = useState<StreamVideoClient | null>(null);
-  const [streamToken, setStreamToken] = useState<string | null>(null);
+const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY!;
+
+export function StreamVideoProvider({ children }: PropsWithChildren) {
+  const [client, setClient] = useState<StreamVideoClient>();
+  const { user } = useSupabaseUser();
 
   useEffect(() => {
-    const setupClient = async () => {
-      try {
-        const client = StreamVideoClient.getOrCreateInstance(process.env.NEXT_PUBLIC_STREAM_KEY!, {
-          token: streamToken!,
-          options: {
-            video: {
-              encoderConfig: {
-                width: 1280,
-                height: 720,
-                bitrateMax: 1500000,
-                bitrateMin: 500000,
-              }
-            }
-          }
-        });
+    if (!user || !apiKey) return;
 
-        setStreamClient(client);
-      } catch (error) {
-        console.error('Error setting up Stream client:', error);
-      }
+    const streamUser = {
+      id: user.id,
+      name: user.email || 'Anonymous',
+      image: user.user_metadata?.avatar_url,
     };
+    
 
-    if (streamToken) {
-      setupClient();
-    }
+    const client = new StreamVideoClient({
+      apiKey,
+      user: streamUser,
+      tokenProvider: async () => {
+        const response = await fetch('/api/stream/token');
+        const { token } = await response.json();
+        return token;
+      },
+    });
 
-    // Cleanup function
+    setClient(client);
+
     return () => {
-      if (streamClient) {
-        streamClient.disconnectUser();
-      }
+      client.disconnectUser();
     };
-  }, [streamToken]);
+  }, [user]);
 
-  return (
-    <div>
-      {/* Rest of the component content */}
-    </div>
-  );
-};
+  if (!client) {
+    return null;
+  }
 
-export default StreamVideoProvider; 
+  return <StreamVideo client={client}>{children}</StreamVideo>;
+} 
