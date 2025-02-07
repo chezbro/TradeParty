@@ -46,12 +46,7 @@ export default function Dashboard() {
 					animate={{ opacity: 1, y: 0 }}
 					className="text-center mb-16"
 				>
-					<h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-						Start Trading Together
-					</h1>
-					<p className="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
-						Host live trading sessions, share analysis, and build your trading community
-					</p>
+
 					<div className="flex flex-col sm:flex-row gap-4 justify-center">
 						<button
 							onClick={() => setStartInstantMeeting(true)}
@@ -59,7 +54,7 @@ export default function Dashboard() {
 								flex items-center justify-center gap-3 font-medium transition-all duration-300"
 						>
 							<FaVideo className="text-lg" />
-							Start Instant Session
+							Host a TradeParty
 						</button>
 						<button
 							onClick={() => setShowCreateLink(true)}
@@ -68,7 +63,7 @@ export default function Dashboard() {
 								font-medium transition-all duration-300"
 						>
 							<FaCalendar className="text-lg" />
-							Schedule Session
+							Schedule a TradeParty
 						</button>
 					</div>
 				</motion.div>
@@ -90,12 +85,12 @@ export default function Dashboard() {
 								<FaUsers className="text-purple-500 text-xl" />
 							</div>
 							<div>
-								<h3 className="text-white text-lg font-medium mb-2">Discover Live Sessions</h3>
+								<h3 className="text-white text-lg font-medium mb-2">Discover TradeParty Streams</h3>
 								<p className="text-gray-400 mb-4">
 									Join active trading rooms and learn from experienced traders in real-time
 								</p>
 								<div className="flex items-center text-purple-400 text-sm font-medium">
-									Browse sessions <FaArrowRight className="ml-2" />
+									Explore <FaArrowRight className="ml-2" />
 								</div>
 							</div>
 						</div>
@@ -111,9 +106,9 @@ export default function Dashboard() {
 								<FaCalendar className="text-teal-500 text-xl" />
 							</div>
 							<div>
-								<h3 className="text-white text-lg font-medium mb-2">Upcoming Sessions</h3>
+								<h3 className="text-white text-lg font-medium mb-2">Upcoming Streams</h3>
 								<p className="text-gray-400 mb-4">
-									View and join scheduled trading sessions from your favorite hosts
+									View and join scheduled trading streams from your favorite hosts
 								</p>
 								<div className="flex items-center text-teal-400 text-sm font-medium">
 									View calendar <FaArrowRight className="ml-2" />

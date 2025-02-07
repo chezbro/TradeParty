@@ -66,12 +66,14 @@ export default function SignIn() {
         <div className="relative h-full flex flex-col p-16">
           {/* Logo Section */}
           <div className="mb-16">
-            <h1 className="text-5xl font-bold text-white mb-6">
-              Trade<span className="text-emerald-500">Party</span>
+            <h1 className="text-5xl font-bold mb-6">
+            <span className="font-bold bg-gradient-to-r from-green-400 to-blue-500 
+                            text-transparent bg-clip-text">
+                            TradeParty</span>
             </h1>
             <div className="flex items-center space-x-3">
               <div className="h-px flex-grow bg-gradient-to-r from-emerald-500/50 to-transparent"></div>
-              <p className="text-lg text-gray-400 font-medium">Social Trading Platform</p>
+              <p className="text-lg text-gray-400 font-medium">Trading Made Fun.</p>
             </div>
           </div>
 
@@ -82,13 +84,13 @@ export default function SignIn() {
                 <div className="flex items-start space-x-6">
                   <div className="flex-shrink-0 w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center">
                     <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">Real-time Market Data</h3>
+                    <h3 className="text-xl font-semibold text-white mb-2">Live Trading Streams</h3>
                     <p className="text-gray-400 leading-relaxed">
-                      Get instant access to market movements and execute trades with zero delay.
+                      Join live trading rooms with expert traders sharing their screens and analysis in real-time.
                     </p>
                   </div>
                 </div>
@@ -103,9 +105,9 @@ export default function SignIn() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">Advanced Analytics</h3>
+                    <h3 className="text-xl font-semibold text-white mb-2">Interactive Charts</h3>
                     <p className="text-gray-400 leading-relaxed">
-                      Professional-grade charts and technical analysis tools at your fingertips.
+                      TradingView-powered charts with real-time annotations from session hosts.
                     </p>
                   </div>
                 </div>
@@ -116,13 +118,13 @@ export default function SignIn() {
                 <div className="flex items-start space-x-6">
                   <div className="flex-shrink-0 w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center">
                     <svg className="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">Social Trading</h3>
+                    <h3 className="text-xl font-semibold text-white mb-2">Live Chat & Q&A</h3>
                     <p className="text-gray-400 leading-relaxed">
-                      Follow top traders and automatically copy their winning strategies.
+                      Interact with hosts and other traders during sessions through chat and live Q&A.
                     </p>
                   </div>
                 </div>
@@ -135,16 +137,16 @@ export default function SignIn() {
           <div className="mt-auto pt-16">
             <div className="grid grid-cols-3 gap-8">
               <div>
+                <p className="text-2xl font-bold text-white">500+</p>
+                <p className="text-sm text-gray-400">Live Sessions</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white">50+</p>
+                <p className="text-sm text-gray-400">Expert Hosts</p>
+              </div>
+              <div>
                 <p className="text-2xl font-bold text-white">10k+</p>
-                <p className="text-sm text-gray-400">Active Traders</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-white">$2M+</p>
-                <p className="text-sm text-gray-400">Daily Volume</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-white">98%</p>
-                <p className="text-sm text-gray-400">Success Rate</p>
+                <p className="text-sm text-gray-400">Active Members</p>
               </div>
             </div>
           </div>
@@ -160,7 +162,7 @@ export default function SignIn() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-            <p className="text-gray-400">Sign in to continue your trading journey</p>
+            <p className="text-gray-400">Sign in to join live trading sessions</p>
           </div>
 
           <div className="bg-gray-800/50 p-8 rounded-2xl backdrop-blur-xl border border-gray-700/50">
