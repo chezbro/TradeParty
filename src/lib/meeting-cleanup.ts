@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { env } from '@/lib/env';
+import * as Sentry from '@sentry/nextjs';
 
 export async function cleanupMeeting(callId: string) {
   try {
@@ -22,6 +23,8 @@ export async function cleanupMeeting(callId: string) {
     
   } catch (error) {
     console.error('Meeting cleanup error:', error);
-    Sentry.captureException(error);
+    if (process.env.NODE_ENV === 'production') {
+      Sentry.captureException(error);
+    }
   }
 } 
