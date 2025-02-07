@@ -41,10 +41,9 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
       {/* Controls Bar */}
       <div className="p-4 bg-gray-900/90 border-t border-white/10">
         <div className="max-w-7xl mx-auto flex items-center justify-center">
-          <CallControls
-            onLeave={handleLeave}
-            className="flex items-center gap-3 p-2"
-          />
+          <div className="flex items-center gap-3 p-2">
+            <CallControls onLeave={handleLeave} />
+          </div>
         </div>
       </div>
     </div>
