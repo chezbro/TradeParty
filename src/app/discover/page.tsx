@@ -55,6 +55,7 @@ const liveSessions = [
         tags: ["Ethereum", "DeFi", "Technical Analysis"],
         timeRunning: "3h 10m"
     },
+    
     {
         id: 6,
         title: "AMD TradeParty",
