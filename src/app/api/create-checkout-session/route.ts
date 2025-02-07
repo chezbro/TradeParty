@@ -1,39 +1,31 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-01-27.acacia'
-});
 
 export async function POST() {
-  try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session: authSession } } = await supabase.auth.getSession();
-
-    if (!authSession) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+  // Temporarily disabled Stripe integration
+  return NextResponse.json(
+    { 
+      message: 'Payments temporarily disabled',
+      url: null 
+    },
+    { 
+      status: 503 
     }
+  );
+}
+
+/* Original Stripe implementation commented out for now
+import { stripe } from '@/lib/stripe';
+import { NextResponse } from 'next/server';
+
+export async function POST(req: Request) {
+  try {
+    const { priceId } = await req.json();
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'subscription',
-      line_items: [
-        {
-          price: process.env.STRIPE_PRICE_ID,
-          quantity: 1,
-        },
-      ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/cancelled`,
-      customer_email: authSession.user.email,
+      // ... stripe configuration
     });
 
-    return NextResponse.json({ sessionId: session.id });
+    return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error('Error creating checkout session:', error);
     return NextResponse.json(
@@ -41,4 +33,5 @@ export async function POST() {
       { status: 500 }
     );
   }
-} 
+}
+*/ 
