@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSupabaseUser } from '@/app/hooks/useSupabaseUser';
-import { useCall } from '../contexts/CallContext';
+import { useCall } from '@stream-io/video-react-sdk';
 import { FaShare } from 'react-icons/fa';
 
 const ParticipantViewUI: React.FC<any> = (props) => {
