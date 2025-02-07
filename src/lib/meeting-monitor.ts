@@ -1,9 +1,16 @@
 import { Redis } from '@upstash/redis';
 import { env } from '@/lib/env';
 
+const redisUrl = env.UPSTASH_REDIS_REST_URL;
+const redisToken = env.UPSTASH_REDIS_REST_TOKEN;
+
+if (!redisUrl || !redisToken) {
+  console.warn('Redis configuration not found. Some features may be limited.');
+}
+
 export const redis = new Redis({
-  url: env.UPSTASH_REDIS_REST_URL || '',
-  token: env.UPSTASH_REDIS_REST_TOKEN || '',
+  url: redisUrl || '',
+  token: redisToken || '',
 });
 
 export class MeetingMonitor {

@@ -50,10 +50,11 @@ const parseEnv = () => {
       return {
         ...process.env,
         NODE_ENV: 'development'
-      };
+      } as z.infer<typeof envSchema>;
     }
     throw error;
   }
 };
 
+export type Env = z.infer<typeof envSchema>;
 export const env = parseEnv(); 
