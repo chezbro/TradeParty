@@ -44,7 +44,7 @@ export class MeetingMonitor {
 
   static async checkMeetingLimits(meetingId: string): Promise<boolean> {
     const key = `meeting:${meetingId}:participants`;
-    const count = await redis.get(key);
+    const count = await redis.get<string | null>(key);
     
     // Limit meetings to 50 participants
     return (count ? parseInt(count) : 0) < 50;
