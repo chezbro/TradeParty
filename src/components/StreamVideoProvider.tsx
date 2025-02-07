@@ -1,10 +1,10 @@
 import { StreamVideo, StreamVideoClient } from "@stream-io/video-react-sdk";
 import { PropsWithChildren, useEffect, useState } from "react";
 import { useSupabaseUser } from "@/app/hooks/useSupabaseUser";
-import { User } from '@supabase/supabase-js';
+import { User, UserMetadata } from '@supabase/supabase-js';
 
-interface SupabaseUser extends User {
-  user_metadata?: {
+interface SupabaseUser extends Omit<User, 'user_metadata'> {
+  user_metadata: UserMetadata & {
     avatar_url?: string;
   };
 }
