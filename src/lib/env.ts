@@ -47,10 +47,25 @@ const parseEnv = () => {
     console.error('Error parsing environment variables:', error);
     // Return a default configuration for development
     if (process.env.NODE_ENV === 'development') {
-      return {
-        ...process.env,
-        NODE_ENV: 'development'
-      } as z.infer<typeof envSchema>;
+      const devDefaults = {
+        NODE_ENV: 'development',
+        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+        NEXT_PUBLIC_STREAM_API_KEY: process.env.NEXT_PUBLIC_STREAM_API_KEY || '',
+        STREAM_SECRET_KEY: process.env.STREAM_SECRET_KEY || '',
+        STREAM_APP_ID: process.env.STREAM_APP_ID || '',
+        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+        NEXT_PUBLIC_SOCKET_URL: process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001',
+        // Optional variables
+        UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
+        UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
+        NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+        NEXT_PUBLIC_FACETIME_HOST: process.env.NEXT_PUBLIC_FACETIME_HOST,
+        NEXT_PUBLIC_GOOGLE_VERIFICATION: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION,
+      } as const;
+
+      return devDefaults;
     }
     throw error;
   }
