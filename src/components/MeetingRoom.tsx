@@ -10,6 +10,11 @@ interface MeetingRoomProps {
   meetingName: string;
 }
 
+// Add type definition for CallControls
+type ExtendedCallControlsProps = {
+  className?: string;
+} & React.ComponentProps<typeof CallControls>;
+
 const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, socket, meetingName }) => {
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
