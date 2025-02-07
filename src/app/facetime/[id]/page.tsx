@@ -902,17 +902,11 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 							
 							{/* Controls Content - Only CallControls */}
 							<div className="mt-4 flex items-center gap-4">
-								<CallControls
-									onLeave={handleLeave}
-									className="flex items-center gap-3 p-2"
-									buttonStyles={{
-										button: "p-3 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors duration-200",
-										buttonOnPrimary: "bg-red-500 hover:bg-red-600",
-										buttonOffPrimary: "bg-gray-800 hover:bg-gray-700",
-										buttonOnSecondary: "bg-emerald-500 hover:bg-emerald-600",
-										buttonOffSecondary: "bg-gray-800 hover:bg-gray-700",
-									}}
-								/>
+								<div className="flex items-center gap-3 p-2">
+									<CallControls
+										onLeave={handleLeave}
+									/>
+								</div>
 							</div>
 						</div>
 					</div>
