@@ -16,6 +16,21 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        has: [
+          {
+            type: 'host',
+            value: 'www.tradeparty.co',
+          },
+        ],
+        destination: 'https://tradeparty.co',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
