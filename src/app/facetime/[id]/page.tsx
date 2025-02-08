@@ -1024,16 +1024,12 @@ export default function FacetimePage() {
 	useEffect(() => {
 		// Initialize socket connection
 		const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001', {
-			query: {
-				userId: user?.id,
-				roomId: id // from your params
-			},
 			reconnection: true,
 			reconnectionAttempts: 5,
 			reconnectionDelay: 1000,
 			reconnectionDelayMax: 5000,
 			timeout: 20000,
-			transports: ['polling', 'websocket'] // Allow both polling and websocket
+			transports: ['polling', 'websocket']
 		});
 
 		// Add heartbeat to keep connection alive
