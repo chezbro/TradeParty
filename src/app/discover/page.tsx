@@ -1,98 +1,93 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaUsers, FaSearch, FaChartLine, FaGlobe, FaClock } from "react-icons/fa";
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-// Sample data - replace with real data later
-const liveSessions = [
-    {
-        id: 1,
-        title: "EUR/USD TradeParty",
-        host: "Sarah Chen",
-        hostImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-        category: "Forex",
-        viewers: 234,
-        tags: ["EUR/USD", "Technical Analysis", "Swing Trading"],
-        timeRunning: "2h 15m"
-    },
-    {
-        id: 2,
-        title: "BTC TradeParty",
-        host: "Alex Rivera",
-        hostImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
-        category: "Crypto",
-        viewers: 567,
-        tags: ["Bitcoin", "Technical Analysis", "Spot Trading"],
-        timeRunning: "45m"
-    },
-    {
-        id: 3,
-        title: "TSLA TradeParty",
-        host: "Michael Chang",
-        hostImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Michael",
-        category: "Stocks",
-        viewers: 892,
-        tags: ["Tesla", "Options", "Day Trading"],
-        timeRunning: "1h 30m"
-    },
-    {
-        id: 4,
-        title: "AAPL TradeParty",
-        host: "Emma Wilson",
-        hostImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emma",
-        category: "Stocks",
-        viewers: 445,
-        tags: ["Apple", "Earnings", "Swing Trading"],
-        timeRunning: "55m"
-    },
-    {
-        id: 5,
-        title: "ETH TradeParty",
-        host: "David Kumar",
-        hostImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=David",
-        category: "Crypto",
-        viewers: 1243,
-        tags: ["Ethereum", "DeFi", "Technical Analysis"],
-        timeRunning: "3h 10m"
-    },
-    
-    {
-        id: 6,
-        title: "AMD TradeParty",
-        host: "Lisa Anderson",
-        hostImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lisa",
-        category: "Stocks",
-        viewers: 328,
-        tags: ["AMD", "Semiconductors", "Options"],
-        timeRunning: "1h 15m"
-    },
-    {
-        id: 7,
-        title: "PLTR TradeParty",
-        host: "Ryan Martinez",
-        hostImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ryan",
-        category: "Stocks",
-        viewers: 556,
-        tags: ["Palantir", "AI Stocks", "Technical Analysis"],
-        timeRunning: "2h 05m"
-    },
-    {
-        id: 8,
-        title: "XRP TradeParty",
-        host: "Sophie Taylor",
-        hostImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie",
-        category: "Crypto",
-        viewers: 673,
-        tags: ["Ripple", "SEC News", "Price Action"],
-        timeRunning: "4h 20m"
-    }
-];
+interface LiveSession {
+    id: string;
+    name: string;
+    host: {
+        id: string;
+        name: string;
+        avatar_url: string;
+    };
+    category: string;
+    viewers: number;
+    tags: string[];
+    started_at: string;
+}
 
 const categories = ["All", "Forex", "Crypto", "Stocks", "Commodities", "Options"];
 
 export default function Discover() {
+    const [liveSessions, setLiveSessions] = useState<LiveSession[]>([]);
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
+    const supabase = createClientComponentClient();
+
+    useEffect(() => {
+        const fetchLiveSessions = async () => {
+            const { data: meetings } = await supabase
+                .from('meetings')
+                .select(`
+                    id,
+                    name,
+                    created_by,
+                    created_at,
+                    user_profiles!inner (
+                        first_name,
+                        last_name,
+                        avatar_url
+                    )
+                `)
+                .eq('status', 'active')
+                .order('created_at', { ascending: false });
+
+            if (meetings) {
+                const sessionsWithViewers = await Promise.all(
+                    meetings.map(async (meeting) => {
+                        // Get real-time viewer count from your socket/Stream service
+                        // This is just a placeholder
+                        const viewers = Math.floor(Math.random() * 1000);
+
+                        return {
+                            id: meeting.id,
+                            name: meeting.name,
+                            host: {
+                                id: meeting.created_by,
+                                name: `${meeting.user_profiles.first_name} ${meeting.user_profiles.last_name}`,
+                                avatar_url: meeting.user_profiles.avatar_url
+                            },
+                            category: 'Trading', // You might want to add a category field to meetings
+                            viewers,
+                            tags: [], // You might want to add a tags table/field
+                            started_at: meeting.created_at
+                        };
+                    })
+                );
+
+                setLiveSessions(sessionsWithViewers);
+            }
+        };
+
+        fetchLiveSessions();
+        
+        // Set up real-time subscription
+        const channel = supabase
+            .channel('meetings_changes')
+            .on('postgres_changes', 
+                { event: '*', schema: 'public', table: 'meetings' },
+                () => {
+                    fetchLiveSessions();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [supabase]);
 
     // Filter sessions based on category and search query
     const filteredSessions = liveSessions.filter(session => {
@@ -102,8 +97,8 @@ export default function Discover() {
         // Search filter - case insensitive
         const searchLower = searchQuery.toLowerCase();
         const matchesSearch = searchQuery === "" || 
-            session.title.toLowerCase().includes(searchLower) ||
-            session.host.toLowerCase().includes(searchLower) ||
+            session.name.toLowerCase().includes(searchLower) ||
+            session.host.name.toLowerCase().includes(searchLower) ||
             session.tags.some(tag => tag.toLowerCase().includes(searchLower));
 
         return matchesCategory && matchesSearch;
@@ -179,19 +174,19 @@ export default function Discover() {
                                     {/* Host Info */}
                                     <div className="flex items-center mb-4">
                                         <img
-                                            src={session.hostImage}
-                                            alt={session.host}
+                                            src={session.host.avatar_url}
+                                            alt={session.host.name}
                                             className="w-10 h-10 rounded-full border-2 border-indigo-500"
                                         />
                                         <div className="ml-3">
-                                            <h3 className="text-white font-medium">{session.host}</h3>
+                                            <h3 className="text-white font-medium">{session.host.name}</h3>
                                             <span className="text-indigo-400 text-sm">{session.category}</span>
                                         </div>
                                     </div>
 
                                     {/* Session Title */}
                                     <h2 className="text-xl font-semibold text-white mb-3">
-                                        {session.title}
+                                        {session.name}
                                     </h2>
 
                                     {/* Tags */}
@@ -214,7 +209,7 @@ export default function Discover() {
                                         </div>
                                         <div className="flex items-center">
                                             <FaClock className="mr-2" />
-                                            {session.timeRunning}
+                                            {new Date(session.started_at).toLocaleTimeString()}
                                         </div>
                                     </div>
                                 </div>

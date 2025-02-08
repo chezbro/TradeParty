@@ -13,41 +13,92 @@ import {
   FaGlobe,
   FaLinkedin
 } from 'react-icons/fa';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-// Dummy data for demonstration
-const dummyProfile = {
-  name: "Alex Thompson",
-  handle: "@alextrader",
-  bio: "Professional Forex & Crypto trader. 8 years of experience in technical analysis and market psychology.",
-  winRate: 68,
-  totalTrades: 1247,
-  profitFactor: 2.4,
-  averageRR: 1.8,
-  monthlyReturn: 12.5,
-  followers: 1432,
-  following: 891,
-  socialLinks: {
-    twitter: "https://twitter.com/alextrader",
-    website: "https://alexthompson.trade",
-    linkedin: "https://linkedin.com/in/alextrader"
-  },
-  meetings: {
-    hosted: 47,
-    participated: 156,
-    upcomingMeetings: 3,
-    totalHours: 204
-  }
-};
+interface UserProfile {
+  username: string;
+  first_name: string;
+  last_name: string;
+  bio: string;
+  twitter_url: string;
+  website_url: string;
+  linkedin_url: string;
+}
 
-const recentTrades = [
-  { pair: "BTC/USD", type: "LONG", entry: 43250, exit: 44800, profit: 3.6, date: "2024-03-15" },
-  { pair: "ETH/USD", type: "SHORT", entry: 3200, exit: 3050, profit: 4.7, date: "2024-03-14" },
-  { pair: "EUR/USD", type: "LONG", entry: 1.0850, exit: 1.0920, profit: 2.1, date: "2024-03-13" },
-];
+interface TradingStats {
+  win_rate: number;
+  total_trades: number;
+  profit_factor: number;
+  average_rr: number;
+  monthly_return: number;
+  meetings_hosted: number;
+  meetings_participated: number;
+  total_meeting_hours: number;
+}
 
 export default function ProfileContent() {
   const { userId } = useParams();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [stats, setStats] = useState<TradingStats | null>(null);
+  const [followers, setFollowers] = useState<number>(0);
+  const [following, setFollowing] = useState<number>(0);
   const [isFollowing, setIsFollowing] = useState(false);
+  const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      // Fetch user profile
+      const { data: profileData } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (profileData) {
+        setProfile(profileData);
+      }
+
+      // Fetch trading stats
+      const { data: statsData } = await supabase
+        .from('trading_stats')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (statsData) {
+        setStats(statsData);
+      }
+
+      // Fetch follower counts
+      const { count: followersCount } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact' })
+        .eq('following_id', userId);
+
+      const { count: followingCount } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact' })
+        .eq('follower_id', userId);
+
+      setFollowers(followersCount || 0);
+      setFollowing(followingCount || 0);
+
+      // Check if current user is following
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: followData } = await supabase
+          .from('follows')
+          .select('*')
+          .eq('follower_id', session.user.id)
+          .eq('following_id', userId)
+          .single();
+
+        setIsFollowing(!!followData);
+      }
+    };
+
+    fetchProfileData();
+  }, [userId, supabase]);
 
   return (
     <div className="min-h-screen bg-[#0F172A] text-gray-100">
@@ -61,15 +112,15 @@ export default function ProfileContent() {
           <div className="flex flex-col md:flex-row items-start gap-8">
             <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 
               flex items-center justify-center text-5xl font-bold text-white">
-              {dummyProfile.name[0]}
+              {profile?.first_name[0]}
             </div>
             
             <div className="flex-grow">
               <div className="flex justify-between items-start">
                 <div>
-                  <h1 className="text-3xl font-bold text-white mb-1">{dummyProfile.name}</h1>
-                  <p className="text-blue-400 mb-3">{dummyProfile.handle}</p>
-                  <p className="text-gray-400 max-w-2xl mb-4">{dummyProfile.bio}</p>
+                  <h1 className="text-3xl font-bold text-white mb-1">{profile?.first_name} {profile?.last_name}</h1>
+                  <p className="text-blue-400 mb-3">{profile?.username}</p>
+                  <p className="text-gray-400 max-w-2xl mb-4">{profile?.bio}</p>
                 </div>
                 
                 <button
@@ -96,20 +147,20 @@ export default function ProfileContent() {
               <div className="flex gap-6 mt-4">
                 <div className="flex items-center gap-2">
                   <FaUsers className="text-gray-500" />
-                  <span>{dummyProfile.followers.toLocaleString()} followers</span>
+                  <span>{followers.toLocaleString()} followers</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <FaChartLine className="text-gray-500" />
-                  <span>{dummyProfile.totalTrades.toLocaleString()} trades</span>
+                  <span>{stats?.total_trades.toLocaleString()} trades</span>
                 </div>
                 <div className="flex gap-4 text-gray-400">
-                  <a href={dummyProfile.socialLinks.twitter} className="hover:text-blue-400 transition-colors">
+                  <a href={profile?.twitter_url} className="hover:text-blue-400 transition-colors">
                     <FaTwitter size={20} />
                   </a>
-                  <a href={dummyProfile.socialLinks.website} className="hover:text-blue-400 transition-colors">
+                  <a href={profile?.website_url} className="hover:text-blue-400 transition-colors">
                     <FaGlobe size={20} />
                   </a>
-                  <a href={dummyProfile.socialLinks.linkedin} className="hover:text-blue-400 transition-colors">
+                  <a href={profile?.linkedin_url} className="hover:text-blue-400 transition-colors">
                     <FaLinkedin size={20} />
                   </a>
                 </div>
@@ -121,10 +172,10 @@ export default function ProfileContent() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[
-            { label: "Win Rate", value: `${dummyProfile.winRate}%`, color: "from-green-500/20 to-green-600/20" },
-            { label: "Profit Factor", value: dummyProfile.profitFactor, color: "from-blue-500/20 to-blue-600/20" },
-            { label: "Avg R:R", value: dummyProfile.averageRR, color: "from-purple-500/20 to-purple-600/20" },
-            { label: "Monthly Return", value: `${dummyProfile.monthlyReturn}%`, color: "from-yellow-500/20 to-yellow-600/20" },
+            { label: "Win Rate", value: `${stats?.win_rate}%`, color: "from-green-500/20 to-green-600/20" },
+            { label: "Profit Factor", value: stats?.profit_factor, color: "from-blue-500/20 to-blue-600/20" },
+            { label: "Avg R:R", value: stats?.average_rr, color: "from-purple-500/20 to-purple-600/20" },
+            { label: "Monthly Return", value: `${stats?.monthly_return}%`, color: "from-yellow-500/20 to-yellow-600/20" },
           ].map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -149,19 +200,15 @@ export default function ProfileContent() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/50">
               <h3 className="text-gray-400 text-sm mb-1">Meetings Hosted</h3>
-              <p className="text-2xl font-bold text-white">{dummyProfile.meetings.hosted}</p>
+              <p className="text-2xl font-bold text-white">{stats?.meetings_hosted}</p>
             </div>
             <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/50">
               <h3 className="text-gray-400 text-sm mb-1">Meetings Joined</h3>
-              <p className="text-2xl font-bold text-white">{dummyProfile.meetings.participated}</p>
-            </div>
-            <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/50">
-              <h3 className="text-gray-400 text-sm mb-1">Upcoming Meetings</h3>
-              <p className="text-2xl font-bold text-white">{dummyProfile.meetings.upcomingMeetings}</p>
+              <p className="text-2xl font-bold text-white">{stats?.meetings_participated}</p>
             </div>
             <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/50">
               <h3 className="text-gray-400 text-sm mb-1">Total Hours</h3>
-              <p className="text-2xl font-bold text-white">{dummyProfile.meetings.totalHours}</p>
+              <p className="text-2xl font-bold text-white">{stats?.total_meeting_hours}</p>
             </div>
           </div>
         </motion.div>
@@ -186,18 +233,7 @@ export default function ProfileContent() {
                 </tr>
               </thead>
               <tbody>
-                {recentTrades.map((trade, index) => (
-                  <tr key={index} className="border-b border-gray-700/50">
-                    <td className="py-4">{trade.pair}</td>
-                    <td className={`py-4 ${trade.type === 'LONG' ? 'text-green-400' : 'text-red-400'}`}>
-                      {trade.type}
-                    </td>
-                    <td className="py-4 text-right">{trade.entry}</td>
-                    <td className="py-4 text-right">{trade.exit}</td>
-                    <td className="py-4 text-right text-green-400">+{trade.profit}%</td>
-                    <td className="py-4 text-right text-gray-400">{trade.date}</td>
-                  </tr>
-                ))}
+                {/* Add trade data fetching and rendering logic here */}
               </tbody>
             </table>
           </div>
