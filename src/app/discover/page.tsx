@@ -56,8 +56,10 @@ export default function Discover() {
                             name: meeting.name,
                             host: {
                                 id: meeting.created_by,
-                                name: `${meeting.user_profiles.first_name} ${meeting.user_profiles.last_name}`,
-                                avatar_url: meeting.user_profiles.avatar_url
+                                name: meeting.user_profiles.length > 0 
+                                    ? `${meeting.user_profiles[0].first_name} ${meeting.user_profiles[0].last_name}`
+                                    : 'Anonymous Host',
+                                avatar_url: meeting.user_profiles[0]?.avatar_url
                             },
                             category: 'Trading', // You might want to add a category field to meetings
                             viewers,
