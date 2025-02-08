@@ -1,4 +1,9 @@
 'use client';
+
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+	console.error('Missing Supabase environment variables');
+}
+
 import { Toaster } from "react-hot-toast";
 import { StreamVideoProvider } from "./providers/StreamVideoProvider";
 import { WatchlistProvider } from "@/context/WatchlistContext";
