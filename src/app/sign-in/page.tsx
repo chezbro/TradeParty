@@ -4,11 +4,18 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'react-hot-toast';
+import { motion } from 'framer-motion'
+import dynamic from 'next/dynamic'
+
+const ReactConfetti = dynamic(() => import('react-confetti'), {
+  ssr: false
+})
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [showConfetti, setShowConfetti] = useState(false)
   const router = useRouter()
   const supabase = createClientComponentClient()
 
@@ -25,7 +32,13 @@ export default function SignIn() {
         toast.error(error.message);
         return;
       }
-      toast.success('Success!');
+      
+      // Show confetti before navigation
+      setShowConfetti(true)
+      
+      // Delay navigation to show the confetti
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
       router.refresh()
       router.push('/')
     } catch (error) {
@@ -59,9 +72,26 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex relative">
+      {showConfetti && (
+        <div className="fixed inset-0 z-50">
+          <ReactConfetti
+            width={window.innerWidth}
+            height={window.innerHeight}
+            recycle={false}
+            numberOfPieces={500}
+            gravity={0.3}
+          />
+        </div>
+      )}
+      
       {/* Left Column - Branding */}
-      <div className="hidden lg:block w-1/2 relative bg-[#0F172A] overflow-hidden">
+      <motion.div 
+        initial={{ opacity: 0, x: -100 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.7, ease: "easeOut" }}
+        className="hidden lg:block w-1/2 relative bg-[#0F172A] overflow-hidden"
+      >
         {/* Content Container */}
         <div className="relative h-full flex flex-col p-16">
           {/* Logo Section */}
@@ -155,10 +185,15 @@ export default function SignIn() {
           <div className="absolute top-[20%] right-[-200px] w-[400px] h-[400px] bg-emerald-500/20 rounded-full blur-3xl"></div>
           <div className="absolute bottom-[-200px] left-[-100px] w-[400px] h-[400px] bg-blue-500/20 rounded-full blur-3xl"></div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Right Column - Sign In Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-900">
+      <motion.div
+        initial={{ opacity: 0, x: 100 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.7, ease: "easeOut" }}
+        className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-900"
+      >
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
@@ -250,7 +285,7 @@ export default function SignIn() {
             By signing in, you agree to our Terms of Service and Privacy Policy
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 } 

@@ -4,12 +4,19 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'react-hot-toast'
+import { motion } from 'framer-motion'
+import dynamic from 'next/dynamic'
+
+const ReactConfetti = dynamic(() => import('react-confetti'), {
+  ssr: false
+})
 
 export default function SignUp() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const router = useRouter()
   const supabase = createClientComponentClient()
+  const [showConfetti, setShowConfetti] = useState(false)
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -22,6 +29,12 @@ export default function SignUp() {
     })
 
     if (!error) {
+      setShowConfetti(true)
+      toast.success('Account created successfully!')
+      
+      // Delay navigation to show the confetti
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
       router.refresh()
       router.push('/sign-in?message=Check your email to confirm your account')
     }
@@ -50,9 +63,26 @@ export default function SignUp() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex relative">
+      {showConfetti && (
+        <div className="fixed inset-0 z-50">
+          <ReactConfetti
+            width={window.innerWidth}
+            height={window.innerHeight}
+            recycle={false}
+            numberOfPieces={500}
+            gravity={0.3}
+          />
+        </div>
+      )}
+      
       {/* Left Column - Branding */}
-      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-12 relative overflow-hidden">
+      <motion.div
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="hidden lg:flex w-1/2 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-12 relative overflow-hidden"
+      >
         <div className="relative z-10">
           <h1 className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-blue-500 mb-6">
             TradeParty
@@ -108,10 +138,15 @@ export default function SignUp() {
         </div>
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-blue-500/20 backdrop-blur-3xl"></div>
-      </div>
+      </motion.div>
 
       {/* Right Column - Sign Up Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-900">
+      <motion.div
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-900"
+      >
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-white mb-2">Create Account</h2>
@@ -202,7 +237,7 @@ export default function SignUp() {
             By creating an account, you agree to our Terms of Service and Privacy Policy
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 } 

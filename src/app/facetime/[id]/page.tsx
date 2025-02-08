@@ -666,6 +666,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 						maxConstraints={[600, Infinity]}
 						axis="x"
 						onResize={handleResize}
+						resizeHandles={['e']}
 						className={`transition-all duration-300 ease-in-out ${
 							arePanelsVisible ? '' : 'hidden'
 						}`}
