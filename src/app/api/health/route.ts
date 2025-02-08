@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '@/lib/env';
+import { redis } from '@/lib/meeting-monitor';
 
 export async function GET() {
   try {
@@ -10,14 +11,31 @@ export async function GET() {
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
     
-    const { data, error } = await supabase.from('meetings').select('count');
-    if (error) throw error;
+    // Get active meetings count
+    const { data: meetings, error: meetingsError } = await supabase
+      .from('meetings')
+      .select('count')
+      .eq('status', 'active');
+    
+    if (meetingsError) throw meetingsError;
 
+    // Get Redis metrics
+    const activeParticipants = await redis.get('active_participants_count');
+    const totalMeetings = await redis.get('total_meetings_count');
+    
     return NextResponse.json(
       { 
         status: 'healthy',
         timestamp: new Date().toISOString(),
-        database: 'connected'
+        metrics: {
+          activeMeetings: meetings[0]?.count || 0,
+          activeParticipants: parseInt(activeParticipants || '0'),
+          totalMeetings: parseInt(totalMeetings || '0'),
+        },
+        services: {
+          database: 'connected',
+          redis: 'connected'
+        }
       },
       { status: 200 }
     );
