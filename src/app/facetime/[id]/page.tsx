@@ -341,7 +341,67 @@ const ParticipantViewUI: React.FC<any> = (props) => {
     );
 };
 
-// Move MeetingRoom component definition above FacetimePage
+// Add this new component for the mobile header
+const MobileHeader = memo(({ meetingName, user, call, id }: { 
+	meetingName: string;
+	user: any;
+	call: Call | null;
+	id: string;
+}) => {
+	const [isVisible, setIsVisible] = useState(true);
+	const lastScrollY = useRef(0);
+
+	useEffect(() => {
+		const handleScroll = () => {
+			const currentScrollY = window.scrollY;
+			setIsVisible(currentScrollY < lastScrollY.current || currentScrollY < 50);
+			lastScrollY.current = currentScrollY;
+		};
+
+		window.addEventListener('scroll', handleScroll, { passive: true });
+		return () => window.removeEventListener('scroll', handleScroll);
+	}, []);
+
+	return (
+		<div className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 md:hidden
+			${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+			<div className="bg-gray-900/90 backdrop-blur-md border-b border-white/10 p-4">
+				<div className="flex items-center justify-between">
+					<div>
+						<h1 className="text-lg font-bold text-white/90 truncate">{meetingName}</h1>
+						<div className="flex items-center gap-2 mt-1">
+							<div className="flex items-center gap-1.5">
+								<span className="animate-pulse text-emerald-400 text-[8px]">●</span>
+								<span className="text-xs text-emerald-400 font-medium">LIVE</span>
+							</div>
+							{call?.state.createdBy?.id === user?.id && (
+								<>
+									<span className="text-xs text-white/50">•</span>
+									<div className="flex items-center gap-1.5 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+										<span className="text-xs text-emerald-400 font-medium">Host</span>
+									</div>
+								</>
+							)}
+						</div>
+					</div>
+					<button
+						onClick={() => {
+							navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_FACETIME_HOST}/${id}`);
+							toast.success('Meeting link copied to clipboard');
+						}}
+						className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+					>
+						<FaCopy className="w-4 h-4 text-emerald-400" />
+					</button>
+				</div>
+			</div>
+		</div>
+	);
+});
+
+MobileHeader.displayName = 'MobileHeader';
+
+// Update the MeetingRoom component to include mobile layout changes
 const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, socket, meetingName }) => {
 	const { user } = useSupabaseUser();
 	const { id } = useParams<{ id: string }>();
@@ -657,7 +717,16 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 				className="relative min-h-screen w-full overflow-hidden bg-black/95"
 				onMouseMove={handleMouseMove}
 			>
-				<div className="relative flex size-full">
+				{/* Add Mobile Header */}
+				<MobileHeader 
+					meetingName={meetingName}
+					user={user}
+					call={call}
+					id={id as string}
+				/>
+
+				{/* Update the main content layout */}
+				<div className="relative flex flex-col md:flex-row size-full">
 					{/* Left Panel - Trading Tools */}
 					<ResizableBox
 						width={panelWidth}
@@ -667,7 +736,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 						axis="x"
 						onResize={handleResize}
 						resizeHandles={['e']}
-						className={`transition-all duration-300 ease-in-out ${
+						className={`transition-all duration-300 ease-in-out hidden md:block ${
 							arePanelsVisible ? '' : 'hidden'
 						}`}
 					>
@@ -775,9 +844,10 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 						</div>
 					</ResizableBox>
 
-					{/* Main Content Area - Chart */}
+					{/* Main Content Area - Modified for mobile */}
 					<div className="flex-1 h-full flex flex-col bg-black/40">
-						<div className="flex-1 p-6">
+						{/* Chart Section */}
+						<div className="flex-1 p-6 md:p-6">
 							<MainContentArea 
 								isMultiChartEnabled={isMultiChartEnabled}
 								chartLayouts={chartLayouts}
@@ -798,9 +868,20 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 								onTogglePanels={handleTogglePanels}
 							/>
 						</div>
+
+						{/* Mobile Video Grid */}
+						<div className="md:hidden w-full h-[40vh] bg-gray-900/40 backdrop-blur-md border-t border-white/5">
+							<div className="h-full p-2">
+								<PaginatedGridLayout
+									groupSize={4}
+									ParticipantViewUI={ParticipantViewUI}
+									VideoPlaceholder={() => null}
+								/>
+							</div>
+						</div>
 					</div>
 
-					{/* New Right Panel - Video Feeds */}
+					{/* Right Panel - Video Feeds (hidden on mobile) */}
 					<ResizableBox
 						width={videosPanelWidth}
 						height={Infinity}
@@ -809,7 +890,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 						axis="x"
 						onResize={(e, { size }) => setVideosPanelWidth(size.width)}
 						resizeHandles={['w']}
-						className={`transition-all duration-300 ease-in-out ${
+						className={`transition-all duration-300 ease-in-out hidden md:block ${
 							arePanelsVisible ? '' : 'hidden'
 						}`}
 					>

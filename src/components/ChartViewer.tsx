@@ -370,20 +370,20 @@ export const ChartViewer: FC<ChartViewerProps> = memo(({
 
               {/* Only show these buttons when not in Add Chart mode */}
               {!isAddChart && (
-                <>
+                <div className="flex flex-col sm:flex-row gap-2">
                   {/* Live Share Button */}
                   {showLiveShareButton && onToggleLiveShare && (
                     <button
                       onClick={handleToggleLiveShare}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg
+                      className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 rounded-lg
                         border transition-colors ${
                           isLiveSharing
                             ? 'bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30'
                             : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
                         }`}
                     >
-                      <span className={`${isLiveSharing ? 'animate-pulse' : ''} text-[8px]`}>●</span>
-                      <span className="text-sm">Share Chart Live</span>
+                      <span className={`${isLiveSharing ? 'animate-pulse' : ''} text-[6px] sm:text-[8px]`}>●</span>
+                      <span className="text-xs sm:text-sm whitespace-nowrap">Share Chart Live</span>
                     </button>
                   )}
                   
@@ -391,18 +391,18 @@ export const ChartViewer: FC<ChartViewerProps> = memo(({
                   {onToggleMultiChart && (
                     <button
                       onClick={onToggleMultiChart}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg
+                      className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 rounded-lg
                         border transition-colors ${
                           isMultiChartEnabled
                             ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30'
                             : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
                         }`}
                     >
-                      <FaChartLine size={16} />
-                      <span className="text-sm">{isMultiChartEnabled ? 'Single View' : 'Multi View'}</span>
+                      <FaChartLine size={14} className="sm:text-base" />
+                      <span className="text-xs sm:text-sm whitespace-nowrap">{isMultiChartEnabled ? 'Single View' : 'Multi View'}</span>
                     </button>
                   )}
-                </>
+                </div>
               )}
             </div>
           )}
