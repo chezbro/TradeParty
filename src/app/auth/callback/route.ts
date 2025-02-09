@@ -3,23 +3,64 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   try {
+    console.log('Auth callback initiated');
     const cookieStore = cookies()
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
     const { searchParams } = new URL(req.url)
     const code = searchParams.get('code')
-    const next = searchParams.get('next') ?? '/'
+    const error = searchParams.get('error')
+    const errorDescription = searchParams.get('error_description')
 
-    if (code) {
-      // Exchange the auth code for a session
-      await supabase.auth.exchangeCodeForSession(code)
+    // Log all search params for debugging
+    console.log('Callback URL params:', Object.fromEntries(searchParams.entries()));
+
+    if (error) {
+      console.error('OAuth error from provider:', error, errorDescription);
+      return NextResponse.redirect(
+        new URL(`/sign-in?error=${error}&error_description=${errorDescription}`, req.url)
+      );
     }
 
-    // URL to redirect to after sign in process completes
-    return NextResponse.redirect(new URL(next, req.url))
+    if (!code) {
+      console.error('No code received in callback');
+      return NextResponse.redirect(new URL('/sign-in?error=no_code', req.url));
+    }
+
+    console.log('Exchanging code for session...');
+    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+    
+    if (exchangeError) {
+      console.error('Session exchange error:', exchangeError);
+      return NextResponse.redirect(
+        new URL(`/sign-in?error=exchange_failed&error_description=${exchangeError.message}`, req.url)
+      );
+    }
+
+    // Verify session was created
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error('Session verification error:', sessionError);
+      return NextResponse.redirect(
+        new URL(`/sign-in?error=session_verification_failed`, req.url)
+      );
+    }
+
+    if (!session) {
+      console.error('No session created after exchange');
+      return NextResponse.redirect(new URL('/sign-in?error=no_session', req.url));
+    }
+
+    console.log('Authentication successful, redirecting to home');
+    return NextResponse.redirect(new URL('/', req.url));
   } catch (error) {
-    console.error('Auth callback error:', error)
-    return NextResponse.redirect(new URL('/sign-in?error=auth_callback_failed', req.url))
+    console.error('Unhandled auth callback error:', error);
+    return NextResponse.redirect(
+      new URL('/sign-in?error=unhandled_callback_error', req.url)
+    );
   }
 } 

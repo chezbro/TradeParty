@@ -51,20 +51,26 @@ export default function SignIn() {
 
   const handleGoogleSignIn = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log('Starting Google OAuth flow...');
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-          }
+          },
+          scopes: 'email profile'
         }
       });
 
       if (error) {
+        console.error('OAuth initialization error:', error);
         toast.error(error.message);
+        return;
       }
+
+      console.log('OAuth flow initiated:', data);
     } catch (error) {
       console.error('Google sign in error:', error);
       toast.error('Failed to sign in with Google');
@@ -226,6 +232,7 @@ export default function SignIn() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="current-password"
                   className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all outline-none"
                   placeholder="Enter your password"
                 />
