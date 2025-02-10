@@ -6,7 +6,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 export default function SignIn() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const redirectPath = searchParams.get('redirect') || '/';
+  const redirectPath = searchParams?.get('redirect') || '/';
 
   const handleSignIn = async (provider: 'google' | 'github') => {
     const supabase = createClientComponentClient();

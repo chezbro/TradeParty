@@ -37,13 +37,19 @@ interface TradingStats {
 }
 
 export default function ProfileContent() {
-  const { userId } = useParams();
+  const params = useParams<{ userId: string }>();
+  const userId = params?.userId; // Safely access userId with optional chaining
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<TradingStats | null>(null);
   const [followers, setFollowers] = useState<number>(0);
   const [following, setFollowing] = useState<number>(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const supabase = createClientComponentClient();
+
+  // Add early return if no userId is present
+  if (!userId) {
+    return null;
+  }
 
   useEffect(() => {
     const fetchProfileData = async () => {

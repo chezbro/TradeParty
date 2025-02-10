@@ -29,8 +29,8 @@ export async function GET() {
         timestamp: new Date().toISOString(),
         metrics: {
           activeMeetings: meetings[0]?.count || 0,
-          activeParticipants: parseInt(activeParticipants || '0'),
-          totalMeetings: parseInt(totalMeetings || '0'),
+          activeParticipants: parseInt(String(activeParticipants || '0')),
+          totalMeetings: parseInt(String(totalMeetings || '0')),
         },
         services: {
           database: 'connected',

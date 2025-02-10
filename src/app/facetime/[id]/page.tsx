@@ -341,13 +341,24 @@ const ParticipantViewUI: React.FC<any> = (props) => {
     );
 };
 
-// Add this new component for the mobile header
-const MobileHeader = memo(({ meetingName, user, call, id }: { 
+// Update the MeetingRoomProps interface to include all required props
+interface MeetingRoomProps {
+	shareChart: (chartData: any) => void;
+	sharedCharts: SharedChart[];
+	socket: Socket | null;
 	meetingName: string;
-	user: any;
-	call: Call | null;
+}
+
+// Update the MobileHeader props interface
+interface MobileHeaderProps {
+	meetingName: string;
+	user: any; // Or use your specific user type
+	call: Call | null | undefined; // Allow for undefined
 	id: string;
-}) => {
+}
+
+// Update the MobileHeader component definition
+const MobileHeader = memo(({ meetingName, user, call, id }: MobileHeaderProps) => {
 	const [isVisible, setIsVisible] = useState(true);
 	const lastScrollY = useRef(0);
 
@@ -404,7 +415,8 @@ MobileHeader.displayName = 'MobileHeader';
 // Update the MeetingRoom component to include mobile layout changes
 const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, socket, meetingName }) => {
 	const { user } = useSupabaseUser();
-	const { id } = useParams<{ id: string }>();
+	const params = useParams<{ id: string }>();
+	const id = params?.id; // Safely access id with optional chaining
 	const call = useCall();
 	
 	console.log('Creator check:', {
@@ -668,6 +680,12 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 		});
 	}, [isLiveSharing, call, currentSymbol]);
 
+	// Then add a separate useEffect for any side effects if needed
+	useEffect(() => {
+		if (!call) return;
+		// Any side effects related to live sharing state changes
+	}, [isLiveSharing, call]);
+
 	const handleTogglePanels = (hideForFullscreen: boolean) => {
 		setArePanelsVisible(!hideForFullscreen);
 		setIsPanelExpanded(!hideForFullscreen);
@@ -721,7 +739,7 @@ const MeetingRoom: FC<MeetingRoomProps> = memo(({ shareChart, sharedCharts, sock
 				<MobileHeader 
 					meetingName={meetingName}
 					user={user}
-					call={call}
+					call={call || null}
 					id={id as string}
 				/>
 
@@ -1067,15 +1085,22 @@ const useSupabaseUser = () => {
 
 export default function FacetimePage() {
 	const { user, isLoaded } = useSupabaseUser();
-	const { id } = useParams<{ id: string }>();
-	const { call, isCallLoading } = useGetCallById(id);
+	const params = useParams<{ id: string }>();
+	const id = params?.id; // Safely access id with optional chaining
+	const { call, isCallLoading } = useGetCallById(id as string);
 	const [confirmJoin, setConfirmJoin] = useState<boolean>(false);
 	const [camMicEnabled, setCamMicEnabled] = useState<boolean>(false);
 	const router = useRouter();
 	const [sharedCharts, setSharedCharts] = useState<SharedChart[]>([]);
 	const [socket, setSocket] = useState<Socket | null>(null);
-	const { meetingDetails, isLoading: isMeetingLoading } = useMeetingDetails(id);
+	const { meetingDetails, isLoading: isMeetingLoading } = useMeetingDetails(id || '');
 	const [isChartFullscreen, setIsChartFullscreen] = useState(false);
+
+	// Early return if no id is present
+	if (!id) {
+		router.push('/'); // Redirect to home if no id
+		return null;
+	}
 
 	useEffect(() => {
 		if (camMicEnabled) {
