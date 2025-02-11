@@ -9,12 +9,13 @@ import { StreamVideoProvider } from "./providers/StreamVideoProvider";
 import { WatchlistProvider } from "@/context/WatchlistContext";
 import { TradesProvider } from "@/context/TradesContext";
 import { usePathname } from 'next/navigation';
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { Header } from "@/components/Header";
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import '@stream-io/video-react-sdk/dist/css/styles.css';
 import "./globals.css";
 
-const Providers = memo(({ children }: { children: React.ReactNode }) => {
+const AuthenticatedProviders = memo(({ children }: { children: React.ReactNode }) => {
 	return (
 		<StreamVideoProvider>
 			<WatchlistProvider>
@@ -26,7 +27,7 @@ const Providers = memo(({ children }: { children: React.ReactNode }) => {
 	);
 });
 
-Providers.displayName = 'Providers';
+AuthenticatedProviders.displayName = 'AuthenticatedProviders';
 
 export default function RootLayout({
 	children,
@@ -34,6 +35,24 @@ export default function RootLayout({
 	children: React.ReactNode;
 }) {
 	const pathname = usePathname();
+	const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+	const supabase = createClientComponentClient();
+
+	useEffect(() => {
+		const checkAuth = async () => {
+			const { data: { session } } = await supabase.auth.getSession();
+			setIsAuthenticated(!!session);
+		};
+		
+		checkAuth();
+
+		const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+			setIsAuthenticated(!!session);
+		});
+
+		return () => subscription.unsubscribe();
+	}, [supabase]);
+
 	const isAuthPage = pathname === '/sign-in' || pathname === '/sign-up';
 
 	if (isAuthPage) {
@@ -52,7 +71,11 @@ export default function RootLayout({
 			<body>
 				<Header />
 				<div className="pt-16">
-					<Providers>{children}</Providers>
+					{isAuthenticated ? (
+						<AuthenticatedProviders>{children}</AuthenticatedProviders>
+					) : (
+						children
+					)}
 				</div>
 				<Toaster />
 			</body>

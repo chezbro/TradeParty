@@ -13,7 +13,7 @@ const nextConfig = {
   },
   experimental: {
     // Disable experimental features that might cause issues
-    serverActions: false,
+    serverActions: true,
     serverComponents: false,
   }
 };

@@ -52,7 +52,8 @@ interface TradePartySession {
 	recording_url: string | null;
 }
 
-export default function Dashboard() {
+export default function Home() {
+	const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 	const [startInstantMeeting, setStartInstantMeeting] = useState<boolean>(false);
 	const [joinMeeting, setJoinMeeting] = useState<boolean>(false);
 	const [showUpcomingMeetings, setShowUpcomingMeetings] = useState<boolean>(false);
@@ -63,25 +64,159 @@ export default function Dashboard() {
 	const supabase = createClientComponentClient();
 
 	useEffect(() => {
-		async function fetchSessions() {
-			try {
-				const { data: sessions, error } = await supabase
-					.from('tradeparty_sessions')
-					.select('*')
-					.order('started_at', { ascending: false })
-					.limit(3); // Only get latest 3 sessions
+		const checkAuth = async () => {
+			const { data: { session } } = await supabase.auth.getSession();
+			setIsAuthenticated(!!session);
+		};
+		checkAuth();
 
-				if (error) throw error;
-				setSessions(sessions || []);
-			} catch (error) {
-				console.error('Error fetching sessions:', error);
-			} finally {
-				setIsLoadingSessions(false);
-			}
-		}
+		const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+			setIsAuthenticated(!!session);
+		});
 
-		fetchSessions();
+		return () => subscription.unsubscribe();
 	}, [supabase]);
+
+	useEffect(() => {
+		if (isAuthenticated) {
+			async function fetchSessions() {
+				try {
+					const { data: sessions, error } = await supabase
+						.from('tradeparty_sessions')
+						.select('*')
+						.order('started_at', { ascending: false })
+						.limit(3);
+
+					if (error) throw error;
+					setSessions(sessions || []);
+				} catch (error) {
+					console.error('Error fetching sessions:', error);
+				} finally {
+					setIsLoadingSessions(false);
+				}
+			}
+
+			fetchSessions();
+		}
+	}, [isAuthenticated, supabase]);
+
+	// Show loading state while checking auth
+	if (isAuthenticated === null) {
+		return null;
+	}
+
+	// Show waitlist landing page for non-authenticated users
+	if (!isAuthenticated) {
+		return (
+			<div className="min-h-screen bg-gray-900">
+				{/* Hero Section */}
+				<div className="relative overflow-hidden">
+					{/* Background decorative elements */}
+					<div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-3xl"></div>
+					<div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl"></div>
+					
+					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 relative">
+						<motion.div 
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ duration: 0.5 }}
+							className="text-center"
+						>
+							<h1 className="text-5xl md:text-7xl font-bold mb-8">
+								<span className="bg-gradient-to-r from-emerald-400 to-blue-500 text-transparent bg-clip-text">
+									TradeParty
+								</span>
+							</h1>
+							<p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto">
+								The Future of Social Trading is Coming Soon
+							</p>
+							
+							<motion.div
+								whileHover={{ scale: 1.05 }}
+								whileTap={{ scale: 0.95 }}
+							>
+								<Link
+									href="/sign-up"
+									className="inline-block bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-8 py-4 rounded-xl text-lg font-medium shadow-lg transition-all duration-200"
+								>
+									Join the Waitlist
+								</Link>
+							</motion.div>
+						</motion.div>
+					</div>
+				</div>
+
+				{/* Features Section */}
+				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+					<motion.div 
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.5, delay: 0.2 }}
+						className="grid grid-cols-1 md:grid-cols-3 gap-8"
+					>
+						<div className="bg-gray-800/50 p-6 rounded-2xl backdrop-blur-xl border border-gray-700/50">
+							<div className="bg-emerald-500/10 p-3 rounded-lg w-fit mb-4">
+								<svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+								</svg>
+							</div>
+							<h3 className="text-xl font-semibold text-white mb-2">Copy Trading</h3>
+							<p className="text-gray-400">Follow and automatically copy successful traders' strategies in real-time.</p>
+						</div>
+
+						<div className="bg-gray-800/50 p-6 rounded-2xl backdrop-blur-xl border border-gray-700/50">
+							<div className="bg-blue-500/10 p-3 rounded-lg w-fit mb-4">
+								<svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+								</svg>
+							</div>
+							<h3 className="text-xl font-semibold text-white mb-2">Live Analysis</h3>
+							<p className="text-gray-400">Get real-time market analysis and insights from expert traders.</p>
+						</div>
+
+						<div className="bg-gray-800/50 p-6 rounded-2xl backdrop-blur-xl border border-gray-700/50">
+							<div className="bg-purple-500/10 p-3 rounded-lg w-fit mb-4">
+								<svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+								</svg>
+							</div>
+							<h3 className="text-xl font-semibold text-white mb-2">Social Trading</h3>
+							<p className="text-gray-400">Join a community of traders and learn from their experiences.</p>
+						</div>
+					</motion.div>
+				</div>
+
+				{/* Stats Section */}
+				<div className="border-t border-gray-800">
+					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+						<motion.div 
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ duration: 0.5, delay: 0.4 }}
+							className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center"
+						>
+							<div>
+								<p className="text-3xl font-bold text-white mb-2">1,000+</p>
+								<p className="text-gray-400">Waitlist Members</p>
+							</div>
+							<div>
+								<p className="text-3xl font-bold text-white mb-2">24/7</p>
+								<p className="text-gray-400">Market Coverage</p>
+							</div>
+							<div>
+								<p className="text-3xl font-bold text-white mb-2">50+</p>
+								<p className="text-gray-400">Expert Traders</p>
+							</div>
+							<div>
+								<p className="text-3xl font-bold text-white mb-2">100%</p>
+								<p className="text-gray-400">Transparency</p>
+							</div>
+						</motion.div>
+					</div>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="min-h-screen bg-[#0F172A]">
@@ -92,7 +227,6 @@ export default function Dashboard() {
 					animate={{ opacity: 1, y: 0 }}
 					className="text-center mb-16"
 				>
-
 					<div className="flex flex-col sm:flex-row gap-4 justify-center">
 						<button
 							onClick={() => setStartInstantMeeting(true)}
@@ -111,294 +245,180 @@ export default function Dashboard() {
 							<FaCalendar className="text-lg" />
 							Schedule a TradeParty
 						</button>
-						<button
-							onClick={() => router.push('/tradeparty/dashboard')}
-							className="bg-transparent border border-indigo-500/30 hover:border-indigo-500 
-								text-white px-8 py-4 rounded-lg flex items-center justify-center gap-3 
-								font-medium transition-all duration-300"
-						>
-							<FaHistory className="text-lg" />
-							Past TradeParties
-						</button>
 					</div>
 				</motion.div>
 
-				{/* Features Grid */}
+				{/* Quick Actions */}
 				<motion.div
 					variants={containerVariants}
 					initial="hidden"
 					animate="visible"
-					className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16"
+					className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
 				>
 					<motion.div
 						variants={cardVariants}
-						className="bg-[#1E293B]/50 rounded-xl p-6 hover:bg-[#1E293B] transition-all duration-300"
-						onClick={() => window.location.href = '/discover'}
+						className="bg-gray-800/50 p-6 rounded-xl border border-gray-700/50"
 					>
-						<div className="flex items-start gap-4">
-							<div className="bg-purple-500/10 p-3 rounded-lg">
-								<FaUsers className="text-purple-500 text-xl" />
-							</div>
+						<div className="flex items-start justify-between">
 							<div>
-								<h3 className="text-white text-lg font-medium mb-2">Discover TradeParty Streams</h3>
-								<p className="text-gray-400 mb-4">
-									Join active trading rooms and learn from experienced traders in real-time
-								</p>
-								<div className="flex items-center text-purple-400 text-sm font-medium">
-									Explore <FaArrowRight className="ml-2" />
-								</div>
+								<h3 className="text-lg font-semibold text-white mb-2">Join Meeting</h3>
+								<p className="text-gray-400 text-sm mb-4">Join an existing TradeParty session</p>
+							</div>
+							<div className="bg-indigo-500/10 p-3 rounded-lg">
+								<FaUsers className="text-indigo-500 text-xl" />
 							</div>
 						</div>
+						<button
+							onClick={() => setJoinMeeting(true)}
+							className="w-full bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+						>
+							Join Now <FaArrowRight className="text-sm" />
+						</button>
 					</motion.div>
 
 					<motion.div
 						variants={cardVariants}
-						className="bg-[#1E293B]/50 rounded-xl p-6 hover:bg-[#1E293B] transition-all duration-300"
-						onClick={() => setShowUpcomingMeetings(true)}
+						className="bg-gray-800/50 p-6 rounded-xl border border-gray-700/50"
 					>
-						<div className="flex items-start gap-4">
-							<div className="bg-teal-500/10 p-3 rounded-lg">
-								<FaCalendar className="text-teal-500 text-xl" />
-							</div>
+						<div className="flex items-start justify-between">
 							<div>
-								<h3 className="text-white text-lg font-medium mb-2">Upcoming Streams</h3>
-								<p className="text-gray-400 mb-4">
-									View and join scheduled trading streams from your favorite hosts
-								</p>
-								<div className="flex items-center text-teal-400 text-sm font-medium">
-									View calendar <FaArrowRight className="ml-2" />
-								</div>
+								<h3 className="text-lg font-semibold text-white mb-2">Upcoming</h3>
+								<p className="text-gray-400 text-sm mb-4">View your scheduled sessions</p>
+							</div>
+							<div className="bg-emerald-500/10 p-3 rounded-lg">
+								<FaCalendar className="text-emerald-500 text-xl" />
 							</div>
 						</div>
+						<button
+							onClick={() => setShowUpcomingMeetings(true)}
+							className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+						>
+							View Schedule <FaArrowRight className="text-sm" />
+						</button>
+					</motion.div>
+
+					<motion.div
+						variants={cardVariants}
+						className="bg-gray-800/50 p-6 rounded-xl border border-gray-700/50"
+					>
+						<div className="flex items-start justify-between">
+							<div>
+								<h3 className="text-lg font-semibold text-white mb-2">Recordings</h3>
+								<p className="text-gray-400 text-sm mb-4">Access past session recordings</p>
+							</div>
+							<div className="bg-blue-500/10 p-3 rounded-lg">
+								<FaPlay className="text-blue-500 text-xl" />
+							</div>
+						</div>
+						<Link
+							href="/recordings"
+							className="w-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+						>
+							View Library <FaArrowRight className="text-sm" />
+						</Link>
+					</motion.div>
+
+					<motion.div
+						variants={cardVariants}
+						className="bg-gray-800/50 p-6 rounded-xl border border-gray-700/50"
+					>
+						<div className="flex items-start justify-between">
+							<div>
+								<h3 className="text-lg font-semibold text-white mb-2">Discover</h3>
+								<p className="text-gray-400 text-sm mb-4">Find new trading sessions</p>
+							</div>
+							<div className="bg-purple-500/10 p-3 rounded-lg">
+								<FaChartLine className="text-purple-500 text-xl" />
+							</div>
+						</div>
+						<Link
+							href="/discover"
+							className="w-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+						>
+							Explore <FaArrowRight className="text-sm" />
+						</Link>
 					</motion.div>
 				</motion.div>
 
-				{/* Add Recent TradeParty Sessions Section before the Pricing Section */}
-				<motion.div
-					initial={{ opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					className="mb-16"
-				>
-					<div className="flex items-center justify-between mb-6">
-						<h2 className="text-2xl font-bold text-white">Recent TradeParty Sessions</h2>
-						<button
-							onClick={() => router.push('/tradeparty/dashboard')}
-							className="text-indigo-400 hover:text-indigo-300 text-sm font-medium flex items-center gap-2"
-						>
-							View All <FaArrowRight className="text-xs" />
-						</button>
-					</div>
-
-					<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-						{sessions.map((session) => (
-							<motion.div
-								key={session.id}
-								variants={cardVariants}
-								className="bg-[#1E293B]/50 rounded-xl p-6 border border-gray-800/50 hover:bg-[#1E293B]/70 transition-all duration-300"
-							>
-								<div className="flex flex-col h-full">
-									<h3 className="text-lg font-semibold text-white mb-2">{session.name}</h3>
-									
-									<div className="flex items-center gap-3 text-sm text-gray-400 mb-4">
-										<div className="flex items-center gap-1.5">
-											<FaCalendar className="text-indigo-400 text-xs" />
-											{format(new Date(session.started_at), 'MMM d')}
+				{/* Recent Sessions */}
+				{sessions.length > 0 && (
+					<div className="mb-16">
+						<h2 className="text-2xl font-bold text-white mb-6">Recent Sessions</h2>
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+							{sessions.map((session) => (
+								<div
+									key={session.id}
+									className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50"
+								>
+									<div className="flex items-start justify-between mb-4">
+										<div>
+											<h3 className="text-lg font-semibold text-white mb-1">{session.name}</h3>
+											<p className="text-sm text-gray-400">
+												{format(new Date(session.started_at), 'MMM d, yyyy')}
+											</p>
 										</div>
-										<div className="flex items-center gap-1.5">
-											<FaClock className="text-indigo-400 text-xs" />
-											{session.duration_minutes}m
+										<div className="flex items-center space-x-2">
+											<div className="flex -space-x-2">
+												{session.participants.avatars.slice(0, 3).map((avatar, i) => (
+													<div
+														key={i}
+														className="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-800"
+													/>
+												))}
+											</div>
+											<span className="text-sm text-gray-400">
+												{session.participant_count} participants
+											</span>
 										</div>
 									</div>
-
-									<div className="flex -space-x-2 mb-4">
-										{session.participants.avatars.slice(0, 4).map((avatar, i) => (
-											<img
-												key={i}
-												src={avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${i}`}
-												alt={`Participant ${i + 1}`}
-												className="w-8 h-8 rounded-full border-2 border-gray-800"
-											/>
-										))}
-										{session.participants.names.length > 4 && (
-											<div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs text-white border-2 border-gray-800">
-												+{session.participants.names.length - 4}
+									<div className="grid grid-cols-2 gap-4 mb-4">
+										<div className="bg-gray-900/50 p-3 rounded-lg">
+											<div className="flex items-center gap-2 text-gray-400 mb-1">
+												<FaClock className="text-sm" />
+												<span className="text-sm">Duration</span>
 											</div>
-										)}
-									</div>
-
-									<div className="mt-auto grid grid-cols-2 gap-3">
-										<div className="bg-gray-900/30 rounded-lg p-3">
-											<div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1">
-												<FaChartLine />
-												Charts
-											</div>
-											<div className="text-lg font-semibold text-white">
-												{session.charts_shared.length}
-											</div>
+											<p className="text-white font-medium">
+												{session.duration_minutes} mins
+											</p>
 										</div>
-										<div className="bg-gray-900/30 rounded-lg p-3">
-											<div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1">
-												<FaExchangeAlt />
-												Trades
+										<div className="bg-gray-900/50 p-3 rounded-lg">
+											<div className="flex items-center gap-2 text-gray-400 mb-1">
+												<FaExchangeAlt className="text-sm" />
+												<span className="text-sm">Trades</span>
 											</div>
-											<div className="text-lg font-semibold text-white">
-												{session.trades_taken.length}
-											</div>
+											<p className="text-white font-medium">
+												{session.trades_taken.length} trades
+											</p>
 										</div>
 									</div>
-
 									{session.recording_url && (
 										<Link
-											href={session.recording_url}
-											className="mt-4 flex items-center justify-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-medium py-2 px-4 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors"
+											href={`/recordings/${session.id}`}
+											className="w-full bg-gray-900/50 hover:bg-gray-900 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
 										>
-											<FaPlay className="text-xs" />
-											Watch Recording
+											Watch Recording <FaPlay className="text-sm" />
 										</Link>
 									)}
 								</div>
-							</motion.div>
-						))}
-
-						{sessions.length === 0 && !isLoadingSessions && (
-							<div className="col-span-3 text-center py-12 bg-[#1E293B]/30 rounded-xl border border-gray-800/50">
-								<p className="text-gray-400">No TradeParty sessions yet</p>
-							</div>
-						)}
-					</div>
-				</motion.div>
-
-				{/* Replace the CTA Section with Pricing */}
-				<div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 
-					rounded-xl p-6 border border-gray-800/50 backdrop-blur-sm">
-					<div className="max-w-5xl mx-auto">
-						<div className="flex flex-col md:flex-row items-center md:items-start gap-6 justify-between">
-							{/* Left side - Features */}
-							<div className="md:w-7/12">
-								<h2 className="text-2xl font-semibold text-white mb-4">
-									Premium TradeParty Membership
-								</h2>
-								<div className="grid grid-cols-1 gap-3">
-									<div className="flex items-center gap-3 bg-[#1E293B]/30 p-3.5 rounded-lg">
-										<div className="bg-indigo-500/10 p-2.5 rounded-lg">
-											<FaUsers className="text-lg text-indigo-400" />
-										</div>
-										<div>
-											<h3 className="text-white font-medium leading-snug">Unlimited Access</h3>
-											<p className="text-gray-400 text-sm">Host rooms with no participant limits</p>
-										</div>
-									</div>
-									<div className="flex items-center gap-3 bg-[#1E293B]/30 p-3.5 rounded-lg">
-										<div className="bg-purple-500/10 p-2.5 rounded-lg">
-											<FaChartLine className="text-lg text-purple-400" />
-										</div>
-										<div>
-											<h3 className="text-white font-medium leading-snug">Pro Trading Tools</h3>
-											<p className="text-gray-400 text-sm">Advanced charts and analysis features</p>
-										</div>
-									</div>
-									<div className="flex items-center gap-3 bg-[#1E293B]/30 p-3.5 rounded-lg">
-										<div className="bg-pink-500/10 p-2.5 rounded-lg">
-											<FaVideo className="text-lg text-pink-400" />
-										</div>
-										<div>
-											<h3 className="text-white font-medium leading-snug">Full Collaboration</h3>
-											<p className="text-gray-400 text-sm">Screen sharing and session recording</p>
-										</div>
-									</div>
-								</div>
-							</div>
-
-							{/* Right side - Pricing Card */}
-							<div className="md:w-5/12 md:pl-4">
-								<div className="bg-[#1E293B]/70 px-6 py-5 rounded-xl border border-gray-800">
-									<div className="flex flex-col items-center text-center">
-										<div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 
-											p-3 rounded-lg mb-4 w-full">
-											<div className="text-gray-300 text-sm">Monthly Plan</div>
-											<div className="flex items-baseline justify-center gap-1">
-												<span className="text-3xl font-bold text-white">$29</span>
-												<span className="text-gray-400">/mo</span>
-											</div>
-										</div>
-										<div className="space-y-2.5 w-full mb-5">
-											<div className="flex items-center gap-2 text-gray-300 text-sm">
-												<FaCheck className="text-green-400 text-xs" />
-												All pro features included
-											</div>
-											<div className="flex items-center gap-2 text-gray-300 text-sm">
-												<FaCheck className="text-green-400 text-xs" />
-												24/7 priority support
-											</div>
-											<div className="flex items-center gap-2 text-gray-300 text-sm">
-												<FaCheck className="text-green-400 text-xs" />
-												Cancel anytime
-											</div>
-										</div>
-										<button
-											onClick={async () => {
-												try {
-													const response = await fetch('/api/create-checkout-session', {
-														method: 'POST',
-														headers: {
-															'Content-Type': 'application/json',
-														},
-													});
-													
-													const { sessionId } = await response.json();
-													const stripe = await getStripe();
-													
-													if (stripe) {
-														const { error } = await stripe.redirectToCheckout({
-															sessionId,
-														});
-														
-														if (error) {
-															console.error('Error:', error);
-															toast.error('Payment failed to initialize');
-														}
-													}
-												} catch (error) {
-													console.error('Error:', error);
-													toast.error('Something went wrong');
-												}
-											}}
-											className="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2.5 rounded-lg
-												flex items-center gap-2 font-medium transition-all duration-300 w-full justify-center"
-										>
-											<FaCreditCard className="text-sm" />
-											Pay Now
-										</button>
-									</div>
-								</div>
-							</div>
+							))}
 						</div>
 					</div>
-				</div>
-			</main>
+				)}
 
-			{(startInstantMeeting || showUpcomingMeetings || showCreateLink || joinMeeting) && (
-				<div className="fixed inset-0 z-[9999]">
-					{startInstantMeeting && (
-						<InstantMeeting
-							enable={startInstantMeeting}
-							setEnable={setStartInstantMeeting}
-						/>
-					)}
-					{showUpcomingMeetings && (
-						<UpcomingMeeting
-							enable={showUpcomingMeetings}
-							setEnable={setShowUpcomingMeetings}
-						/>
-					)}
-					{showCreateLink && (
-						<CreateLink enable={showCreateLink} setEnable={setShowCreateLink} />
-					)}
-					{joinMeeting && (
-						<JoinMeeting enable={joinMeeting} setEnable={setJoinMeeting} />
-					)}
-				</div>
-			)}
+				{/* Modals */}
+				{startInstantMeeting && (
+					<InstantMeeting onClose={() => setStartInstantMeeting(false)} />
+				)}
+				{showUpcomingMeetings && (
+					<UpcomingMeeting onClose={() => setShowUpcomingMeetings(false)} />
+				)}
+				{showCreateLink && (
+					<CreateLink onClose={() => setShowCreateLink(false)} />
+				)}
+				{joinMeeting && (
+					<JoinMeeting onClose={() => setJoinMeeting(false)} />
+				)}
+			</main>
 		</div>
 	);
 }

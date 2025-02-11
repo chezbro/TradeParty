@@ -11,7 +11,8 @@ import {
   FaUserCheck,
   FaTwitter,
   FaGlobe,
-  FaLinkedin
+  FaLinkedin,
+  FaEdit
 } from 'react-icons/fa';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
@@ -23,6 +24,7 @@ interface UserProfile {
   twitter_url: string;
   website_url: string;
   linkedin_url: string;
+  id: string;
 }
 
 interface TradingStats {
@@ -36,6 +38,8 @@ interface TradingStats {
   total_meeting_hours: number;
 }
 
+interface EditForm extends UserProfile, TradingStats {}
+
 export default function ProfileContent() {
   const params = useParams<{ userId: string }>();
   const userId = params?.userId; // Safely access userId with optional chaining
@@ -44,12 +48,27 @@ export default function ProfileContent() {
   const [followers, setFollowers] = useState<number>(0);
   const [following, setFollowing] = useState<number>(0);
   const [isFollowing, setIsFollowing] = useState(false);
-  const supabase = createClientComponentClient();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [editForm, setEditForm] = useState<EditForm | null>(null);
+  const supabase = createClientComponentClient({
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  });
 
   // Add early return if no userId is present
   if (!userId) {
     return null;
   }
+
+  useEffect(() => {
+    const checkCurrentUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsOwnProfile(session?.user?.id === userId);
+    };
+
+    checkCurrentUser();
+  }, [userId, supabase]);
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -60,10 +79,6 @@ export default function ProfileContent() {
         .eq('id', userId)
         .single();
 
-      if (profileData) {
-        setProfile(profileData);
-      }
-
       // Fetch trading stats
       const { data: statsData } = await supabase
         .from('trading_stats')
@@ -71,8 +86,25 @@ export default function ProfileContent() {
         .eq('user_id', userId)
         .single();
 
-      if (statsData) {
+      if (profileData && statsData) {
+        setProfile(profileData);
         setStats(statsData);
+        // Combine both profile and stats data for the edit form
+        setEditForm({ ...profileData, ...statsData });
+      } else {
+        // Initialize with default values if no data exists
+        const defaultStats = {
+          win_rate: 0,
+          total_trades: 0,
+          profit_factor: 0,
+          average_rr: 0,
+          monthly_return: 0,
+          meetings_hosted: 0,
+          meetings_participated: 0,
+          total_meeting_hours: 0
+        };
+        setStats(defaultStats);
+        setEditForm({ ...profileData, ...defaultStats });
       }
 
       // Fetch follower counts
@@ -106,6 +138,91 @@ export default function ProfileContent() {
     fetchProfileData();
   }, [userId, supabase]);
 
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editForm) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      console.log('Current user:', session.user.id);
+      console.log('Profile ID:', userId);
+      console.log('Updating profile with:', editForm);
+
+      // First update the profile
+      const { error: profileError, data: profileResult } = await supabase
+        .from('user_profiles')
+        .update({
+          username: editForm.username,
+          first_name: editForm.first_name,
+          last_name: editForm.last_name,
+          bio: editForm.bio,
+          twitter_url: editForm.twitter_url,
+          website_url: editForm.website_url,
+          linkedin_url: editForm.linkedin_url
+        })
+        .eq('id', session.user.id)  // Use session.user.id instead of userId
+        .select()
+        .single();
+
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        throw profileError;
+      }
+
+      // Then update or insert the stats
+      const { error: statsError, data: statsResult } = await supabase
+        .from('trading_stats')
+        .upsert({
+          user_id: session.user.id,  // Use session.user.id instead of userId
+          win_rate: editForm.win_rate || 0,
+          total_trades: editForm.total_trades || 0,
+          profit_factor: editForm.profit_factor || 0,
+          average_rr: editForm.average_rr || 0,
+          monthly_return: editForm.monthly_return || 0,
+          meetings_hosted: editForm.meetings_hosted || 0,
+          meetings_participated: editForm.meetings_participated || 0,
+          total_meeting_hours: editForm.total_meeting_hours || 0
+        })
+        .select()
+        .single();
+
+      if (statsError) {
+        console.error('Stats update error:', statsError);
+        throw statsError;
+      }
+
+      // If both operations succeed, update the local state
+      if (profileResult) {
+        setProfile(profileResult);
+      }
+      if (statsResult) {
+        setStats(statsResult);
+      }
+      setIsEditing(false);
+
+      // Show success message
+      alert('Profile updated successfully!');
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      alert(`Failed to update profile: ${error.message || 'Unknown error'}`);
+    }
+  };
+
+  // Add this function to generate consistent avatar gradient colors based on username
+  const getAvatarGradient = (username: string) => {
+    const colors = [
+      ['from-pink-500 to-purple-500', 'from-blue-500 to-teal-500'],
+      ['from-orange-500 to-red-500', 'from-green-500 to-teal-500'],
+      ['from-blue-500 to-purple-500', 'from-indigo-500 to-purple-500']
+    ];
+    const index = username?.length % colors.length || 0;
+    return colors[index][0];
+  };
+
   return (
     <div className="min-h-screen bg-[#0F172A] text-gray-100">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -116,39 +233,223 @@ export default function ProfileContent() {
           className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 mb-8 border border-gray-700/50"
         >
           <div className="flex flex-col md:flex-row items-start gap-8">
-            <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 
-              flex items-center justify-center text-5xl font-bold text-white">
-              {profile?.first_name[0]}
+            <div className={`w-32 h-32 rounded-2xl bg-gradient-to-br ${getAvatarGradient(profile?.username || '')}
+              flex items-center justify-center text-5xl font-bold text-white`}>
+              {profile?.first_name?.[0]}
             </div>
             
             <div className="flex-grow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h1 className="text-3xl font-bold text-white mb-1">{profile?.first_name} {profile?.last_name}</h1>
-                  <p className="text-blue-400 mb-3">{profile?.username}</p>
-                  <p className="text-gray-400 max-w-2xl mb-4">{profile?.bio}</p>
-                </div>
-                
-                <button
-                  onClick={() => setIsFollowing(!isFollowing)}
-                  className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-2
-                    ${isFollowing 
-                      ? 'bg-gray-700 hover:bg-gray-600' 
-                      : 'bg-blue-500 hover:bg-blue-600'}`}
-                >
-                  {isFollowing ? (
-                    <>
-                      <FaUserCheck />
-                      Following
-                    </>
-                  ) : (
-                    <>
-                      <FaUserPlus />
-                      Follow
-                    </>
+              {!isEditing ? (
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h1 className="text-3xl font-bold text-white mb-1">
+                      {profile?.first_name} {profile?.last_name}
+                      {isOwnProfile && (
+                        <button
+                          onClick={() => setIsEditing(true)}
+                          className="ml-3 text-gray-400 hover:text-blue-400 text-xl"
+                        >
+                          <FaEdit />
+                        </button>
+                      )}
+                    </h1>
+                    <p className="text-blue-400 mb-3">{profile?.username}</p>
+                    <p className="text-gray-400 max-w-2xl mb-4">{profile?.bio}</p>
+                  </div>
+                  
+                  {!isOwnProfile && (
+                    <button
+                      onClick={() => setIsFollowing(!isFollowing)}
+                      className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-2
+                        ${isFollowing 
+                          ? 'bg-gray-700 hover:bg-gray-600' 
+                          : 'bg-blue-500 hover:bg-blue-600'}`}
+                    >
+                      {isFollowing ? (
+                        <>
+                          <FaUserCheck />
+                          Following
+                        </>
+                      ) : (
+                        <>
+                          <FaUserPlus />
+                          Follow
+                        </>
+                      )}
+                    </button>
                   )}
-                </button>
-              </div>
+                </div>
+              ) : (
+                <form onSubmit={handleEditSubmit} className="space-y-4 w-full">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">First Name</label>
+                      <input
+                        type="text"
+                        value={editForm?.first_name || ''}
+                        onChange={(e) => setEditForm(prev => ({ ...prev!, first_name: e.target.value }))}
+                        className="w-full bg-gray-700/50 rounded-lg px-4 py-2 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Last Name</label>
+                      <input
+                        type="text"
+                        value={editForm?.last_name || ''}
+                        onChange={(e) => setEditForm(prev => ({ ...prev!, last_name: e.target.value }))}
+                        className="w-full bg-gray-700/50 rounded-lg px-4 py-2 text-white"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Username</label>
+                    <input
+                      type="text"
+                      value={editForm?.username || ''}
+                      onChange={(e) => setEditForm(prev => ({ ...prev!, username: e.target.value }))}
+                      className="w-full bg-gray-700/50 rounded-lg px-4 py-2 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Bio</label>
+                    <textarea
+                      value={editForm?.bio || ''}
+                      onChange={(e) => setEditForm(prev => ({ ...prev!, bio: e.target.value }))}
+                      className="w-full bg-gray-700/50 rounded-lg px-4 py-2 text-white"
+                      rows={3}
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Twitter URL</label>
+                      <input
+                        type="url"
+                        value={editForm?.twitter_url || ''}
+                        onChange={(e) => setEditForm(prev => ({ ...prev!, twitter_url: e.target.value }))}
+                        className="w-full bg-gray-700/50 rounded-lg px-4 py-2 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Website URL</label>
+                      <input
+                        type="url"
+                        value={editForm?.website_url || ''}
+                        onChange={(e) => setEditForm(prev => ({ ...prev!, website_url: e.target.value }))}
+                        className="w-full bg-gray-700/50 rounded-lg px-4 py-2 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">LinkedIn URL</label>
+                      <input
+                        type="url"
+                        value={editForm?.linkedin_url || ''}
+                        onChange={(e) => setEditForm(prev => ({ ...prev!, linkedin_url: e.target.value }))}
+                        className="w-full bg-gray-700/50 rounded-lg px-4 py-2 text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-6 border-t border-gray-700 pt-6">
+                    <h3 className="text-xl font-bold mb-4">Trading Statistics</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">Win Rate (%)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={editForm?.win_rate || 0}
+                          onChange={(e) => setEditForm(prev => ({ ...prev!, win_rate: parseFloat(e.target.value) }))}
+                          className="w-full bg-gray-700/50 rounded-lg px-4 py-2 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">Total Trades</label>
+                        <input
+                          type="number"
+                          value={editForm?.total_trades || 0}
+                          onChange={(e) => setEditForm(prev => ({ ...prev!, total_trades: parseInt(e.target.value) }))}
+                          className="w-full bg-gray-700/50 rounded-lg px-4 py-2 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">Profit Factor</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={editForm?.profit_factor || 0}
+                          onChange={(e) => setEditForm(prev => ({ ...prev!, profit_factor: parseFloat(e.target.value) }))}
+                          className="w-full bg-gray-700/50 rounded-lg px-4 py-2 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">Average R:R</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={editForm?.average_rr || 0}
+                          onChange={(e) => setEditForm(prev => ({ ...prev!, average_rr: parseFloat(e.target.value) }))}
+                          className="w-full bg-gray-700/50 rounded-lg px-4 py-2 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">Monthly Return (%)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={editForm?.monthly_return || 0}
+                          onChange={(e) => setEditForm(prev => ({ ...prev!, monthly_return: parseFloat(e.target.value) }))}
+                          className="w-full bg-gray-700/50 rounded-lg px-4 py-2 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">Meetings Hosted</label>
+                        <input
+                          type="number"
+                          value={editForm?.meetings_hosted || 0}
+                          onChange={(e) => setEditForm(prev => ({ ...prev!, meetings_hosted: parseInt(e.target.value) }))}
+                          className="w-full bg-gray-700/50 rounded-lg px-4 py-2 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">Meetings Participated</label>
+                        <input
+                          type="number"
+                          value={editForm?.meetings_participated || 0}
+                          onChange={(e) => setEditForm(prev => ({ ...prev!, meetings_participated: parseInt(e.target.value) }))}
+                          className="w-full bg-gray-700/50 rounded-lg px-4 py-2 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">Total Meeting Hours</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={editForm?.total_meeting_hours || 0}
+                          onChange={(e) => setEditForm(prev => ({ ...prev!, total_meeting_hours: parseFloat(e.target.value) }))}
+                          className="w-full bg-gray-700/50 rounded-lg px-4 py-2 text-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <button
+                      type="submit"
+                      className="px-6 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
+                    >
+                      Save Changes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsEditing(false);
+                        setEditForm(profile);
+                      }}
+                      className="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
               
               <div className="flex gap-6 mt-4">
                 <div className="flex items-center gap-2">

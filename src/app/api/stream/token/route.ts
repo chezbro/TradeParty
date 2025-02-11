@@ -6,6 +6,8 @@ import { NextResponse } from 'next/server';
 const STREAM_API_KEY = process.env.NEXT_PUBLIC_STREAM_API_KEY!;
 const STREAM_API_SECRET = process.env.STREAM_SECRET_KEY!;
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const supabase = createRouteHandlerClient({ cookies });

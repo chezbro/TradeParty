@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import ProfileContent from './ProfileContent';
 
 export default function ProfilePage() {

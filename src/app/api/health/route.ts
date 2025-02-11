@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { env } from '@/lib/env';
 import { redis } from '@/lib/meeting-monitor';
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     // Check Supabase connection

@@ -7,13 +7,14 @@ import {
 	Description,
 	TransitionChild,
 } from "@headlessui/react";
-import { FaCopy } from "react-icons/fa";
+import { FaCopy, FaTimes } from "react-icons/fa";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { Fragment, useState, Dispatch, SetStateAction, useCallback, memo } from "react";
 import { useStreamVideoClient, Call } from "@stream-io/video-react-sdk";
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
+import { motion } from 'framer-motion';
 
 interface Props {
 	enable: boolean;
@@ -25,57 +26,91 @@ interface MeetingFormProps {
 	setFacetimeLink: Dispatch<SetStateAction<string>>;
 }
 
-export default function InstantMeeting({ enable, setEnable }: Props) {
+const InstantMeeting = memo(({ enable, setEnable }: Props) => {
 	const [showMeetingLink, setShowMeetingLink] = useState(false);
 	const [facetimeLink, setFacetimeLink] = useState<string>("");
 
 	const closeModal = () => setEnable(false);
 
 	return (
-		<>
-			<Transition appear show={enable} as={Fragment}>
-				<Dialog as='div' className='relative z-[9999]' onClose={closeModal}>
-					<TransitionChild
-						as={Fragment}
-						enter='ease-out duration-300'
-							enterFrom='opacity-0'
-							enterTo='opacity-100'
-							leave='ease-in duration-200'
-							leaveFrom='opacity-100'
-							leaveTo='opacity-0'
-					>
-						<div className='fixed inset-0 bg-black/75' />
-					</TransitionChild>
+		<Transition appear show={true} as={Fragment}>
+			<Dialog as="div" className="relative z-50" onClose={closeModal}>
+				<Transition.Child
+					as={Fragment}
+					enter="ease-out duration-300"
+					enterFrom="opacity-0"
+					enterTo="opacity-100"
+					leave="ease-in duration-200"
+					leaveFrom="opacity-100"
+					leaveTo="opacity-0"
+				>
+					<div className="fixed inset-0 bg-black/80" />
+				</Transition.Child>
 
-					<div className='fixed inset-0 overflow-y-auto'>
-						<div className='flex min-h-full items-center justify-center p-4 text-center'>
-							<TransitionChild
-								as={Fragment}
-								enter='ease-out duration-300'
-								enterFrom='opacity-0 scale-95'
-								enterTo='opacity-100 scale-100'
-								leave='ease-in duration-200'
-								leaveFrom='opacity-100 scale-100'
-								leaveTo='opacity-0 scale-95'
-							>
-								<DialogPanel className='w-full max-w-2xl transform overflow-hidden rounded-lg bg-white p-8 align-middle shadow-2xl transition-all text-left relative border border-gray-200'>
-									{showMeetingLink ? (
-										<MeetingLink facetimeLink={facetimeLink} />
-									) : (
-										<MeetingForm
-											setShowMeetingLink={setShowMeetingLink}
-											setFacetimeLink={setFacetimeLink}
-										/>
-									)}
-								</DialogPanel>
-							</TransitionChild>
-						</div>
+				<div className="fixed inset-0 overflow-y-auto">
+					<div className="flex min-h-full items-center justify-center p-4">
+						<Transition.Child
+							as={Fragment}
+							enter="ease-out duration-300"
+							enterFrom="opacity-0 scale-95"
+							enterTo="opacity-100 scale-100"
+							leave="ease-in duration-200"
+							leaveFrom="opacity-100 scale-100"
+							leaveTo="opacity-0 scale-95"
+						>
+							<Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-gray-800/50 p-6 backdrop-blur-xl border border-gray-700/50 transition-all">
+								<div className="flex justify-between items-center mb-6">
+									<Dialog.Title as="h3" className="text-xl font-semibold text-white">
+										{showMeetingLink ? 'Meeting Created' : 'Start Instant Meeting'}
+									</Dialog.Title>
+									<button
+										onClick={closeModal}
+										className="text-gray-400 hover:text-white transition-colors"
+									>
+										<FaTimes />
+									</button>
+								</div>
+
+								{showMeetingLink ? (
+									<MeetingLink facetimeLink={facetimeLink} />
+								) : (
+									<MeetingForm
+										setShowMeetingLink={setShowMeetingLink}
+										setFacetimeLink={setFacetimeLink}
+									/>
+								)}
+
+								{showMeetingLink && facetimeLink && (
+									<motion.div
+										initial={{ opacity: 0, y: 20 }}
+										animate={{ opacity: 1, y: 0 }}
+										className="mt-6"
+									>
+										<p className="text-gray-400 mb-4">Share this link with your participants:</p>
+										<div className="bg-gray-900/50 p-4 rounded-xl border border-gray-700/50 break-all font-mono text-sm text-white">
+											{`${window.location.origin}/facetime/${facetimeLink}`}
+										</div>
+										<button
+											onClick={() => {
+												navigator.clipboard.writeText(`${window.location.origin}/facetime/${facetimeLink}`);
+												toast.success('Link copied to clipboard!');
+											}}
+											className="w-full mt-4 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-colors"
+										>
+											Copy Link
+										</button>
+									</motion.div>
+								)}
+							</Dialog.Panel>
+						</Transition.Child>
 					</div>
-				</Dialog>
-			</Transition>
-		</>
+				</div>
+			</Dialog>
+		</Transition>
 	);
-}
+});
+
+InstantMeeting.displayName = 'InstantMeeting';
 
 const MeetingForm = memo(({ setShowMeetingLink, setFacetimeLink }: MeetingFormProps) => {
 	const [meetingName, setMeetingName] = useState("");
@@ -222,3 +257,5 @@ const MeetingLink = memo(({ facetimeLink }: { facetimeLink: string }) => {
 });
 
 MeetingLink.displayName = 'MeetingLink';
+
+export default InstantMeeting;
