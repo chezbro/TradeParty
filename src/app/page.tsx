@@ -54,7 +54,7 @@ interface TradePartySession {
 
 export default function Home() {
 	const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-	const [startInstantMeeting, setStartInstantMeeting] = useState<boolean>(false);
+	const [isInstantMeetingOpen, setIsInstantMeetingOpen] = useState(false);
 	const [joinMeeting, setJoinMeeting] = useState<boolean>(false);
 	const [showUpcomingMeetings, setShowUpcomingMeetings] = useState<boolean>(false);
 	const [showCreateLink, setShowCreateLink] = useState<boolean>(false);
@@ -229,7 +229,7 @@ export default function Home() {
 				>
 					<div className="flex flex-col sm:flex-row gap-4 justify-center">
 						<button
-							onClick={() => setStartInstantMeeting(true)}
+							onClick={() => setIsInstantMeetingOpen(true)}
 							className="bg-indigo-500 hover:bg-indigo-600 text-white px-8 py-4 rounded-lg
 								flex items-center justify-center gap-3 font-medium transition-all duration-300"
 						>
@@ -408,9 +408,10 @@ export default function Home() {
 				)}
 
 				{/* Modals */}
-				{startInstantMeeting && (
-					<InstantMeeting onClose={() => setStartInstantMeeting(false)} />
-				)}
+				<InstantMeeting 
+					isOpen={isInstantMeetingOpen}
+					onClose={() => setIsInstantMeetingOpen(false)}
+				/>
 				{showUpcomingMeetings && (
 					<UpcomingMeeting onClose={() => setShowUpcomingMeetings(false)} />
 				)}

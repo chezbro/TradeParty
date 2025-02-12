@@ -1,118 +1,63 @@
 "use client";
-import {
-	Dialog,
-	DialogTitle,
-	DialogPanel,
-	Transition,
-	Description,
-	TransitionChild,
-} from "@headlessui/react";
-import { FaCopy, FaTimes } from "react-icons/fa";
+import { Description, Dialog } from "@headlessui/react";
+import { FaCopy } from "react-icons/fa";
 import CopyToClipboard from "react-copy-to-clipboard";
-import { Fragment, useState, Dispatch, SetStateAction, useCallback, memo } from "react";
-import { useStreamVideoClient, Call } from "@stream-io/video-react-sdk";
+import { useState, useCallback } from "react";
+import { useStreamVideoClient } from "@stream-io/video-react-sdk";
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
+import { Modal } from "@/components/ui/Modal";
 
-interface Props {
-	enable: boolean;
-	setEnable: React.Dispatch<React.SetStateAction<boolean>>;
+interface InstantMeetingProps {
+	isOpen: boolean;
+	onClose: () => void;
 }
 
-interface MeetingFormProps {
-	setShowMeetingLink: Dispatch<SetStateAction<boolean>>;
-	setFacetimeLink: Dispatch<SetStateAction<string>>;
-}
-
-const InstantMeeting = memo(({ enable, setEnable }: Props) => {
+export default function InstantMeeting({ isOpen, onClose }: InstantMeetingProps) {
 	const [showMeetingLink, setShowMeetingLink] = useState(false);
-	const [facetimeLink, setFacetimeLink] = useState<string>("");
+	const [facetimeLink, setFacetimeLink] = useState("");
 
-	const closeModal = () => setEnable(false);
+	const title = showMeetingLink ? 'Meeting Created' : 'Start Trading Session';
 
 	return (
-		<Transition appear show={true} as={Fragment}>
-			<Dialog as="div" className="relative z-50" onClose={closeModal}>
-				<Transition.Child
-					as={Fragment}
-					enter="ease-out duration-300"
-					enterFrom="opacity-0"
-					enterTo="opacity-100"
-					leave="ease-in duration-200"
-					leaveFrom="opacity-100"
-					leaveTo="opacity-0"
+		<Modal isOpen={isOpen} onClose={onClose} title={title}>
+			{showMeetingLink ? (
+				<MeetingLink facetimeLink={facetimeLink} />
+			) : (
+				<MeetingForm
+					setShowMeetingLink={setShowMeetingLink}
+					setFacetimeLink={setFacetimeLink}
+				/>
+			)}
+
+			{showMeetingLink && facetimeLink && (
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					className="mt-6"
 				>
-					<div className="fixed inset-0 bg-black/80" />
-				</Transition.Child>
-
-				<div className="fixed inset-0 overflow-y-auto">
-					<div className="flex min-h-full items-center justify-center p-4">
-						<Transition.Child
-							as={Fragment}
-							enter="ease-out duration-300"
-							enterFrom="opacity-0 scale-95"
-							enterTo="opacity-100 scale-100"
-							leave="ease-in duration-200"
-							leaveFrom="opacity-100 scale-100"
-							leaveTo="opacity-0 scale-95"
-						>
-							<Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-gray-800/50 p-6 backdrop-blur-xl border border-gray-700/50 transition-all">
-								<div className="flex justify-between items-center mb-6">
-									<Dialog.Title as="h3" className="text-xl font-semibold text-white">
-										{showMeetingLink ? 'Meeting Created' : 'Start Trading Session'}
-									</Dialog.Title>
-									<button
-										onClick={closeModal}
-										className="text-gray-400 hover:text-white transition-colors"
-									>
-										<FaTimes />
-									</button>
-								</div>
-
-								{showMeetingLink ? (
-									<MeetingLink facetimeLink={facetimeLink} />
-								) : (
-									<MeetingForm
-										setShowMeetingLink={setShowMeetingLink}
-										setFacetimeLink={setFacetimeLink}
-									/>
-								)}
-
-								{showMeetingLink && facetimeLink && (
-									<motion.div
-										initial={{ opacity: 0, y: 20 }}
-										animate={{ opacity: 1, y: 0 }}
-										className="mt-6"
-									>
-										<p className="text-gray-400 mb-4">Share this link with your participants:</p>
-										<div className="bg-gray-900/50 p-4 rounded-xl border border-gray-700/50 break-all font-mono text-sm text-white">
-											{`${window.location.origin}/facetime/${facetimeLink}`}
-										</div>
-										<button
-											onClick={() => {
-												navigator.clipboard.writeText(`${window.location.origin}/facetime/${facetimeLink}`);
-												toast.success('Link copied to clipboard!');
-											}}
-											className="w-full mt-4 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-colors"
-										>
-											Copy Link
-										</button>
-									</motion.div>
-								)}
-							</Dialog.Panel>
-						</Transition.Child>
+					<p className="text-gray-400 mb-4">Share this link with your participants:</p>
+					<div className="bg-gray-900/50 p-4 rounded-xl border border-gray-700/50 break-all font-mono text-sm text-white">
+						{`${window.location.origin}/facetime/${facetimeLink}`}
 					</div>
-				</div>
-			</Dialog>
-		</Transition>
+					<button
+						onClick={() => {
+							navigator.clipboard.writeText(`${window.location.origin}/facetime/${facetimeLink}`);
+							toast.success('Link copied to clipboard!');
+						}}
+						className="w-full mt-4 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-colors"
+					>
+						Copy Link
+					</button>
+				</motion.div>
+			)}
+		</Modal>
 	);
-});
+}
 
-InstantMeeting.displayName = 'InstantMeeting';
-
-const MeetingForm = memo(({ setShowMeetingLink, setFacetimeLink }: MeetingFormProps) => {
+const MeetingForm = ({ setShowMeetingLink, setFacetimeLink }: { setShowMeetingLink: React.Dispatch<React.SetStateAction<boolean>>; setFacetimeLink: React.Dispatch<React.SetStateAction<string>> }) => {
 	const [meetingName, setMeetingName] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const client = useStreamVideoClient();
@@ -155,8 +100,6 @@ const MeetingForm = memo(({ setShowMeetingLink, setFacetimeLink }: MeetingFormPr
 
 	return (
 		<>
-
-
 			<Description className='text-sm text-gray-500 mb-6'>
 				Create a live trading room and invite others to analyze trades together
 			</Description>
@@ -179,11 +122,9 @@ const MeetingForm = memo(({ setShowMeetingLink, setFacetimeLink }: MeetingFormPr
 			</form>
 		</>
 	);
-});
+};
 
-MeetingForm.displayName = 'MeetingForm';
-
-const MeetingLink = memo(({ facetimeLink }: { facetimeLink: string }) => {
+const MeetingLink = ({ facetimeLink }: { facetimeLink: string }) => {
 	const [copied, setCopied] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -197,12 +138,12 @@ const MeetingLink = memo(({ facetimeLink }: { facetimeLink: string }) => {
 
 	return (
 		<>
-			<DialogTitle
+			<Dialog.Title
 				as='h3'
 				className='text-xl font-semibold leading-6 mb-2'
 			>
 				Share Your TradeParty
-			</DialogTitle>
+			</Dialog.Title>
 
 			<Description className='text-sm text-gray-500 mb-6'>
 				Start a new TradeParty and invite others to join.
@@ -246,8 +187,4 @@ const MeetingLink = memo(({ facetimeLink }: { facetimeLink: string }) => {
 			</Link>
 		</>
 	);
-});
-
-MeetingLink.displayName = 'MeetingLink';
-
-export default InstantMeeting;
+};
