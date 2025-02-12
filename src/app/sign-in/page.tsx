@@ -11,6 +11,10 @@ const ReactConfetti = dynamic(() => import('react-confetti'), {
   ssr: false
 })
 
+const TutorialVideoModal = dynamic(() => import('@/components/TutorialVideoModal'), {
+  ssr: false
+})
+
 export default function SignIn() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -18,6 +22,7 @@ export default function SignIn() {
   const [showConfetti, setShowConfetti] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [waitlistCount, setWaitlistCount] = useState(0)
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
   const router = useRouter()
   const supabase = createClientComponentClient()
 
@@ -120,6 +125,11 @@ export default function SignIn() {
           />
         </div>
       )}
+      
+      <TutorialVideoModal 
+        isOpen={isVideoModalOpen} 
+        onClose={() => setIsVideoModalOpen(false)} 
+      />
       
       {/* Left Column - Branding */}
       <motion.div 
@@ -232,9 +242,22 @@ export default function SignIn() {
       >
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-white mb-2">Coming Soon</h2>
+            <h2 className="text-3xl font-bold text-white mb-2">Coming Soon!</h2>
             <p className="text-gray-400">Join the waitlist for early access</p>
           </div>
+
+          <motion.button
+            onClick={() => setIsVideoModalOpen(true)}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full mb-8 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium shadow-lg flex items-center justify-center space-x-2"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Watch a Sneak Peek</span>
+          </motion.button>
 
           <div className="bg-gray-800/50 p-8 rounded-2xl backdrop-blur-xl border border-gray-700/50">
             <form onSubmit={handleJoinWaitlist} className="space-y-6">
