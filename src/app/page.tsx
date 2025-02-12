@@ -306,13 +306,13 @@ export default function Home() {
 					onClose={() => setIsInstantMeetingOpen(false)}
 				/>
 				{showUpcomingMeetings && (
-					<UpcomingMeeting onClose={() => setShowUpcomingMeetings(false)} />
+					<UpcomingMeeting enable={showUpcomingMeetings} setEnable={setShowUpcomingMeetings} />
 				)}
 				{showCreateLink && (
-					<CreateLink onClose={() => setShowCreateLink(false)} />
+					<CreateLink enable={showCreateLink} setEnable={setShowCreateLink} />
 				)}
 				{joinMeeting && (
-					<JoinMeeting onClose={() => setJoinMeeting(false)} />
+					<JoinMeeting enable={joinMeeting} setEnable={setJoinMeeting} />
 				)}
 			</main>
 		</div>

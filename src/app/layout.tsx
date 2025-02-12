@@ -53,24 +53,11 @@ export default function RootLayout({
 		return () => subscription.unsubscribe();
 	}, [supabase]);
 
-	const isAuthPage = pathname === '/sign-in' || pathname === '/sign-up';
-
-	if (isAuthPage) {
-		return (
-			<html lang="en">
-				<body>
-					{children}
-					<Toaster />
-				</body>
-			</html>
-		);
-	}
-
 	return (
 		<html lang="en">
 			<body>
-				<Header />
-				<div className="pt-16">
+				{isAuthenticated && <Header />}
+				<div className={isAuthenticated ? "pt-16" : ""}>
 					{isAuthenticated ? (
 						<AuthenticatedProviders>{children}</AuthenticatedProviders>
 					) : (
