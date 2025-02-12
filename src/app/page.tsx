@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { format } from 'date-fns';
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Link from "next/link";
+import SignIn from "./sign-in/page";
 
 const containerVariants = {
 	hidden: { opacity: 0 },
@@ -105,117 +106,9 @@ export default function Home() {
 		return null;
 	}
 
-	// Show waitlist landing page for non-authenticated users
+	// Show sign-in page for non-authenticated users
 	if (!isAuthenticated) {
-		return (
-			<div className="min-h-screen bg-gray-900">
-				{/* Hero Section */}
-				<div className="relative overflow-hidden">
-					{/* Background decorative elements */}
-					<div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-3xl"></div>
-					<div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl"></div>
-					
-					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 relative">
-						<motion.div 
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.5 }}
-							className="text-center"
-						>
-							<h1 className="text-5xl md:text-7xl font-bold mb-8">
-								<span className="bg-gradient-to-r from-emerald-400 to-blue-500 text-transparent bg-clip-text">
-									TradeParty
-								</span>
-							</h1>
-							<p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto">
-								The Future of Social Trading is Coming Soon
-							</p>
-							
-							<motion.div
-								whileHover={{ scale: 1.05 }}
-								whileTap={{ scale: 0.95 }}
-							>
-								<Link
-									href="/sign-up"
-									className="inline-block bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-8 py-4 rounded-xl text-lg font-medium shadow-lg transition-all duration-200"
-								>
-									Join the Waitlist
-								</Link>
-							</motion.div>
-						</motion.div>
-					</div>
-				</div>
-
-				{/* Features Section */}
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-					<motion.div 
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.5, delay: 0.2 }}
-						className="grid grid-cols-1 md:grid-cols-3 gap-8"
-					>
-						<div className="bg-gray-800/50 p-6 rounded-2xl backdrop-blur-xl border border-gray-700/50">
-							<div className="bg-emerald-500/10 p-3 rounded-lg w-fit mb-4">
-								<svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-								</svg>
-							</div>
-							<h3 className="text-xl font-semibold text-white mb-2">Copy Trading</h3>
-							<p className="text-gray-400 text-sm mb-4">Share your charts and trade together in real-time</p>
-						</div>
-
-						<div className="bg-gray-800/50 p-6 rounded-2xl backdrop-blur-xl border border-gray-700/50">
-							<div className="bg-blue-500/10 p-3 rounded-lg w-fit mb-4">
-								<svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-								</svg>
-							</div>
-							<h3 className="text-xl font-semibold text-white mb-2">Live Chart Sharing</h3>
-							<p className="text-gray-400">Share your TradingView charts in real-time with your trading buddies</p>
-						</div>
-
-						<div className="bg-gray-800/50 p-6 rounded-2xl backdrop-blur-xl border border-gray-700/50">
-							<div className="bg-purple-500/10 p-3 rounded-lg w-fit mb-4">
-								<svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-								</svg>
-							</div>
-							<h3 className="text-xl font-semibold text-white mb-2">Trade Together</h3>
-							<p className="text-gray-400">Analyze markets and execute trades as a team</p>
-						</div>
-					</motion.div>
-				</div>
-
-				{/* Stats Section */}
-				<div className="border-t border-gray-800">
-					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-						<motion.div 
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.5, delay: 0.4 }}
-							className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center"
-						>
-							<div>
-								<p className="text-3xl font-bold text-white mb-2">10,000+</p>
-								<p className="text-gray-400">Active Traders</p>
-							</div>
-							<div>
-								<p className="text-3xl font-bold text-white mb-2">24/7</p>
-								<p className="text-gray-400">Trading Sessions</p>
-							</div>
-							<div>
-								<p className="text-3xl font-bold text-white mb-2">100K+</p>
-								<p className="text-gray-400">Charts Shared</p>
-							</div>
-							<div>
-								<p className="text-3xl font-bold text-white mb-2">50+</p>
-								<p className="text-gray-400">Markets</p>
-							</div>
-						</motion.div>
-					</div>
-				</div>
-			</div>
-		);
+		return <SignIn />;
 	}
 
 	return (
