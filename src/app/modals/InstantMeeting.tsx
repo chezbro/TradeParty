@@ -61,7 +61,7 @@ const InstantMeeting = memo(({ enable, setEnable }: Props) => {
 							<Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-gray-800/50 p-6 backdrop-blur-xl border border-gray-700/50 transition-all">
 								<div className="flex justify-between items-center mb-6">
 									<Dialog.Title as="h3" className="text-xl font-semibold text-white">
-										{showMeetingLink ? 'Meeting Created' : 'Start Instant Meeting'}
+										{showMeetingLink ? 'Meeting Created' : 'Start Trading Session'}
 									</Dialog.Title>
 									<button
 										onClick={closeModal}
@@ -155,21 +155,13 @@ const MeetingForm = memo(({ setShowMeetingLink, setFacetimeLink }: MeetingFormPr
 
 	return (
 		<>
-			<DialogTitle as="h3" className="text-xl font-semibold leading-6 mb-2">
-				Create a TradeParty
-			</DialogTitle>
+
 
 			<Description className='text-sm text-gray-500 mb-6'>
-				Start an instant TradeParty meeting with your cliq
+				Create a live trading room and invite others to analyze trades together
 			</Description>
 
 			<form className='w-full' onSubmit={handleSubmit}>
-				<label
-					className='block text-left text-sm font-medium text-gray-700 mb-1'
-					htmlFor='description'
-				>
-					Name
-				</label>
 				<input
 					type='text'
 					name='description'

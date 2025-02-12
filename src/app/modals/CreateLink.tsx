@@ -148,11 +148,11 @@ const MeetingForm = ({
 				as='h3'
 				className='text-xl font-semibold leading-6 mb-2'
 			>
-				Schedule a TradeParty
+				Create TradeParty Session
 			</DialogTitle>
 
 			<Description className='text-sm text-gray-500 mb-6'>
-				Schedule a TradeParty meeting with friends and peers.
+				Share this link to invite traders to your live trading session
 			</Description>
 
 			<form className='w-full' onSubmit={handleStartMeeting}>

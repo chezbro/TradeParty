@@ -93,7 +93,7 @@ export default function TradePartyDashboard() {
                     </div>
                     <div className="flex items-center gap-2">
                       <FaUsers className="text-indigo-400" />
-                      {session.participant_count} participants
+                      {session.participant_count} traders
                     </div>
                   </div>
 

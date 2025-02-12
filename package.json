@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@headlessui/react": "^2.1.8",
+    "@headlessui/react": "^0.0.0-insiders.1be0e67",
     "@heroicons/react": "^2.2.0",
     "@phosphor-icons/react": "^2.1.7",
     "@radix-ui/react-icons": "^1.3.2",

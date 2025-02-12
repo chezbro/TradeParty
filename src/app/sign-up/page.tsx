@@ -62,8 +62,8 @@ export default function SignUp() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">Copy Trading</h3>
-                <p className="text-gray-400">Automatically copy successful traders' strategies</p>
+                <h3 className="text-lg font-semibold text-white">Live Chart Sharing</h3>
+                <p className="text-gray-400">Share your TradingView charts in real-time</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -73,8 +73,8 @@ export default function SignUp() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">Advanced Analytics</h3>
-                <p className="text-gray-400">Deep insights into market trends and performance</p>
+                <h3 className="text-lg font-semibold text-white">Multi-Chart Layout</h3>
+                <p className="text-gray-400">View and analyze multiple charts simultaneously</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -84,8 +84,8 @@ export default function SignUp() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">24/7 Trading</h3>
-                <p className="text-gray-400">Trade any time, anywhere with our mobile app</p>
+                <h3 className="text-lg font-semibold text-white">Trading Community</h3>
+                <p className="text-gray-400">Trade and learn together with like-minded traders</p>
               </div>
             </div>
           </div>
@@ -96,7 +96,7 @@ export default function SignUp() {
                   <div key={i} className="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-800"></div>
                 ))}
               </div>
-              <p className="text-sm text-gray-400">Join 10,000+ traders who trust TradeParty</p>
+              <p className="text-sm text-gray-400">Join 10,000+ traders who use TradeParty daily</p>
             </div>
           </div>
         </div>

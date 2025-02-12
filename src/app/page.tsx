@@ -161,7 +161,7 @@ export default function Home() {
 								</svg>
 							</div>
 							<h3 className="text-xl font-semibold text-white mb-2">Copy Trading</h3>
-							<p className="text-gray-400">Follow and automatically copy successful traders' strategies in real-time.</p>
+							<p className="text-gray-400 text-sm mb-4">Share your charts and trade together in real-time</p>
 						</div>
 
 						<div className="bg-gray-800/50 p-6 rounded-2xl backdrop-blur-xl border border-gray-700/50">
@@ -170,8 +170,8 @@ export default function Home() {
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
 								</svg>
 							</div>
-							<h3 className="text-xl font-semibold text-white mb-2">Live Analysis</h3>
-							<p className="text-gray-400">Get real-time market analysis and insights from expert traders.</p>
+							<h3 className="text-xl font-semibold text-white mb-2">Live Chart Sharing</h3>
+							<p className="text-gray-400">Share your TradingView charts in real-time with your trading buddies</p>
 						</div>
 
 						<div className="bg-gray-800/50 p-6 rounded-2xl backdrop-blur-xl border border-gray-700/50">
@@ -180,8 +180,8 @@ export default function Home() {
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
 								</svg>
 							</div>
-							<h3 className="text-xl font-semibold text-white mb-2">Social Trading</h3>
-							<p className="text-gray-400">Join a community of traders and learn from their experiences.</p>
+							<h3 className="text-xl font-semibold text-white mb-2">Trade Together</h3>
+							<p className="text-gray-400">Analyze markets and execute trades as a team</p>
 						</div>
 					</motion.div>
 				</div>
@@ -196,20 +196,20 @@ export default function Home() {
 							className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center"
 						>
 							<div>
-								<p className="text-3xl font-bold text-white mb-2">1,000+</p>
-								<p className="text-gray-400">Waitlist Members</p>
+								<p className="text-3xl font-bold text-white mb-2">10,000+</p>
+								<p className="text-gray-400">Active Traders</p>
 							</div>
 							<div>
 								<p className="text-3xl font-bold text-white mb-2">24/7</p>
-								<p className="text-gray-400">Market Coverage</p>
+								<p className="text-gray-400">Trading Sessions</p>
+							</div>
+							<div>
+								<p className="text-3xl font-bold text-white mb-2">100K+</p>
+								<p className="text-gray-400">Charts Shared</p>
 							</div>
 							<div>
 								<p className="text-3xl font-bold text-white mb-2">50+</p>
-								<p className="text-gray-400">Expert Traders</p>
-							</div>
-							<div>
-								<p className="text-3xl font-bold text-white mb-2">100%</p>
-								<p className="text-gray-400">Transparency</p>
+								<p className="text-gray-400">Markets</p>
 							</div>
 						</motion.div>
 					</div>
@@ -357,17 +357,19 @@ export default function Home() {
 												{format(new Date(session.started_at), 'MMM d, yyyy')}
 											</p>
 										</div>
-										<div className="flex items-center space-x-2">
+										<div className="flex items-center">
 											<div className="flex -space-x-2">
 												{session.participants.avatars.slice(0, 3).map((avatar, i) => (
-													<div
+													<img
 														key={i}
-														className="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-800"
+														src={`https://picsum.photos/32/32?random=${session.id}-${i}`}
+														alt={`Participant ${i + 1}`}
+														className="w-8 h-8 rounded-full border-2 border-gray-800 object-cover"
 													/>
 												))}
 											</div>
-											<span className="text-sm text-gray-400">
-												{session.participant_count} participants
+											<span className="text-sm text-gray-400 ml-2">
+												{/* {session.participant_count} Traders */}
 											</span>
 										</div>
 									</div>

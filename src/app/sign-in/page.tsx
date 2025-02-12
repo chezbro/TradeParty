@@ -1,7 +1,7 @@
 'use client'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion'
@@ -17,6 +17,7 @@ export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [waitlistCount, setWaitlistCount] = useState(0)
   const router = useRouter()
   const supabase = createClientComponentClient()
 
@@ -138,7 +139,7 @@ export default function SignIn() {
             </h1>
             <div className="flex items-center space-x-3">
               <div className="h-px flex-grow bg-gradient-to-r from-emerald-500/50 to-transparent"></div>
-              <p className="text-lg text-gray-400 font-medium">Trading Made Fun.</p>
+              <p className="text-lg text-gray-400 font-medium">Trade Together, Grow Together.</p>
             </div>
           </div>
 
@@ -153,9 +154,9 @@ export default function SignIn() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">Live Trading Streams</h3>
+                    <h3 className="text-xl font-semibold text-white mb-2">Live Trading Sessions</h3>
                     <p className="text-gray-400 leading-relaxed">
-                      Join live trading rooms with expert traders sharing their screens and analysis in real-time.
+                      Join live trading rooms where traders share their charts, analysis, and trade setups in real-time.
                     </p>
                   </div>
                 </div>
@@ -172,7 +173,7 @@ export default function SignIn() {
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-2">Interactive Charts</h3>
                     <p className="text-gray-400 leading-relaxed">
-                      TradingView-powered charts with real-time annotations from session hosts.
+                      TradingView-powered charts with real-time annotation features.
                     </p>
                   </div>
                 </div>
@@ -187,9 +188,9 @@ export default function SignIn() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">Live Chat & Q&A</h3>
+                    <h3 className="text-xl font-semibold text-white mb-2">Trading Performance</h3>
                     <p className="text-gray-400 leading-relaxed">
-                      Interact with hosts and other traders during sessions through chat and live Q&A.
+                      Track your trading performance during streams and analyze your history to improve your strategy over time.
                     </p>
                   </div>
                 </div>
@@ -201,17 +202,17 @@ export default function SignIn() {
           {/* Stats Section */}
           <div className="mt-auto pt-16">
             <div className="grid grid-cols-3 gap-8">
-              <div>
-                <p className="text-2xl font-bold text-white">500+</p>
-                <p className="text-sm text-gray-400">Live Sessions</p>
+              <div className="flex flex-col justify-center items-center">
+                <p className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-emerald-500 text-transparent bg-clip-text">Trade</p>
+                <p className="text-sm text-gray-400">Together Live</p>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-white">50+</p>
-                <p className="text-sm text-gray-400">Expert Hosts</p>
+              <div className="flex flex-col justify-center items-center">
+                <p className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-500 text-transparent bg-clip-text">Learn</p>
+                <p className="text-sm text-gray-400">From Each Other</p>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-white">10k+</p>
-                <p className="text-sm text-gray-400">Active Members</p>
+              <div className="flex flex-col justify-center items-center">
+                <p className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-indigo-500 text-transparent bg-clip-text">Grow</p>
+                <p className="text-sm text-gray-400">As One Community</p>
               </div>
             </div>
           </div>
@@ -267,7 +268,7 @@ export default function SignIn() {
 
             <div className="mt-8 text-center">
               <p className="text-sm text-gray-400">
-                Be among the first to experience the future of social trading
+                Get early access to TradeParty.
               </p>
             </div>
           </div>
@@ -276,14 +277,16 @@ export default function SignIn() {
             <div className="flex items-center justify-center space-x-4">
               <div className="flex -space-x-2">
                 {[...Array(3)].map((_, i) => (
-                  <div
+                  <img
                     key={i}
-                    className="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-800"
+                    src={`https://picsum.photos/seed/user${i}/32/32`}
+                    alt={`Waitlist user ${i + 1}`}
+                    className="w-8 h-8 rounded-full border-2 border-gray-800 object-cover"
                   />
                 ))}
               </div>
               <p className="text-sm text-gray-400">
-                Join 1,000+ traders on the waitlist
+                Join {waitlistCount > 0 ? `${waitlistCount.toLocaleString()}+` : 'other'} traders on the waitlist
               </p>
             </div>
           </div>
